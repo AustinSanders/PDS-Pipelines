@@ -1,0 +1,38 @@
+{
+    "inst": "CTX",
+    "recipe": {
+        "mroctx2isis": {
+            "from_": "value",
+            "to": "value"
+        },    
+        "spiceinit": {
+            "from_": "value"
+        },
+        "ctxcal": {
+            "from_": "value",
+            "to": "value"
+        },
+        "ctxevenodd": {
+            "from_": "value",
+            "to": "value"
+        },
+        "reduce": {
+            "from_": "value",
+            "to": "value",
+            "algorithm": "average",
+            "mode": "scale",
+            "sscale": "value",
+            "lscale": "value",
+            "validper": "1",
+            "vper_replace": "nearest"
+        },
+        "isis2std":{
+            "from_": "value",
+            "to": "value",
+            "format": "jpeg",
+            "quality": "60",
+            "stretch": "linear"
+        }
+    }    
+
+}

@@ -1,0 +1,29 @@
+{
+    "inst": "Vik_VisA",
+    "recipe": {
+        "vik2isis": {
+            "from_": "value",
+            "to": "value"
+        },    
+        "spiceinit": {
+            "from_": "value"
+        },
+        "vikclean": {
+            "from_": "value",
+            "to": "value"
+        },
+        "vikcal": {
+            "from_": "value",
+            "to": "value"
+        },
+        "cam2map": {
+            "from_": "value",
+            "to": "value",
+            "map": "value",
+            "matchmap": "no",
+            "pixres": "value",
+            "defaultrange": "value"
+        }
+    }    
+
+}

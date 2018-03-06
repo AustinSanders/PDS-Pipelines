@@ -1,0 +1,27 @@
+{
+    "inst": "THEMIS_IR",
+    "recipe": {
+        "thm2isis": {
+            "from_": "value",
+            "to": "value"
+        },
+        "cubeatt-band": {
+            "from_": "value",
+            "to": "value"
+        },    
+        "spiceinit": {
+            "from_": "value",
+            "ckpredicted": "yes",
+            "cknadir": "yes"
+        },
+        "cam2map": {
+            "from_": "value",
+            "to": "value",
+            "map": "value",
+            "matchmap": "NO",
+            "pixres": "value",
+            "defaultrange": "value"
+        }
+    }    
+
+}

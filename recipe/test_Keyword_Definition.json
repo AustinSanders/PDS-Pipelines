@@ -1,0 +1,226 @@
+{
+  "instrument": {
+    "COMMON": {
+      "processdate": {
+        "type": "time",
+        "displayname": "Process Date",
+        "group": "Parameters",
+        "keyword": "RunDate"
+      },
+      "isisversion": {
+        "type": "string",
+        "displayname": "Isis Version",
+        "group": "Parameters",
+        "keyword": "IsisVersion"
+      },
+      "spacecraftname": {
+        "type": "string",
+        "displayname": "Spacecraft Name",
+        "group": "Instrument",
+        "keyword": "SpacecraftName"
+      },
+      "lines": {
+        "type": "integer",
+        "displayname": "Lines",
+        "group": "Parameters",
+        "keyword" : "Lines"
+      },
+      "samples": {
+        "type": "integer",
+        "displayname": "Samples",
+        "group": "Parameters",
+        "keyword": "Samples"
+      },  
+      "minimumlatitude": {
+        "type": "double",
+        "displayname": "Minimum Latitude",
+        "group": "Camstats",
+        "keyword": "MinimumLatitude"
+      },
+      "starttime": {
+        "type": "time",
+        "displayname": "Start Time",
+        "group": "Instrument",
+        "keyword": "StartTime"
+      },
+      "declination": {
+        "type": "double",
+        "displayname": "Declination",
+        "group": "Geometry",
+        "keyword": "Declination"
+      },
+      "geombandsused": {
+        "type": "integer",
+        "displayname": "Bands in Geometry",
+        "group": "Geometry",
+        "keyword": "BandsUsed"
+      },
+      "geomreferenceband": {
+        "type": "integer",
+        "displayname": "Virtual Geometry Band",
+        "group": "Geometry",
+        "keyword": "ReferenceBand"
+      },
+      "geomoriginalband": {
+        "type": "integer",
+        "displayname": "Original Geometry Band",
+        "group": "Geometry",
+        "keyword": "OriginalBand"
+      },
+      "centroidradius": {
+        "type": "double",
+        "displayname": "Centroid Radius",
+        "group": "Polygon",
+        "keyword": "CentroidRadius"
+      }
+    },
+    "mroCTX": {
+      "statsbandfilter": {
+        "type": "string",
+        "displayname": "Band Filter Used For Statistics",
+        "group": "BandBin",
+        "keyword": "FilterName"
+      },
+      "statsbandcenterwave": {
+        "type": "double",
+        "displayname": "Center Wavelength Of Band Used For Statistics",
+        "group": "BandBin",
+        "keyword": "Center"
+      },
+      "focalplanetemperature": {
+        "type": "double",
+        "displayname": "Focal Plane Temperature",
+        "group": "Instrument",
+        "keyword": "FocalPlaneTemperature"
+      },
+      "offsetmodeid": {
+        "type": "string",
+        "displayname": "Offset Mode",
+        "group": "Instrument",
+        "keyword": "OffsetModeId"
+      }
+    },
+    "themisIR_EDR": {
+      "statsbandfilter": {
+        "type": "string",
+        "displayname": "Band Filter Used For Statistics",
+        "group": "BandBin",
+        "keyword": "FilterName"
+      },
+      "statsbandcenterwave": {
+        "type": "double",
+        "displayname": "Center Wavelength Of Band Used For Statistics",
+        "group": "BandBin",
+        "keyword": "Center"
+      },
+      "gainnumber": {
+        "type": "integer",
+        "displayname": "Gain Number",
+        "group": "Instrument",
+        "keyword": "GainNumber"
+      },
+      "offsetnumber": {
+        "type": "integer",
+        "displayname": "Offset Number",
+        "group": "Instrument",
+        "keyword": "OffsetNumber"
+      },
+      "missingscanlines": {
+        "type": "integer",
+        "displayname": "Missing Scan Lines",
+        "group": "Instrument",
+        "keyword": "MissingScanLines"
+      },
+      "timedelayintegration": {
+        "type": "string",
+        "displayname": "Time Delay Integration",
+        "group": "Instrument",
+        "keyword": "TimeDelayIntegration"
+      },
+      "spatialsumming": {
+        "type": "integer",
+        "displayname": "Spatial Summing",
+        "group": "Instrument",
+        "keyword": "SpatialSumming"
+      },
+      "spacecraftclockoffset": {
+        "type": "double",
+        "displayname": "Spacecraft Clock Offset",
+        "group": "Instrument",
+        "keyword": "SpacecraftClockOffset"
+      },
+      "producerid": {
+        "type": "string",
+        "displayname": "Producer ID",
+        "group": "Archive",
+        "keyword": "ProducerId"
+      },
+      "orbitnumber": {
+        "type": "integer",
+        "displayname": "Orbit Number",
+        "group": "Archive",
+        "keyword": "OrbitNumber"
+      },
+      "missionname": {
+        "type": "string",
+        "displayname": "Mission Name",
+        "group": "OriginalLabel",
+        "keyword": "MISSION_NAME"
+      },
+      "instrumenthostname": { 
+        "type": "string",
+        "displayname": "Instrument Host Name",
+        "group": "OriginalLabel",
+        "keyword": "INSTRUMENT_HOST_NAME"
+      },
+      "detectorid": {
+        "type": "string",
+        "displayname": "Detector ID",
+        "group": "OriginalLabel",
+        "keyword": "DETECTOR_ID"
+      },
+      "missionphasename": {
+        "type": "string",
+        "displayname": "Mission Phase Name",
+        "group": "OriginalLabel",
+        "keyword": "MISSION_PHASE_NAME"
+      },
+      "productcreationtime": {
+        "type": "time",
+        "displayname": "Product_Creation_Time",
+        "group": "OriginalLabel",
+        "keyword": "PRODUCT_CREATION_TIME"
+      },
+      "productversionid": {
+        "type": "string",
+        "displayname": "Product Version ID",
+        "group": "OriginalLabel",
+        "keyword": "PRODUCT_VERSION_ID"
+      },
+      "releaseid": {
+        "type": "string",
+        "displayname": "Release ID",
+        "group": "OriginalLabel",
+        "keyword": "RELEASE_ID"
+      },
+      "starttimeet": {
+        "type": "string",
+        "displayname": "Start Time ET",
+        "group": "OriginalLabel",
+        "keyword": "START_TIME_ET"
+      },
+      "stoptimeet": {
+        "type": "string",
+        "displayname": "Stop Time ET",
+        "group": "OriginalLabel",
+        "keyword": "STOP_TIME_ET"
+      },
+      "corename": {
+        "type": "string",
+        "displayname": "Core Name",
+        "group": "SPECTRAL_QUBE",
+        "keyword": "CORE_NAME"
+      }
+    }
+  }
+}

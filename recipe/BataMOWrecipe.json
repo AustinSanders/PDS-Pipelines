@@ -1,0 +1,44 @@
+{
+    "inst": "MOW",
+    "recipe": {
+        "STEP1": {
+            "mroctx2isis": {
+                "from_": "value",
+                "to": "value"
+            }, 
+            "spiceinit": {
+                "from_": "value",
+                "spksmithed": "true",
+                "cksmithed": "true"
+            },
+            "ctxcal": {
+                "from_": "value",
+                "to": "value"
+            },
+            "ctxevenodd": {
+                "from_": "value",
+                "to": "value"
+            },
+            "cam2map": {
+                "from_": "value",
+                "to": "value",
+                "map": "value",
+                "matchmap": "NO",
+                "pixres": "MAP",
+                "defaultrange": "CAMERA",
+                "trim": "YES"
+            }
+        },
+        "STEP2": {
+             "equalizer": {
+                 "fromlist": "value"
+             },
+             "automos": {
+                 "fromlist": "value",
+                 "mosaic": "value",
+                 "priority": "value"
+             }
+        }   
+    }    
+
+}

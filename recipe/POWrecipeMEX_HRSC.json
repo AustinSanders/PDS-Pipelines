@@ -1,0 +1,23 @@
+{
+    "inst": "HRSC",
+    "recipe": {
+        "hrsc2isis": {
+            "from_": "value",
+            "to": "value"
+        },    
+        "spiceinit": {
+            "from_": "value",
+            "ckpredicted": "yes",
+            "cknadir": "yes"
+        },
+        "cam2map": {
+            "from_": "value",
+            "to": "value",
+            "map": "value",
+            "matchmap": "no",
+            "pixres": "value",
+            "defaultrange": "value"
+        }
+    }    
+
+}

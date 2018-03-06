@@ -1,0 +1,33 @@
+{
+    "inst": "MOC-WA",
+    "recipe": {
+        "moc2isis": {
+            "from_": "value",
+            "to": "value"
+        },    
+        "spiceinit": {
+            "from_": "value"
+        },
+        "moccal": {
+            "from_": "value",
+            "to": "value"
+        },
+        "mocevenodd": {
+            "from_": "value",
+            "to": "value"
+        },
+        "mocgap": {
+            "from_": "value",
+            "to": "value"
+        },
+        "cam2map": {
+            "from_": "value",
+            "to": "value",
+            "map": "value",
+            "matchmap": "no",
+            "pixres": "value",
+            "defaultrange": "value"
+        }
+    }    
+
+}

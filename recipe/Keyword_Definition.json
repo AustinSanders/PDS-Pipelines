@@ -1,0 +1,700 @@
+{
+  "instrument": {
+    "COMMON": {
+      "processdate": {
+        "type": "time",
+        "displayname": "Process Date",
+        "group": "Parameters",
+        "keyword": "RunDate"
+      },
+      "isisversion": {
+        "type": "string",
+        "displayname": "Isis Version",
+        "group": "Parameters",
+        "keyword": "IsisVersion"
+      },
+      "spacecraftname": {
+        "type": "string",
+        "displayname": "Spacecraft Name",
+        "group": "Instrument",
+        "keyword": "SpacecraftName"
+      },
+      "lines": {
+        "type": "integer",
+        "displayname": "Lines",
+        "group": "Parameters",
+        "keyword" : "Lines"
+      },
+      "samples": {
+        "type": "integer",
+        "displayname": "Samples",
+        "group": "Parameters",
+        "keyword": "Samples"
+      },  
+      "minimumlatitude": {
+        "type": "double",
+        "displayname": "Minimum Latitude",
+        "group": "Camstats",
+        "keyword": "MinimumLatitude"
+      },
+      "maximumlatitude": {
+        "type": "double",
+        "displayname": "Maximum Latitude",
+        "group": "Camstats",
+        "keyword": "MaximumLatitude"
+      },
+      "minimumlongitude": {
+        "type": "double",
+        "displayname": "Minimum Longitude",
+        "group": "Camstats",
+        "keyword": "MinimumLongitude"
+      },
+      "maximumlongitude": {
+        "type": "double",
+        "displayname": "Maximum Longitude",
+        "group": "Camstats",
+        "keyword": "MaximumLongitude"
+      },
+      "minimumresolution": {
+        "type": "double",
+        "displayname": "Minimum Resolution",
+        "group": "Camstats",
+        "keyword": "MinimumResolution"
+      },
+      "maximumresolution": {
+        "type": "double",
+        "displayname": "Maximum Resolution",
+        "group": "Camstats",
+        "keyword": "MaximumResolution"
+      },
+      "minimumphaseangle": {
+        "type": "double",
+        "displayname": "Minimum Phase Angle",
+        "group": "Camstats",
+        "keyword": "MinimumPhase"
+      },
+      "maximumphaseangle": {
+        "type": "double",
+        "displayname": "Maximum Phase Angle",
+        "group": "Camstats",
+        "keyword": "MaximumPhase"
+      },
+      "minimumemissionangle": {
+        "type": "double",
+        "displayname": "Minimum Emission Angle",
+        "group": "Camstats",
+        "keyword": "MinimumEmission"
+      },
+      "maximumemissionangle": {
+        "type": "double",
+        "displayname": "Maximum Emission Angle",
+        "group": "Camstats",
+        "keyword": "MaximumEmission"
+      },
+      "minimumincidenceangle": {
+        "type": "double",
+        "displayname": "Minimum Incidence Angle",
+        "group": "Camstats",
+        "keyword": "MinimumIncidence"
+      },
+      "maximumincidenceangle": {
+        "type": "double",
+        "displayname": "Maximum Incidence Angle",
+        "group": "Camstats",
+        "keyword": "MaximumIncidence"
+      },
+      "minimumlocalsolartime": {
+        "type": "double",
+        "displayname": "Minimum Local Time",
+        "group": "Camstats",
+        "keyword": "LocalTimeMinimum"
+      },
+      "maximumlocalsolartime": {
+        "type": "double",
+        "displayname": "Maximum Local Time",
+        "group": "Camstats",
+        "keyword": "LocalTimeMaximum"
+      },
+      "starttime": {
+        "type": "time",
+        "displayname": "Start Time",
+        "group": "Instrument",
+        "keyword": "StartTime"
+      },
+      "stoptime": {
+        "type": "time",
+        "displayname": "Stop Time",
+        "group": "Instrument",
+        "keyword": "StopTime"
+      },
+      "spacecraftclockstartcount": {
+        "type": "string",
+        "displayname": "Spacecraft Clock Start Count",
+        "group": "Archive",
+        "keyword": "SpacecraftClockStartCount"
+      },
+      "spacecraftclockstopcount": {
+        "type": "string",
+        "displayname": "Spacecraft Clock Stop Count",
+        "group": "Archive",
+        "keyword": "pacecraftClockStopCount"
+      },
+      "exposureduration": {
+        "type": "double",
+        "displayname": "Exposure Duration",
+        "group": "Instrument",
+        "keyword": "ExposureDuration"
+      },
+      "datasetid": {
+        "type": "string",
+        "displayname": "Data Set Identifier",
+        "group": "Archive",
+        "keyword": "DataSetId"
+      },
+      "spktype": {
+        "type": "string",
+        "displayname": "SPK Kernel Type",
+        "group": "Kernels",
+        "keyword": "InstrumentPositionQuality"
+      },
+      "cktype": {
+        "type": "string",
+        "displayname": "CK Kernel Type",
+        "group": "Kernels",
+        "keyword": "InstrumentPointingQuality"
+      },
+      "dnmean": {
+        "type": "double",
+        "displayname": "dnmean",
+        "group": "Statistics",
+        "keyword": "MeanValue"
+      },
+      "dnstandarddeviation": {
+        "type": "double",
+        "displayname": "dnstandarddeviation",
+        "group": "Statistics",
+        "keyword": "StandardDeviation"
+      },
+      "dnminimum": {
+        "type": "double",
+        "displayname": "dnminimum",
+        "group": "Statistics",
+        "keyword": "MinimumValue"
+      },
+      "dnmaximum": {
+        "type": "double",
+        "displayname": "dnmaximum",
+        "group": "Statistics",
+        "keyword": "MaximumValue"
+      },
+      "dnpercenthis": {
+        "type": "double",
+        "displayname": "dnpercenthis",
+        "group": "Statistics",
+        "keyword": "PercentHIS"
+      },
+      "dnpercenthrs": {
+        "type": "double",
+        "displayname": "dnpercenthrs",
+        "group": "Statistics",
+        "keyword": "PercentHRS"
+      },
+      "dnpercentlis": {
+        "type": "double",
+        "displayname": "dnpercentlis",
+        "group": "Statistics",
+        "keyword": "PercentLIS"
+      },
+      "dnpercentlrs": {
+        "type": "double",
+        "displayname": "dnpercentlrs",
+        "group": "Statistics",
+        "keyword": "PercentLRS"
+      },
+      "dnpercentnull": {
+        "type": "double",
+        "displayname": "dnpercentnull",
+        "group": "dnpercentnull",
+        "keyword": "PercentNull"
+      },
+      "centerlatitude": {
+        "type": "double",
+        "displayname": "Center Latitude",
+        "group": "Geometry",
+        "keyword": "CenterLatitude"
+      },
+      "centerlongitude": {
+        "type": "double",
+        "displayname": "Center Longitude",
+        "group": "Geometry",
+        "keyword": "CenterLongitude"
+      },
+      "centerline": {
+        "type": "double",
+        "displayname": "Image Center Line",
+        "group": "Image Center Line",
+        "keyword": "CenterLine"
+      },
+      "centersample": {
+        "type": "double",
+        "displayname": "Image Center Sample",
+        "group": "Geometry",
+        "keyword": "CenterSample"
+      },
+      "centerphaseangle": {
+        "type": "double",
+        "displayname": "Center Phase Angle",
+        "group": "Geometry",
+        "keyword": "PhaseAngle"
+      },
+      "centeremissionangle": {
+        "type": "double",
+        "displayname": "Center Emission Angle",
+        "group": "Geometry",
+        "keyword": "EmissionAngle"
+      },
+      "centerincidenceangle": {
+        "type": "double",
+        "displayname": "Center Incidence Angle",
+        "group": "Geometry",
+        "keyword": "IncidenceAngle"
+      },
+      "centerradius": {
+        "type": "double",
+        "displayname": "Center Radius",
+        "group": "Geometry",
+        "keyword": "CenterRadius"
+      },
+      "rightascension": {
+        "type": "double",
+        "displayname": "Right Ascension",
+        "group": "Geometry",
+        "keyword": "RightAscension"
+      },
+      "declination": {
+        "type": "double",
+        "displayname": "Declination",
+        "group": "Geometry",
+        "keyword": "Declination"
+      },
+      "geombandsused": {
+        "type": "integer",
+        "displayname": "Bands in Geometry",
+        "group": "Geometry",
+        "keyword": "BandsUsed"
+      },
+      "geomreferenceband": {
+        "type": "integer",
+        "displayname": "Virtual Geometry Band",
+        "group": "Geometry",
+        "keyword": "ReferenceBand"
+      },
+      "geomoriginalband": {
+        "type": "integer",
+        "displayname": "Original Geometry Band",
+        "group": "Geometry",
+        "keyword": "OriginalBand"
+      },
+      "solarlongitude": {
+        "type": "double",
+        "displayname": "Solar Longitude",
+        "group": "Geometry",
+        "keyword": "SolarLongitude"
+      },
+      "localsolartime": {
+        "type": "double",
+        "displayname": "Local Solar Time",
+        "group": "Geometry",
+        "keyword": "LocalTime"
+      },
+      "slantdistance": {
+        "type": "double",
+        "displayname": "Slant Distance",
+        "group": "Geometry",
+        "keyword": "SlantDistance"
+      },
+      "targetcenterdistance": {
+        "type": "double",
+        "displayname": "Target Center Distance",
+        "group": "Geometry",
+        "keyword": "TargetCenterDistance"
+      },
+      "northazimuth": {
+        "type": "double",
+        "displayname": "double",
+        "group": "Geometry",
+        "keyword": "NorthAzimuth"
+      },
+      "subsolarazimuth": {
+        "type": "double",
+        "displayname": "Solar Azimuth Image",
+        "group": "Geometry",
+        "keyword": "SubSolarAzimuth"
+      },
+      "subsolarlatitude": {
+        "type": "double",
+        "displayname": "Solar Latitude Image",
+        "group": "Geometry",
+        "keyword": "SubSolarLatitude"
+      },
+      "subsolarlongitude": {
+        "type": "double",
+        "displayname": "Solar Longitude Image",
+        "group": "Geometry",
+        "keyword": "SubSolarLongitude"
+      },
+      "subspacecraftazimuth": {
+        "type": "double",
+        "displayname": "Spacecraft Azimuth Image",
+        "group": "Geometry",
+        "keyword": "SubSpacecraftAzimuth"
+      },
+      "subspacecraftlatitude": {
+        "type": "double",
+        "displayname": "Spacecraft Latitude Image",
+        "group": "Geometry",
+        "keyword": "SubSpacecraftLatitude"
+      },
+      "subspacecraftlongitude": {
+        "type": "double",
+        "displayname": "Spacecraft Longitude Image",
+        "group": "Geometry",
+        "keyword": "SubSpacecraftLongitude"
+      },
+      "subsolargroundazimuth": {
+        "type": "double",
+        "displayname": "Solar Azimuth Ground",
+        "group": "Geometry",
+        "keyword": "SubSolarGroundAzimuth"
+      },
+      "subspacecraftgroundazimuth": {
+        "type": "double",
+        "displayname": "Spacecraft Azimuth Ground",
+        "group": "Geometry",
+        "keyword": "SubSpacecraftGroundAzimuth"
+      },
+      "offnadir": {
+        "type": "double",
+        "displayname": "Off Nadir",
+        "group": "Geometry",
+        "keyword": "OffNadir"
+      },
+      "upperleftlatitude": {
+        "type": "double",
+        "displayname": "Upper Left Latitude",
+        "group": "Geometry",
+        "keyword": "UpperLeftLatitude"
+      },
+      "upperleftlongitude": {
+        "type": "double",
+        "displayname": "Upper Left Longitude",
+        "group": "Geometry",
+        "keyword": "UpperLeftLongitude"
+      },
+      "upperrightlatitude": {
+        "type": "double",
+        "displayname": "Upper Right Latitude",
+        "group": "Geometry",
+        "keyword": "UpperRightLatitude"
+      },
+      "upperrightlongitude": {
+        "type": "double",
+        "displayname": "Upper Right Longitude",
+        "group": "Geometry",
+        "keyword": "UpperRightLongitude"
+      },
+      "LowerLeftLatitude": {
+        "type": "double",
+        "displayname": "Lower Left Latitude",
+        "group": "Geometry",
+        "keyword": "LowerLeftLatitude"
+      },
+      "lowerleftlongitude": {
+        "type": "double",
+        "displayname": "Lower Right Longitude",
+        "group": "Geometry",
+        "keyword": "LowerLeftLongitude"
+      },
+      "lowerrightlatitude": {
+        "type": "double",
+        "displayname": "Lower Right Latitude",
+        "group": "Geometry",
+        "keyword": "LowerRightLatitude"
+      },
+      "lowerrightlongitude": {
+        "type": "double",
+        "displayname": "Lower Right Longitude",
+        "group": "Geometry",
+        "keyword": "LowerRightLongitude"
+      },
+      "centersampleresolution": {
+        "type": "double",
+        "displayname": "Center Sample Resolution",
+        "group": "Geometry",
+        "keyword": "SampleResolution"
+      },
+      "centerlineresolution": {
+        "type": "double",
+        "displayname": "Center Line Resolution",
+        "group": "Geometry",
+        "keyword": "LineResolution"
+      },
+      "centerpixelresolution": {
+        "type": "double",
+        "displayname": "Center Pixel Resolution",
+        "group": "Geometry",
+        "keyword": "PixelResolution"
+      },
+      "meangroundresolution": {
+        "type": "double",
+        "displayname": "Mean Ground Resolution",
+        "group": "Geometry",
+        "keyword": "MeanGroundResolution"
+      },
+      "haslongitudeboundary": {
+        "type": "boolean",
+        "displayname": "Has Longitude Boundary",
+        "group": "Geometry",
+        "keyword": "HasLongitudeBoundary"
+      },
+      "hasnorthpole": {
+        "type": "boolean",
+        "displayname": "Has North Pole",
+        "group": "Geometry",
+        "keyword": "HasNorthPole"
+      },
+      "hassouthpole": {
+        "type": "boolean",
+        "displayname": "Has South Pole",
+        "group": "Geometry",
+        "keyword": "HasSouthPole"
+      },
+      "parallaxx": {
+        "type": "double",
+        "displayname": "X Component of Parallax Vector",
+        "group": "Geometry",
+        "keyword": "ParallaxX"
+      },
+      "parallaxy": {
+        "type": "double",
+        "displayname": "Y Component of Parallax Vector",
+        "group": "Geometry",
+        "keyword": "ParallaxY"
+      },
+      "shadowx": {
+        "type": "double",
+        "displayname": "X Component of Shadow Vector",
+        "group": "Geometry",
+        "keyword": "ShadowX"
+      },
+      "shadowy": {
+        "type": "double",
+        "displayname": "Y Component of Shadow Vector",
+        "group": "Geometry",
+        "keyword": "ShadowY"
+      },
+      "centroidline": {
+        "type": "double",
+        "displayname": "Centroid Line",
+        "group": "Polygon",
+        "keyword": "CentroidLine"
+      },
+      "centroidsample": {
+        "type": "double",
+        "displayname": "Centroid Sample",
+        "group": "Polygon",
+        "keyword": "CentroidSample"
+      },
+      "centroidradius": {
+        "type": "double",
+        "displayname": "Centroid Radius",
+        "group": "Polygon",
+        "keyword": "CentroidRadius"
+      },
+      "surfacearea": {
+        "type": "double",
+        "displayname": "Surface Area",
+        "group": "Polygon",
+        "keyword": "SurfaceArea"
+      },
+      "globalcoverage": {
+        "type": "double",
+        "displayname": "Global Coverage",
+        "group": "Polygon",
+        "keyword": "GlobalCoverage"
+      }
+    },
+    "CTX": {
+      "statsbandfilter": {
+        "type": "string",
+        "displayname": "Band Filter Used For Statistics",
+        "group": "BandBin",
+        "keyword": "FilterName"
+      },
+      "statsbandcenterwave": {
+        "type": "double",
+        "displayname": "Center Wavelength Of Band Used For Statistics",
+        "group": "BandBin",
+        "keyword": "Center"
+      },
+      "dataqualitydesc": {
+        "type": "string",
+        "displayname": "Data Quality Description",
+        "group": "OriginalLabel",
+        "keyword": "DATA_QUALITY_DESC"
+      },
+      "focalplanetemperature": {
+        "type": "double",
+        "displayname": "Focal Plane Temperature",
+        "group": "Instrument",
+        "keyword": "FocalPlaneTemperature"
+      },
+      "offsetmodeid": {
+        "type": "string",
+        "displayname": "Offset Mode",
+        "group": "Instrument",
+        "keyword": "OffsetModeId"
+      },
+      "originalproductid": {
+        "type": "string",
+        "displayname": "Original Product Identifier",
+        "group": "OriginalLabel",
+        "keyword": "ORIGINAL_PRODUCT_ID"
+      },
+      "samplebitmodeid": {
+        "type": "string",
+        "displayname": "Sample Bitmode Identifier",
+        "group": "Instrument",
+        "keyword": "SampleBitModeId"
+      },
+      "samplefirstpixel": {
+        "type": "integer",
+        "displayname": "Sample First Pixel",
+        "group": "Instrument",
+        "keyword": "SampleFirstPixel"
+      },
+      "samplingfactor": {
+        "type": "integer",
+        "displayname": "Sampling Factor",
+        "group": "OriginalLabel",
+        "keyword": "SAMPLING_FACTOR"
+      },
+      "ctxid": {
+        "type": "string",
+        "displayname": "CTX Identifier",
+        "group": "OriginalLabel",
+        "keyword": "DATA_SET_ID"  
+      }
+    },
+    "themisIR_EDR": {
+      "gainnumber": {
+        "type": "integer",
+        "displayname": "Gain Number",
+        "group": "Instrument",
+        "keyword": "GainNumber"
+      },
+      "offsetnumber": {
+        "type": "integer",
+        "displayname": "Offset Number",
+        "group": "Instrument",
+        "keyword": "OffsetNumber"
+      },
+      "missingscanlines": {
+        "type": "integer",
+        "displayname": "Missing Scan Lines",
+        "group": "Instrument",
+        "keyword": "MissingScanLines"
+      },
+      "timedelayintegration": {
+        "type": "string",
+        "displayname": "Time Delay Integration",
+        "group": "Instrument",
+        "keyword": "TimeDelayIntegration"
+      },
+      "spatialsumming": {
+        "type": "integer",
+        "displayname": "Spatial Summing",
+        "group": "Instrument",
+        "keyword": "SpatialSumming"
+      },
+      "spacecraftclockoffset": {
+        "type": "double",
+        "displayname": "Spacecraft Clock Offset",
+        "group": "Instrument",
+        "keyword": "SpacecraftClockOffset"
+      },
+      "producerid": {
+        "type": "string",
+        "displayname": "Producer ID",
+        "group": "Archive",
+        "keyword": "ProducerId"
+      },
+      "orbitnumber": {
+        "type": "integer",
+        "displayname": "Orbit Number",
+        "group": "Archive",
+        "keyword": "OrbitNumber"
+      },
+      "missionname": {
+        "type": "string",
+        "displayname": "Mission Name",
+        "group": "OriginalLabel",
+        "keyword": "MISSION_NAME"
+      },
+      "instrumenthostname": { 
+        "type": "string",
+        "displayname": "Instrument Host Name",
+        "group": "OriginalLabel",
+        "keyword": "INSTRUMENT_HOST_NAME"
+      },
+      "detectorid": {
+        "type": "string",
+        "displayname": "Detector ID",
+        "group": "OriginalLabel",
+        "keyword": "DETECTOR_ID"
+      },
+      "missionphasename": {
+        "type": "string",
+        "displayname": "Mission Phase Name",
+        "group": "OriginalLabel",
+        "keyword": "MISSION_PHASE_NAME"
+      },
+      "productcreationtime": {
+        "type": "time",
+        "displayname": "Product_Creation_Time",
+        "group": "OriginalLabel",
+        "keyword": "PRODUCT_CREATION_TIME"
+      },
+      "productversionid": {
+        "type": "string",
+        "displayname": "Product Version ID",
+        "group": "OriginalLabel",
+        "keyword": "PRODUCT_VERSION_ID"
+      },
+      "releaseid": {
+        "type": "string",
+        "displayname": "Release ID",
+        "group": "OriginalLabel",
+        "keyword": "RELEASE_ID"
+      },
+      "starttimeet": {
+        "type": "string",
+        "displayname": "Start Time ET",
+        "group": "OriginalLabel",
+        "keyword": "START_TIME_ET"
+      },
+      "stoptimeet": {
+        "type": "string",
+        "displayname": "Stop Time ET",
+        "group": "OriginalLabel",
+        "keyword": "STOP_TIME_ET"
+      },
+      "corename": {
+        "type": "string",
+        "displayname": "Core Name",
+        "group": "SPECTRAL_QUBE",
+        "keyword": "CORE_NAME"
+      }
+    }
+  }
+}
