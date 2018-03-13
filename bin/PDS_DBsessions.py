@@ -21,10 +21,10 @@ class PDS_DBsessions(object):
 
         if database == "JOBS":
 
-            engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(clusterjobs_user
-                                                                        clusterjobs_pass
-                                                                        clusterjobs_host
-                                                                        clusterjobs_port
+            engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(clusterjobs_user,
+                                                                        clusterjobs_pass,
+                                                                        clusterjobs_host,
+                                                                        clusterjobs_port,
                                                                         clusterjobs_db))
 
 
@@ -41,10 +41,10 @@ class PDS_DBsessions(object):
 
             base = automap_base()
 
-            engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(pdsdi_user
-                                                                        pdsdi_pass
-                                                                        pdsdi_host
-                                                                        pdsdi_port
+            engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(pdsdi_user,
+                                                                        pdsdi_pass,
+                                                                        pdsdi_host,
+                                                                        pdsdi_port,
                                                                         pdsdi_db))
 
  
@@ -63,16 +63,16 @@ class PDS_DBsessions(object):
  
 #            base = automap_base()      
 
-            #engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(upcprd_user
-                                                                        #upcprd_pass
-                                                                        #upcprd_host
-                                                                        #upcprd_port
+            #engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(upcprd_user,
+                                                                        #upcprd_pass,
+                                                                        #upcprd_host,
+                                                                        #upcprd_port,
                                                                         #upcprd_db))
 
-            #engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(upcdev_user
-                                                                        #upcdev_pass
-                                                                        #upcdev_host
-                                                                        #upcdev_port
+            #engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(upcdev_user,
+                                                                        #upcdev_pass,
+                                                                        #upcdev_host,
+                                                                        #upcdev_port,
                                                                         #upcdev_db))
 
 #            mymetadata = MetaData()

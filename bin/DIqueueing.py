@@ -75,10 +75,10 @@ def main():
 
 
     try:
-        engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(pdsdi_user
-                                                                    pdsdi_pass
-                                                                    pdsdi_host
-                                                                    pdsdi_port
+        engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(pdsdi_user,
+                                                                    pdsdi_pass,
+                                                                    pdsdi_host,
+                                                                    pdsdi_port,
                                                                     pdsdi_db))
 
         metadata = MetaData(bind=engine)

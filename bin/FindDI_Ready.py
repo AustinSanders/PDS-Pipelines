@@ -24,7 +24,7 @@ class Args:
         pass
 
     def parse_args(self):
-        parser = argparse.ArgumentParser(description='Find Arcives for DI')
+        parser = argparse.ArgumentParser(description='Find Archives for DI')
 
         parser.add_argument('--archive', '-a', dest="archive",
                           help="Enter archive to test for DI")
@@ -38,8 +38,6 @@ class Args:
 
 def main():
 
-#    pdb.set_trace()
-
     args = Args()
     args.parse_args()
 
@@ -47,10 +45,10 @@ def main():
     archiveID = PDSinfoDICT[args.archive]['archiveid']
 
     try:
-        engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(pdsdi_user
-                                                                    pdsdi_pass
-                                                                    pdsdi_host
-                                                                    pdsdi_port
+        engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(pdsdi_user,
+                                                                    pdsdi_pass,
+                                                                    pdsdi_host,
+                                                                    pdsdi_port,
                                                                     pdsdi_db))
 
         metadata = MetaData(bind=engine)
@@ -75,25 +73,17 @@ def main():
 
     if args.volume:
         volstr = '%' + args.volume + '%'
-
-        testQ = session.query(Files).filter(files.c.archiveid == archiveID, files.c.filename.like(volstr)).filter(or_(cast(files.c.di_date, Date) < testing_date, cast(files.c.di_date, Date) == None)).count()
-        
-#        testQ = session.query(Files).filter(files.c.archiveid == archiveID, 
-#                                            files.c.filename.like(volstr), 
-#                                            cast(files.c.di_date, Date) < testing_date).count()
-
+        testQ = session.query(Files).filter(files.c.archiveid == archiveID,
+                                            files.c.filename.like(volstr)).filter(or_(cast(files.c.di_date, Date) < testing_date,
+                                                                                      cast(files.c.di_date, Date) == None)).count()
         if testQ > 0:
             print 'Volume %s DI Ready: %s Files' % (args.volume, str(testQ))
         elif testQ == 0:
             print 'Volume %s DI Current' % args.volume
 
     else:
-
-        testQ = session.query(Files).filter(files.c.archiveid == archiveID).filter(or_(cast(files.c.di_date, Date) < testing_date, cast(files.c.di_date, Date) == None)).count()
-
-#        testQ = session.query(Files).filter(files.c.archiveid == archiveID,
-#                                            cast(files.c.di_date, Date) < testing_date).count()
-    
+        testQ = session.query(Files).filter(files.c.archiveid == archiveID).filter(or_(cast(files.c.di_date, Date) < testing_date,
+                                                                                    cast(files.c.di_date, Date) == None)).count()
         if testQ > 0:
             print 'Archive %s DI Ready: %s Files' % (args.archive, str(testQ))
         elif testQ == 0:

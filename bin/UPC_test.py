@@ -17,10 +17,10 @@ class UPC_test(object):
     def __init__(self):
 
         Base = declarative_base()
-        engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(upcdev_user
-                                                                    upcdev_pass
-                                                                    upcdev_host
-                                                                    upcdev_port
+        engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(upcdev_user,
+                                                                    upcdev_pass,
+                                                                    upcdev_host,
+                                                                    upcdev_port,
                                                                     upcdev_db))
         
 
