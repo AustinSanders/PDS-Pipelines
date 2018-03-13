@@ -36,6 +36,54 @@ class Args:
         self.archive = args.archive
         self.volume = args.volume
 
+
+class Files(object):
+    pass
+
+
+class Archives(object):
+    pass
+
+
+def db_connect():
+    engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(pdsdi_user,
+                                                            pdsdi_pass,
+                                                            pdsdi_host,
+                                                            pdsdi_port,
+                                                            pdsdi_db))
+
+    metadata = MetaData(bind=engine)
+    files = Table('files', metadata, autoload=True)
+    archives = Table('archives', metadata, autoload=True)
+    filesmapper = mapper(Files, files)
+    archivesmapper = mapper(Archives, archives)
+    Session = sessionmaker()
+    session = Session()
+
+    return session, files, archives
+
+
+def archive_expired(session, archiveID, files, testing_date = None):
+    if testing_date == None:
+        td = (datetime.datetime.now(pytz.utc) - datetime.timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
+        testing_date = datetime.datetime.strptime(str(td), "%Y-%m-%d %H:%M:%S")
+
+    testQ = session.query(Files).filter(files.c.archiveid == archiveID).filter(or_(cast(files.c.di_date, Date) < testing_date,
+                                                                                cast(files.c.di_date, Date) == None)).count()
+    return testQ
+
+def volume_expired(session, archiveID, files, testing_date = None):
+    if testing_date == None:
+        td = (datetime.datetime.now(pytz.utc) - datetime.timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
+        testing_date = datetime.datetime.strptime(str(td), "%Y-%m-%d %H:%M:%S")
+
+    volstr = '%' + args.volume + '%'
+    testQ = session.query(Files).filter(files.c.archiveid == archiveID,
+                                        files.c.filename.like(volstr)).filter(or_(cast(files.c.di_date, Date) < testing_date,
+                                                                                cast(files.c.di_date, Date) == None)).count()
+
+    return testQ
+
 def main():
 
     args = Args()
@@ -45,51 +93,27 @@ def main():
     archiveID = PDSinfoDICT[args.archive]['archiveid']
 
     try:
-        engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(pdsdi_user,
-                                                                    pdsdi_pass,
-                                                                    pdsdi_host,
-                                                                    pdsdi_port,
-                                                                    pdsdi_db))
-
-        metadata = MetaData(bind=engine)
-        files = Table('files', metadata, autoload=True)
-        archives = Table('archives', metadata, autoload=True)
-
-        class Files(object):
-            pass
-        class Archives(object):
-            pass
-
-        filesmapper = mapper(Files, files)
-        archivesmapper = mapper(Archives, archives)
-        Session = sessionmaker()
-        session = Session()
-        print 'Database Connection Success'
-    except:
-        print 'Database Connection Error'
-
-    td = (datetime.datetime.now(pytz.utc) - datetime.timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
-    testing_date = datetime.datetime.strptime(str(td), "%Y-%m-%d %H:%M:%S")
-
-    if args.volume:
-        volstr = '%' + args.volume + '%'
-        testQ = session.query(Files).filter(files.c.archiveid == archiveID,
-                                            files.c.filename.like(volstr)).filter(or_(cast(files.c.di_date, Date) < testing_date,
-                                                                                      cast(files.c.di_date, Date) == None)).count()
-        if testQ > 0:
-            print 'Volume %s DI Ready: %s Files' % (args.volume, str(testQ))
-        elif testQ == 0:
-            print 'Volume %s DI Current' % args.volume
-
+        session, files, archives = db_connect()
+        print(args.archive)
+        print('Database Connection Success')
+    except Exception as e:
+        print(e)
     else:
-        testQ = session.query(Files).filter(files.c.archiveid == archiveID).filter(or_(cast(files.c.di_date, Date) < testing_date,
-                                                                                    cast(files.c.di_date, Date) == None)).count()
-        if testQ > 0:
-            print 'Archive %s DI Ready: %s Files' % (args.archive, str(testQ))
-        elif testQ == 0:
-            print 'Archive %s DI Current' % args.archive
+        # if db connection fails, there's no sense in doing this part
+        td = (datetime.datetime.now(pytz.utc) - datetime.timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
+        testing_date = datetime.datetime.strptime(str(td), "%Y-%m-%d %H:%M:%S")
 
-    
+        if args.volume:
+            if volume_expired(session, archiveID, files, testing_date):
+                print('Volume {} DI Ready: {} Files'.format(args.volume, str(testQ)))
+            else:
+                print('Volume {} DI Curent'.format(args.volume))
+        else:
+            if archive_expired(session, archiveID, files, testing_date):
+                print('Archive {} DI Ready: {} Files'.format(args.archive, str(testQ)))
+            else:
+                print('Archive {} DI Curent'.format(args.archive))
+                
 
 if __name__ == "__main__":
     sys.exit(main())
