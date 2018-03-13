@@ -62,8 +62,18 @@ class PDS_DBsessions(object):
 #        elif database == "UPC":
  
 #            base = automap_base()      
-#            engine = create_engine('postgresql://upcmgr:un1pl@c0@dino.wr.usgs.gov:3309/upc_dev')
-#            engine = create_engine('postgresql://upcmgr:un1pl@c0@dino.wr.usgs.gov:3309/upc_prd')
+
+            #engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(upcprd_user
+                                                                        #upcprd_pass
+                                                                        #upcprd_host
+                                                                        #upcprd_port
+                                                                        #upcprd_db))
+
+            #engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(upcdev_user
+                                                                        #upcdev_pass
+                                                                        #upcdev_host
+                                                                        #upcdev_port
+                                                                        #upcdev_db))
 
 #            mymetadata = MetaData()
 #            print mymetadata.tables
