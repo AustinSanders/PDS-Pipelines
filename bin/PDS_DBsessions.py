@@ -13,13 +13,21 @@ from sqlalchemy.orm import eagerload
 
 from sqlalchemy.ext.declarative import declarative_base
 
+from config import *
+
 class PDS_DBsessions(object):
 
     def __init__(self, database):
 
         if database == "JOBS":
 
-            engine = create_engine('postgresql://jobmgr:jbMg!r@spacely.wr.usgs.gov:3309/clusterjobs_prd')
+            engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(clusterjobs_user
+                                                                        clusterjobs_pass
+                                                                        clusterjobs_host
+                                                                        clusterjobs_port
+                                                                        clusterjobs_db))
+
+
             Session = sessionmaker(bind=engine)
             self.session = Session()
             DBsession = self.session
@@ -33,7 +41,12 @@ class PDS_DBsessions(object):
 
             base = automap_base()
 
-            engine = create_engine('postgresql://pdsdi:dataInt@dino.wr.usgs.gov:3309/pds_di_prd')
+            engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(pdsdi_user
+                                                                        pdsdi_pass
+                                                                        pdsdi_host
+                                                                        pdsdi_port
+                                                                        pdsdi_db))
+
  
             base.prepare(engine, reflect=True)
 

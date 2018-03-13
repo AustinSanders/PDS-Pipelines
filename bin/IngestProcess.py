@@ -19,6 +19,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 
 import pdb
+from config import *
 
 def getArchiveID(inputfile):
 
@@ -91,7 +92,12 @@ def main():
     RQ_pilotB = RedisQueue('PilotB_ReadyQueue')
 
     try:
-        engine = create_engine('postgresql://pdsdi:dataInt@dino.wr.usgs.gov:3309/pds_di_prd')
+        engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(pdsdi_user
+                                                                    pdsdi_pass
+                                                                    pdsdi_host
+                                                                    pdsdi_port
+                                                                    pdsdi_db))
+
         metadata = MetaData(bind=engine)
         files = Table('files', metadata, autoload=True)
         archives = Table('archives', metadata, autoload=True)

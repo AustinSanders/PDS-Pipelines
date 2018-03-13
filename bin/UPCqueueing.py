@@ -18,6 +18,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from RedisQueue import *
 
 import pdb
+from config import *
 
 class Args:
     def __init__(self):
@@ -64,7 +65,12 @@ def main():
     RQ = RedisQueue('UPC_ReadyQueue')
 
     try:
-        engine = create_engine('postgresql://pdsdi:dataInt@dino.wr.usgs.gov:3309/pds_di_prd')
+        engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(pdsdi_user
+                                                                    pdsdi_pass
+                                                                    pdsdi_host
+                                                                    pdsdi_port
+                                                                    pdsdi_db))
+
         metadata = MetaData(bind=engine)
         files = Table('files', metadata, autoload=True)
 
