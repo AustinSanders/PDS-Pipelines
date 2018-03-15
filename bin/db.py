@@ -31,4 +31,4 @@ def db_connect(cred):
     Session = sessionmaker()
     session = Session()
 
-    return session, files, archives
+    return session, files, archives, engine

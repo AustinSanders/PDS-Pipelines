@@ -12,8 +12,9 @@ from sqlalchemy.orm.util import *
 from sqlalchemy.orm import eagerload
 
 from sqlalchemy.ext.declarative import declarative_base
+from db import db_connect
 
-from config import *
+from config import credentials as c
 
 class PDS_DBsessions(object):
 
@@ -21,42 +22,20 @@ class PDS_DBsessions(object):
 
         if database == "JOBS":
 
-            engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(clusterjobs_user,
-                                                                        clusterjobs_pass,
-                                                                        clusterjobs_host,
-                                                                        clusterjobs_port,
-                                                                        clusterjobs_db))
-
-
-            Session = sessionmaker(bind=engine)
-            self.session = Session()
+            # files and archives are returned, but we don't care about them so we throw them away
+            self.session, _, _, engine = db_connect('clusterjob_prd')
             DBsession = self.session
-
             Base = automap_base()
             Base.prepare(engine, reflect=True)
-
             self.processingTAB = Base.classes.processing
-
         elif database == "DI":
-
             base = automap_base()
-
-            engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(pdsdi_user,
-                                                                        pdsdi_pass,
-                                                                        pdsdi_host,
-                                                                        pdsdi_port,
-                                                                        pdsdi_db))
-
- 
+            # files and archives are returned, but we don't care about them so we throw them away
+            self.session, _, _ , engine = db_connect('pdsdi')
             base.prepare(engine, reflect=True)
-
             self.files = base.classes.files
             self.archives = base.classes.archives
-       
-            Session = sessionmaker(bind=engine)
-            self.session = Session()
             DBsession = self.session
-
             self.DB_files = self.files
 
 #        elif database == "UPC":

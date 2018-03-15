@@ -16,10 +16,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
 from sqlalchemy.ext.declarative import declarative_base
+from db import Files, db_connect
 
 
 import pdb
-from config import *
 
 def main():
 #    pdb.set_trace()
@@ -73,20 +73,7 @@ def main():
     logger.info('Starting DI Process')
  
     try:
-        engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(pdsdi_user,
-                                                                    pdsdi_pass,
-                                                                    pdsdi_host,
-                                                                    pdsdi_port,
-                                                                    pdsdi_db))
-        metadata = MetaData(bind=engine)
-        files = Table('files', metadata, autoload=True)
-
-        class Files(object):
-            pass
-
-        filesmapper = mapper(Files, files)
-        Session = sessionmaker()
-        session = Session()
+        session, files = db_connect('pdsdi')
         logger.info('DataBase Connecton: Success')
     except:
         logger.error('DataBase Connection: Error')

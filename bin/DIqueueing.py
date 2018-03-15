@@ -19,12 +19,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
 from sqlalchemy.ext.declarative import declarative_base
+from db import Files, Archives, db_connect
 
 from sqlalchemy import or_
 
 import pdb
-
-from config import *
 
 class Args:
     def __init__(self):
@@ -75,25 +74,7 @@ def main():
 
 
     try:
-        engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(pdsdi_user,
-                                                                    pdsdi_pass,
-                                                                    pdsdi_host,
-                                                                    pdsdi_port,
-                                                                    pdsdi_db))
-
-        metadata = MetaData(bind=engine)
-        files = Table('files', metadata, autoload=True)
-        archives = Table('archives', metadata, autoload=True)
-
-        class Files(object):
-            pass
-        class Archives(object):
-            pass
-
-        filesmapper = mapper(Files, files)
-        archivesmapper = mapper(Archives, archives)
-        Session = sessionmaker()
-        session = Session()
+        session, files, archives = db_connect('pdsdi')
         logger.info('DataBase Connecton: Success')
     except:
         logger.error('DataBase Connection: Error')
