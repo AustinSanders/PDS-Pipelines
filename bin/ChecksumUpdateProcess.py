@@ -41,7 +41,8 @@ def main():
     logger.info('Starting DI Process')
  
     try:
-        session, files = db_connect('pdsdi')
+        # Throws away archive and engine information
+        session, files, _, _ = db_connect('pdsdi')
         logger.info('DataBase Connecton: Success')
     except:
         logger.error('DataBase Connection: Error')

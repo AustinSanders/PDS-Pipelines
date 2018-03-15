@@ -92,7 +92,8 @@ def main():
     RQ_pilotB = RedisQueue('PilotB_ReadyQueue')
 
     try:
-        session, files, archives = db_connect('pdsdi')
+        # Throws away engine information
+        session, files, archives, _ = db_connect('pdsdi')
         logger.info('DataBase Connecton: Success')
     except:   
         logger.error('DataBase Connection: Error')

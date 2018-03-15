@@ -14,8 +14,6 @@ from sqlalchemy.orm import eagerload
 from sqlalchemy.ext.declarative import declarative_base
 from db import db_connect
 
-from config import credentials as c
-
 class PDS_DBsessions(object):
 
     def __init__(self, database):
