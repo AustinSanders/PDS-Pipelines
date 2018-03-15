@@ -9,15 +9,14 @@ import sqlalchemy
 from sqlalchemy import Date, cast
 
 from sqlalchemy import *
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import mapper
-from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
 from sqlalchemy.ext.declarative import declarative_base
 
+from db import Files, Archives, db_connect
+
 import pdb
-from config import *
+
 
 class Args:
     def __init__(self):
@@ -35,32 +34,6 @@ class Args:
         args = parser.parse_args()
         self.archive = args.archive
         self.volume = args.volume
-
-
-class Files(object):
-    pass
-
-
-class Archives(object):
-    pass
-
-
-def db_connect():
-    engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(pdsdi_user,
-                                                            pdsdi_pass,
-                                                            pdsdi_host,
-                                                            pdsdi_port,
-                                                            pdsdi_db))
-
-    metadata = MetaData(bind=engine)
-    files = Table('files', metadata, autoload=True)
-    archives = Table('archives', metadata, autoload=True)
-    filesmapper = mapper(Files, files)
-    archivesmapper = mapper(Archives, archives)
-    Session = sessionmaker()
-    session = Session()
-
-    return session, files, archives
 
 
 def archive_expired(session, archiveID, files, testing_date = None):
@@ -93,7 +66,7 @@ def main():
     archiveID = PDSinfoDICT[args.archive]['archiveid']
 
     try:
-        session, files, archives = db_connect()
+        session, files, archives = db_connect('pdsdi')
         print(args.archive)
         print('Database Connection Success')
     except Exception as e:
@@ -107,12 +80,12 @@ def main():
             if volume_expired(session, archiveID, files, testing_date):
                 print('Volume {} DI Ready: {} Files'.format(args.volume, str(testQ)))
             else:
-                print('Volume {} DI Curent'.format(args.volume))
+                print('Volume {} DI Current'.format(args.volume))
         else:
             if archive_expired(session, archiveID, files, testing_date):
                 print('Archive {} DI Ready: {} Files'.format(args.archive, str(testQ)))
             else:
-                print('Archive {} DI Curent'.format(args.archive))
+                print('Archive {} DI Current'.format(args.archive))
                 
 
 if __name__ == "__main__":
