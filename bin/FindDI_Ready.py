@@ -17,13 +17,12 @@ from db import Files, Archives, db_connect
 
 import pdb
 
-
 class Args:
     def __init__(self):
         pass
 
     def parse_args(self):
-        parser = argparse.ArgumentParser(description='Find Archives for DI')
+        parser = argparse.ArgumentParser(description='Find Arcives for DI')
 
         parser.add_argument('--archive', '-a', dest="archive",
                           help="Enter archive to test for DI")
@@ -35,7 +34,6 @@ class Args:
         self.archive = args.archive
         self.volume = args.volume
 
-
 def archive_expired(session, archiveID, files, testing_date = None):
     if testing_date == None:
         td = (datetime.datetime.now(pytz.utc)\
@@ -43,12 +41,12 @@ def archive_expired(session, archiveID, files, testing_date = None):
 
         testing_date = datetime.datetime.strptime(str(td), "%Y-%m-%d %H:%M:%S")
 
-    testQ = session.query(Files).filter(
+    expired = session.query(Files).filter(
         files.c.archiveid == archiveID).filter(or_(
             cast(files.c.di_date, Date) < testing_date,
-            cast(files.c.di_date, Date) == None)).count()
+            cast(files.c.di_date, Date) == None))
 
-    return testQ
+    return expired
 
 def volume_expired(session, archiveID, files, testing_date = None):
     if testing_date == None:
@@ -58,12 +56,12 @@ def volume_expired(session, archiveID, files, testing_date = None):
         testing_date = datetime.datetime.strptime(str(td), "%Y-%m-%d %H:%M:%S")
 
     volstr = '%' + args.volume + '%'
-    testQ = session.query(Files).filter(files.c.archiveid == archiveID,
+    expired = session.query(Files).filter(files.c.archiveid == archiveID,
                                         files.c.filename.like(volstr)).filter(or_(
                                             cast(files.c.di_date, Date) < testing_date,
-                                            cast(files.c.di_date, Date) == None)).count()
+                                            cast(files.c.di_date, Date) == None))
 
-    return testQ
+    return expired
 
 def main():
 
@@ -87,15 +85,15 @@ def main():
         testing_date = datetime.datetime.strptime(str(td), "%Y-%m-%d %H:%M:%S")
 
         if args.volume:
-            Q = volume_expired(session, archiveID, files, testing_date)
-            if Q:
-                print('Volume {} DI Ready: {} Files'.format(args.volume, str(Q)))
+            expired = volume_expired(session, archiveID, files, testing_date)
+            if expired.count():
+                print('Volume {} DI Ready: {} Files'.format(args.volume, str(expired.count())))
             else:
                 print('Volume {} DI Current'.format(args.volume))
         else:
-            Q = archive_expired(session, archiveID, files, testing_date)
-            if Q:
-                print('Archive {} DI Ready: {} Files'.format(args.archive, str(Q)))
+            expired = archive_expired(session, archiveID, files, testing_date)
+            if expired.count():
+                print('Archive {} DI Ready: {} Files'.format(args.archive, str(expired.count())))
             else:
                 print('Archive {} DI Current'.format(args.archive))
                 

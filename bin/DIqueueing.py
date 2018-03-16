@@ -22,7 +22,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from db import Files, Archives, db_connect
 
 from sqlalchemy import or_
-
 import pdb
 
 class Args:
@@ -47,6 +46,7 @@ class Args:
         self.archive = args.archive
         self.volume = args.volume
         self.jobarray = args.jobarray
+
 
 def main():
 
@@ -87,12 +87,22 @@ def main():
 
     if args.volume:
         volstr = '%' + args.volume + '%'
-        testcount = session.query(Files).filter(files.c.archiveid == archiveID, files.c.filename.like(volstr)).filter(or_(cast(files.c.di_date, Date) < testing_date, cast(files.c.di_date, Date) == None)).count()
+        testcount = session.query(Files).filter(
+            files.c.archiveid == archiveID, files.c.filename.like(volstr)).filter(
+                or_(cast(files.c.di_date, Date) < testing_date,
+                    cast(files.c.di_date, Date) == None)).count()
 #        logger.info('Query Count %s', testcount) 
-        testQ = session.query(Files).filter(files.c.archiveid == archiveID, files.c.filename.like(volstr)).filter(or_(cast(files.c.di_date, Date) < testing_date, cast(files.c.di_date, Date) == None))
+        testQ = session.query(Files).filter(
+            files.c.archiveid == archiveID, files.c.filename.like(volstr)).filter(
+                or_(cast(files.c.di_date, Date) < testing_date,
+                    cast(files.c.di_date, Date) == None))
     else:
-        testcount = session.query(Files).filter(files.c.archiveid == archiveID).filter(or_(cast(files.c.di_date, Date) < testing_date, cast(files.c.di_date, Date) == None)).count()
-        testQ = session.query(Files).filter(files.c.archiveid == archiveID).filter(or_(cast(files.c.di_date, Date) < testing_date, cast(files.c.di_date, Date) == None))
+        testcount = session.query(Files).filter(files.c.archiveid == archiveID).filter(
+            or_(cast(files.c.di_date, Date) < testing_date,
+                cast(files.c.di_date, Date) == None)).count()
+        testQ = session.query(Files).filter(files.c.archiveid == archiveID).filter(
+            or_(cast(files.c.di_date, Date) < testing_date,
+                cast(files.c.di_date, Date) == None))
         
     addcount = 0
     for element in testQ:
