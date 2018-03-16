@@ -7,7 +7,7 @@ from db import db_connect
 
 def main():
     PDS_info = json.load(open('/usgs/cdev/PDS/bin/PDSinfo.json','r'))
-    #reddis_queue = RedisQueue('DI_ReadyQueue')
+    reddis_queue = RedisQueue('DI_ReadyQueue')
 
     try:
         session, files, archives, _ = db_connect('pdsdi')
@@ -23,8 +23,12 @@ def main():
             - datetime.timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
         testing_date = datetime.datetime.strptime(str(td), "%Y-%m-%d %H:%M:%S")
         expired = archive_expired(session, archive_id, files, testing_date)
+        # If any files within the archive are expired, send them to the queue
         if expired.count():
+            # @TODO get rid of print statements or enable with --verbose?
             for target in expired:
+                # @TODO add to queue instead of printing (i.e. uncomment).
+                # reddis_queue.QueueAdd(target.filename)
                 print(target.filename)
             print('Archive {} DI Ready: {} Files'.format(target, str(Q)))
         else:
