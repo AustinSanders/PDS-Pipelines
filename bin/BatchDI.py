@@ -27,9 +27,7 @@ def main():
         if expired.count():
             # @TODO get rid of print statements or enable with --verbose?
             for target in expired:
-                # @TODO add to queue instead of printing (i.e. uncomment).
-                # reddis_queue.QueueAdd(target.filename)
-                print(target.filename)
+                reddis_queue.QueueAdd(target.filename)
             print('Archive {} DI Ready: {} Files'.format(target, str(Q)))
         else:
             print('Archive {} DI Current'.format(target))
