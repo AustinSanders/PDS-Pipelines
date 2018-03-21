@@ -21,14 +21,18 @@ def db_connect(cred):
                                                                     c[cred]['db']))
     except KeyError:
         print("Credentials not found for {}".format(cred))
+    else:
+        metadata = MetaData(bind=engine)
+        files = None
+        archives = None
+        try:
+            files = Table('files', metadata, autoload=True)
+            archives = Table('archives', metadata, autoload=True)
+            filesmapper = mapper(Files, files)
+            archivesmapper = mapper(Archives, archives)
+        except:
+            pass
+        Session = sessionmaker()
+        session = Session()
 
-
-    metadata = MetaData(bind=engine)
-    files = Table('files', metadata, autoload=True)
-    archives = Table('archives', metadata, autoload=True)
-    filesmapper = mapper(Files, files)
-    archivesmapper = mapper(Archives, archives)
-    Session = sessionmaker()
-    session = Session()
-
-    return session, files, archives, engine
+        return session, files, archives, engine
