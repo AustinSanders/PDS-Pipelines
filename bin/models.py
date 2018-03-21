@@ -11,7 +11,7 @@ metadata = None
 def set_meta(meta):
     metadata = meta
 
-def customdispatch(func):
+def t_dispatch(func):
     """ Dispatch on obj, not type(obj)
     
     Decorator with functionality similar to singledispatch,
@@ -30,9 +30,9 @@ def customdispatch(func):
 def meta(keytype, **kwargs):
     return _meta(_type(keytype), kwargs)
 
-@customdispatch
+@t_dispatch
 def _meta(c_type, **kwargs):
-    """ If type not listed in single dispatch..."""
+    """ If implementation for specified type doesn't exist..."""
     raise(NotImplementedError)
 
 @_meta.register(str)
@@ -93,7 +93,7 @@ class meta_precision(Base):
     value = Column()
 
 class meta_time(Base):
-    ___tablename__ = 'meta_time'
+    __tablename__ = 'meta_time'
     upcid = Column(Integer, primary_key = True)
     typeid = Column(Integer)
     # @TODO
@@ -125,15 +125,3 @@ class meta_geometry(Base):
     upcid = Column(Integer, primary_key=True)
     typeid = Column(Integer)
     value = Column(Geometry('geometry'))
-
-
-if __name__ == "__main__":
-    from db import db_connect
-    _,_,_,engine = db_connect('upcdev')
-    
-    set_meta(MetaData(bind=engine))
-
-    m_keytype = 'boolean'
-    db_input = meta(m_keytype, engine, metadata, upcid = 1, typeid=m_keytype, value = 42)
-    attrs = vars(db_input)
-    print(', '.join("%s: %s" % item for item in attrs.items()))
