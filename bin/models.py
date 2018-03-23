@@ -31,7 +31,7 @@ def meta(keytype, *args, **kwargs):
     Parameters
     ----------
     keytype : str
-        A type description.
+        A type description of the table's value.
     *args
         Variable length argument list.
     **kwargs
@@ -42,8 +42,8 @@ def meta(keytype, *args, **kwargs):
     out : :class:`.meta_string` or :class:`.meta_precision` or :class:`.meta_integer` or :class:`.meta_time` or :class:`.meta_boolean`
         A SQLAlchemy table with type specific column specification.
     """
-    # Evaluate string type description to yield formal type
     try:
+        # Evaluate string type description to yield formal type
         return _meta(eval(keytype.capitalize()), *args, **kwargs)
     except NameError:
         print('Keytype {} not found\n'.format(keytype))
@@ -52,7 +52,23 @@ def meta(keytype, *args, **kwargs):
 
 @dispatch
 def _meta(c_type, *args, **kwargs):
-    """ If implementation for specified type doesn't exist..."""
+    """Helper function for :meth:`.meta`
+    
+    Parameters
+    ----------
+    c_type : type
+        The formal type that will be stored in the Table's 'value' column.
+    *args
+        Variable length argument list
+    *kwargs
+        Arbitrary length keyword arguments assigned to the table.
+
+    Note
+    ----
+    This function differs from the :meth:`.meta` function in that it
+    takes a formal type as its first argument, while the non-underscored
+    version handles string type descriptions.
+    """
     raise(NotImplementedError)
 
 @_meta.register(String)
