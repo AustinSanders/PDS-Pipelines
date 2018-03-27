@@ -2,6 +2,7 @@ import datetime
 import pytz
 import json
 from FindDI_Ready import archive_expired, volume_expired
+from RedisQueue import RedisQueue
 from db import db_connect
 
 
@@ -26,9 +27,9 @@ def main():
         # If any files within the archive are expired, send them to the queue
         if expired.count():
             # @TODO get rid of print statements or enable with --verbose?
-            for target in expired:
-                reddis_queue.QueueAdd(target.filename)
-            print('Archive {} DI Ready: {} Files'.format(target, str(Q)))
+            for f in expired:
+                reddis_queue.QueueAdd(f.filename)
+            print('Archive {} DI Ready: {} Files'.format(target, str(expired.count())))
         else:
             print('Archive {} DI Current'.format(target))
     return 0
