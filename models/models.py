@@ -29,11 +29,9 @@ def create_table(keytype, *args, **kwargs):
         print('Keytype {} not found\n'.format(keytype))
 
 
-# @TODO Bob/Scott/J ask about primary key
 class DataFiles(Base):
     __tablename__ = 'datafiles'
-    # @TODO add default = nextval('datafiles_upcid_seq'::regclass)
-    upcid = Column(Integer, primary_key=True)
+    upcid = Column(Integer, primary_key=True, autoincrement = True)
     isisid = Column(String(256))
     productid = Column(String(256))
     edr_source = Column(String(1024))
@@ -44,8 +42,7 @@ class DataFiles(Base):
 
 class Instruments(Base):
     __tablename__ = 'instruments_meta'
-    # @TODO add default nextval('instruments_meta_instrumentid_seq'::regclass)
-    instrumentid = Column(Integer, primary_key=True)
+    instrumentid = Column(Integer, primary_key=True, autoincrement = True)
     instrument = Column(String(256), nullable=False)
     displayname = Column(String(256))
     mission = Column(String(256))
@@ -54,17 +51,23 @@ class Instruments(Base):
     product_type = Column(String(8))
 
 
-# @TODO
-"""
 class Targets(Base):
     __table__ = Table('targets_meta', metadata, autoload=True)
-"""
+    targetid = Column(Integer, primary_key = True, autoincrement = True)
+    naifid = Column(Integer)
+    targetname = Column(String(20), nullable = False)
+    system = Column(String(20), nullable = False)
+    displayname = Column(String(20))
+    aaxisradius = Column(Float)
+    baxisradius = Column(Float)
+    caxisradius = Column(Float)
+    description = Column(String(1024))
+    iau_mean_radius = Column(Float)
 
 
 class Keywords(Base):
     __tablename__ = 'keywords'
-    # @TODO add default nextval('keywords_typeid_seq'::regclass)
-    typeid = Column(Integer, primary_key=True)
+    typeid = Column(Integer, primary_key=True, autoincrement = True)
     instrumentid = Column(Integer)
     datatype = Column(String(20), nullable=False)
     typename = Column(String(256))
