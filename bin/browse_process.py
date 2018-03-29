@@ -1,7 +1,9 @@
 #!/usgs/apps/anaconda/bin/python
-import os, sys, pvl
+import os
+import sys
+import pvl
 import logging
-import shutil 
+import shutil
 from pysis import isis
 from pysis.exceptions import ProcessError
 
@@ -9,6 +11,7 @@ from RedisQueue import *
 from Recipe import *
 
 import pdb
+
 
 def scaleFactor(line, sample):
 
@@ -27,16 +30,18 @@ def scaleFactor(line, sample):
     else:
         scalefactor = sample/maxSample
         testline = int(line/scalefactor)
-         
+
         if testline < minLine:
             scalefactor = line/minLine
 
     return scalefactor
 
+
 def makedir(inputfile):
 
     temppath = os.path.dirname(inputfile).lower()
-    finalpath = temppath.replace('/pds_san/pds_archive/', '/pds_san/PDS_Derived/UPC/images/')
+    finalpath = temppath.replace(
+        '/pds_san/pds_archive/', '/pds_san/PDS_Derived/UPC/images/')
 
     if not os.path.exists(finalpath):
         try:
@@ -50,17 +55,18 @@ def makedir(inputfile):
 
 def main():
 
-#    pdb.set_trace()
+    #    pdb.set_trace()
 
     workarea = '/scratch/pds_services/workarea/'
 
-##***************** Set up logging *****************
+# ***************** Set up logging *****************
     logger = logging.getLogger('Browse_Process')
     logger.setLevel(logging.INFO)
     logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Process.log')
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s, %(message)s')
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
-    logger.addHandler(logFileHandle)    
+    logger.addHandler(logFileHandle)
 
     RQ_main = RedisQueue('Browse_ReadyQueue')
 
@@ -73,24 +79,28 @@ def main():
             if 'Mars_Reconnaissance_Orbiter/CTX/' in inputfile:
                 mission = 'CTX'
 
-## ********** Derived DIR path Stuff **********************
+# ********** Derived DIR path Stuff **********************
             finalpath = makedir(inputfile)
 
             recipeOBJ = Recipe()
             recip_json = recipeOBJ.getRecipeJSON(mission, 'browse')
             recipeOBJ.AddJsonFile(recip_json)
 
+            infile = workarea + \
+                os.path.splitext(os.path.basename(inputfile))[
+                    0] + '.Binput.cub'
+            outfile = workarea + \
+                os.path.splitext(os.path.basename(inputfile))[
+                    0] + '.Boutput.cub'
 
-            infile = workarea + os.path.splitext(os.path.basename(inputfile))[0] + '.Binput.cub'
-            outfile = workarea + os.path.splitext(os.path.basename(inputfile))[0] + '.Boutput.cub'
-            
             status = 'success'
             for item in recipeOBJ.getProcesses():
                 if status == 'error':
                     break
                 elif status == 'success':
                     processOBJ = Process()
-                    processR = processOBJ.ProcessFromRecipe(item, recipeOBJ.getRecipe())
+                    processR = processOBJ.ProcessFromRecipe(
+                        item, recipeOBJ.getRecipe())
 
                     if '2isis' in item:
                         processOBJ.updateParameter('from_', inputfile)
@@ -118,7 +128,9 @@ def main():
                         processOBJ.updateParameter('to', outfile)
 
                     elif item == 'isis2std':
-                        outfile = finalpath + '/' + os.path.splitext(os.path.basename(inputfile))[0] + '.browse.jpg'
+                        outfile = finalpath + '/' + \
+                            os.path.splitext(os.path.basename(inputfile))[
+                                0] + '.browse.jpg'
                         processOBJ.updateParameter('from_', infile)
                         processOBJ.updateParameter('to', outfile)
 
@@ -141,12 +153,12 @@ def main():
                             logger.error('Process %s :: Error', k)
                             status = 'error'
 
-      
-            if status == 'success': 
+            if status == 'success':
                 os.remove(infile)
-                logger.info('Browse Process Success: %s', inputfile)  
+                logger.info('Browse Process Success: %s', inputfile)
         else:
             logger.error('File %s Not Found', inputfile)
+
 
 if __name__ == "__main__":
     sys.exit(main())

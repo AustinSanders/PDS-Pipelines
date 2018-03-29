@@ -1,6 +1,10 @@
 #!/usgs/apps/anaconda/bin/python
 
-import os, sys, subprocess, datetime, pytz
+import os
+import sys
+import subprocess
+import datetime
+import pytz
 import argparse
 import json
 
@@ -17,6 +21,7 @@ from db import Files, Archives, db_connect
 
 import pdb
 
+
 class Args:
     def __init__(self):
         pass
@@ -25,18 +30,19 @@ class Args:
         parser = argparse.ArgumentParser(description='Find Arcives for DI')
 
         parser.add_argument('--archive', '-a', dest="archive",
-                          help="Enter archive to test for DI")
+                            help="Enter archive to test for DI")
 
         parser.add_argument('--volume', '-v', dest="volume",
-                          help="Enter Volume to Test")
+                            help="Enter Volume to Test")
 
         args = parser.parse_args()
         self.archive = args.archive
         self.volume = args.volume
 
-def archive_expired(session, archiveID, files, testing_date = None):
+
+def archive_expired(session, archiveID, files, testing_date=None):
     if testing_date == None:
-        td = (datetime.datetime.now(pytz.utc)\
+        td = (datetime.datetime.now(pytz.utc)
               - datetime.timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
 
         testing_date = datetime.datetime.strptime(str(td), "%Y-%m-%d %H:%M:%S")
@@ -48,20 +54,23 @@ def archive_expired(session, archiveID, files, testing_date = None):
 
     return expired
 
-def volume_expired(session, archiveID, files, testing_date = None):
+
+def volume_expired(session, archiveID, files, testing_date=None):
     if testing_date == None:
-        td = (datetime.datetime.now(pytz.utc)\
+        td = (datetime.datetime.now(pytz.utc)
               - datetime.timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
 
         testing_date = datetime.datetime.strptime(str(td), "%Y-%m-%d %H:%M:%S")
 
     volstr = '%' + args.volume + '%'
     expired = session.query(Files).filter(files.c.archiveid == archiveID,
-                                        files.c.filename.like(volstr)).filter(or_(
-                                            cast(files.c.di_date, Date) < testing_date,
-                                            cast(files.c.di_date, Date) == None))
+                                          files.c.filename.like(volstr)).filter(or_(
+                                              cast(files.c.di_date,
+                                                   Date) < testing_date,
+                                              cast(files.c.di_date, Date) == None))
 
     return expired
+
 
 def main():
 
@@ -80,23 +89,25 @@ def main():
         print(e)
     else:
         # if db connection fails, there's no sense in doing this part
-        td = (datetime.datetime.now(pytz.utc)\
+        td = (datetime.datetime.now(pytz.utc)
               - datetime.timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
         testing_date = datetime.datetime.strptime(str(td), "%Y-%m-%d %H:%M:%S")
 
         if args.volume:
             expired = volume_expired(session, archiveID, files, testing_date)
             if expired.count():
-                print('Volume {} DI Ready: {} Files'.format(args.volume, str(expired.count())))
+                print('Volume {} DI Ready: {} Files'.format(
+                    args.volume, str(expired.count())))
             else:
                 print('Volume {} DI Current'.format(args.volume))
         else:
             expired = archive_expired(session, archiveID, files, testing_date)
             if expired.count():
-                print('Archive {} DI Ready: {} Files'.format(args.archive, str(expired.count())))
+                print('Archive {} DI Ready: {} Files'.format(
+                    args.archive, str(expired.count())))
             else:
                 print('Archive {} DI Current'.format(args.archive))
-                
+
 
 if __name__ == "__main__":
     sys.exit(main())

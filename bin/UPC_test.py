@@ -1,6 +1,9 @@
 #!/usgs/apps/anaconda/bin/python
 
-import os, subprocess, sys, datetime
+import os
+import subprocess
+import sys
+import datetime
 
 import sqlalchemy
 from sqlalchemy import *
@@ -12,6 +15,7 @@ from sqlalchemy.orm import eagerload
 
 from config import *
 
+
 class UPC_test(object):
 
     def __init__(self):
@@ -22,7 +26,6 @@ class UPC_test(object):
                                                                     upcdev_host,
                                                                     upcdev_port,
                                                                     upcdev_db))
-        
 
         metadata = MetaData(bind=engine)
         Session = sessionmaker(bind=engine)
@@ -35,5 +38,6 @@ class UPC_test(object):
 
     def get_keyword_typeid(self, key):
 
-        Qobj = self.session.query(self.DBT_keywords).filter(self.DBT_keywords.typename == key).first()
+        Qobj = self.session.query(self.DBT_keywords).filter(
+            self.DBT_keywords.typename == key).first()
         return Qobj.typeid

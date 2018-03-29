@@ -3,13 +3,15 @@
 import redis
 from config import redis_info as ri
 
+
 class RedisQueue(object):
 
     def __init__(self, name, namespace='queue'):
 
         # self.__db=redis.Redis(host=ri['host'], port=ri['port'], db=ri['db'])
-        self.__db=redis.StrictRedis(host=ri['host'], port=ri['port'], db=ri['db'])
-        self.id_name = '%s:%s' %(namespace, name)
+        #self.__db=redis.StrictRedis(host=ri['host'], port=ri['port'], db=ri['db'])
+        self.__db = redis.StrictRedis()
+        self.id_name = '%s:%s' % (namespace, name)
 
     def RemoveAll(self):
         self.__db.delete(self.id_name)
@@ -26,12 +28,12 @@ class RedisQueue(object):
     def QueueGet(self):
         item = self.__db.rpop(self.id_name)
         return item
-    
+
     def ListGet(self):
         list = self.__db.lrange(self.id_name, 0, -1)
         return list
 
-    def RecipeGet(self): 
+    def RecipeGet(self):
         recipe = self.__db.lrange(self.id_name, 0, -1)
         return recipe
 
