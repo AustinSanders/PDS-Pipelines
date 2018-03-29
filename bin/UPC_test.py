@@ -10,13 +10,20 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
 from sqlalchemy.orm import eagerload
 
+from config import *
 
 class UPC_test(object):
 
     def __init__(self):
 
         Base = declarative_base()
-        engine = create_engine('postgresql://upcmgr:un1pl@c0@dino.wr.usgs.gov:3309/upc_dev')
+        engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(upcdev_user,
+                                                                    upcdev_pass,
+                                                                    upcdev_host,
+                                                                    upcdev_port,
+                                                                    upcdev_db))
+        
+
         metadata = MetaData(bind=engine)
         Session = sessionmaker(bind=engine)
         self.session = Session
