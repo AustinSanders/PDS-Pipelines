@@ -17,7 +17,7 @@ from Recipe import *
 from UPCkeywords import *
 from UPC_test import *
 from db import db_connect
-import models
+import upc_models
 
 
 from sqlalchemy import *
@@ -77,7 +77,7 @@ def AddProcessDB(inputfile, outvalue):
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    # @TODO move to models.py
+    # @TODO move to pds_models.py
     class files(Base):
         __table__ = Table('files', metadata, autoload=True)
 
@@ -324,7 +324,7 @@ def main():
                         keyvalue = keywordsOBJ.getKeyword(keygroup, keyword)
                     print('test of keyvalue: %s' % keyvalue)
 
-                    DBinput = models.create_table(keytype,
+                    DBinput = upc_models.create_table(keytype,
                                                   upcid=UPCid,
                                                   typeid=keyword_Qobj.typeid,
                                                   value=keyvalue)
@@ -376,7 +376,7 @@ def main():
                             M_keygroup, M_keyword)
                     print('Mission keyvalue is: %s' % M_keyvalue)
 
-                    DBinput = models.create_table(M_keytype,
+                    DBinput = upc_models.create_table(M_keytype,
                                                   upcid=UPCid,
                                                   typeid=M_keyword_Qobj.typeid,
                                                   value=M_keyvalue)
