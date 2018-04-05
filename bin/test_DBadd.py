@@ -37,7 +37,13 @@ def main():
     workarea = '/scratch/pds_services/workarea/'
 
     Base = declarative_base()
-    engine = create_engine('postgresql://upcmgr:un1pl@c0@dino.wr.usgs.gov:3309/upc_dev')
+    engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(upcdev_user,
+                                                                upcdev_pass,
+                                                                upcdev_host,
+                                                                upcdev_port,
+                                                                upcdev_db))
+
+
     metadata = MetaData(bind=engine)
 
 #    datafiles = Table('datafiles', metadata, autoload=True)

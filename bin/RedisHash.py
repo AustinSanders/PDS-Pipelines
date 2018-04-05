@@ -1,12 +1,13 @@
 #!/usgs/apps/anaconda/bin/python
 
 import redis
+from config import redis_info as ri
 
 class RedisHash(object):
 
     def __init__(self, name, namespace='user'):
 
-        self.__db=redis.StrictRedis(host='redis.wr.usgs.gov', port=6379, db=0)
+        self.__db=redis.StrictRedis(host=ri['host'], port=ri['port'], db=ri['db'])
         self.id_name = '%s:%s' %(namespace, name)
 
     def IsInHash(self, element):

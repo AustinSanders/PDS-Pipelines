@@ -19,9 +19,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
 from sqlalchemy.ext.declarative import declarative_base
+from db import Files, Archives, db_connect
 
 from sqlalchemy import or_
-
 import pdb
 
 class Args:
@@ -87,6 +87,7 @@ class Args:
         self.volume = args.volume
         self.jobarray = args.jobarray
 
+
 def main():
 
     pdb.set_trace()
@@ -112,20 +113,8 @@ def main():
 
 
     try:
-        engine = create_engine('postgresql://pdsdi:dataInt@dino.wr.usgs.gov:3309/pds_di_prd')
-        metadata = MetaData(bind=engine)
-        files = Table('files', metadata, autoload=True)
-        archives = Table('archives', metadata, autoload=True)
-
-        class Files(object):
-            pass
-        class Archives(object):
-            pass
-
-        filesmapper = mapper(Files, files)
-        archivesmapper = mapper(Archives, archives)
-        Session = sessionmaker()
-        session = Session()
+        # Throws away engine information
+        session, files, archives, _ = db_connect('pdsdi')
         logger.info('DataBase Connecton: Success')
     except:
         logger.error('DataBase Connection: Error')
@@ -137,12 +126,22 @@ def main():
 
     if args.volume:
         volstr = '%' + args.volume + '%'
-        testcount = session.query(Files).filter(files.c.archiveid == archiveID, files.c.filename.like(volstr)).filter(or_(cast(files.c.di_date, Date) < testing_date, cast(files.c.di_date, Date) == None)).count()
+        testcount = session.query(Files).filter(
+            files.c.archiveid == archiveID, files.c.filename.like(volstr)).filter(
+                or_(cast(files.c.di_date, Date) < testing_date,
+                    cast(files.c.di_date, Date) == None)).count()
 #        logger.info('Query Count %s', testcount) 
-        testQ = session.query(Files).filter(files.c.archiveid == archiveID, files.c.filename.like(volstr)).filter(or_(cast(files.c.di_date, Date) < testing_date, cast(files.c.di_date, Date) == None))
+        testQ = session.query(Files).filter(
+            files.c.archiveid == archiveID, files.c.filename.like(volstr)).filter(
+                or_(cast(files.c.di_date, Date) < testing_date,
+                    cast(files.c.di_date, Date) == None))
     else:
-        testcount = session.query(Files).filter(files.c.archiveid == archiveID).filter(or_(cast(files.c.di_date, Date) < testing_date, cast(files.c.di_date, Date) == None)).count()
-        testQ = session.query(Files).filter(files.c.archiveid == archiveID).filter(or_(cast(files.c.di_date, Date) < testing_date, cast(files.c.di_date, Date) == None))
+        testcount = session.query(Files).filter(files.c.archiveid == archiveID).filter(
+            or_(cast(files.c.di_date, Date) < testing_date,
+                cast(files.c.di_date, Date) == None)).count()
+        testQ = session.query(Files).filter(files.c.archiveid == archiveID).filter(
+            or_(cast(files.c.di_date, Date) < testing_date,
+                cast(files.c.di_date, Date) == None))
         
     addcount = 0
     for element in testQ:

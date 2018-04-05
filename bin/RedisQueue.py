@@ -1,13 +1,14 @@
 #!/usgs/apps/anaconda/bin/python
 
 import redis
+from config import redis_info as ri
 
 class RedisQueue(object):
 
     def __init__(self, name, namespace='queue'):
 
-#        self.__db=redis.Redis(host='redis.wr.usgs.gov', port=6379, db=0)
-        self.__db=redis.StrictRedis(host='redis.wr.usgs.gov', port=6379, db=0)
+        # self.__db=redis.Redis(host=ri['host'], port=ri['port'], db=ri['db'])
+        self.__db=redis.StrictRedis(host=ri['host'], port=ri['port'], db=ri['db'])
         self.id_name = '%s:%s' %(namespace, name)
 
     def RemoveAll(self):

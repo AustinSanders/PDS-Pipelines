@@ -12,6 +12,7 @@ from sqlalchemy.orm.util import *
 from sqlalchemy.orm import eagerload
 
 from sqlalchemy.ext.declarative import declarative_base
+from db import db_connect
 
 class PDS_DBsessions(object):
 
@@ -19,38 +20,37 @@ class PDS_DBsessions(object):
 
         if database == "JOBS":
 
-            engine = create_engine('postgresql://jobmgr:jbMg!r@spacely.wr.usgs.gov:3309/clusterjobs_prd')
-            Session = sessionmaker(bind=engine)
-            self.session = Session()
+            # files and archives are returned, but we don't care about them so we throw them away
+            self.session, _, _, engine = db_connect('clusterjob_prd')
             DBsession = self.session
-
             Base = automap_base()
             Base.prepare(engine, reflect=True)
-
             self.processingTAB = Base.classes.processing
-
         elif database == "DI":
-
             base = automap_base()
-
-            engine = create_engine('postgresql://pdsdi:dataInt@dino.wr.usgs.gov:3309/pds_di_prd')
- 
+            # files and archives are returned, but we don't care about them so we throw them away
+            self.session, _, _ , engine = db_connect('pdsdi')
             base.prepare(engine, reflect=True)
-
             self.files = base.classes.files
             self.archives = base.classes.archives
-       
-            Session = sessionmaker(bind=engine)
-            self.session = Session()
             DBsession = self.session
-
             self.DB_files = self.files
 
 #        elif database == "UPC":
  
 #            base = automap_base()      
-#            engine = create_engine('postgresql://upcmgr:un1pl@c0@dino.wr.usgs.gov:3309/upc_dev')
-#            engine = create_engine('postgresql://upcmgr:un1pl@c0@dino.wr.usgs.gov:3309/upc_prd')
+
+            #engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(upcprd_user,
+                                                                        #upcprd_pass,
+                                                                        #upcprd_host,
+                                                                        #upcprd_port,
+                                                                        #upcprd_db))
+
+            #engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(upcdev_user,
+                                                                        #upcdev_pass,
+                                                                        #upcdev_host,
+                                                                        #upcdev_port,
+                                                                        #upcdev_db))
 
 #            mymetadata = MetaData()
 #            print mymetadata.tables

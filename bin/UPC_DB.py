@@ -10,17 +10,24 @@ from sqlalchemy.ext.declarative import declarative_base
 
 
 from PDS_DBsessions import *
+from config import *
 
 class UPC_DB(object):
 
     def __init__(self):
     
         Base = declarative_base()
-        engine = create_engine('postgresql://upcmgr:un1pl@c0@dino.wr.usgs.gov:3309/upc_dev')
+
+        engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(upcdev_user,
+                                                                    upcdev_pass,
+                                                                    upcdev_host,
+                                                                    upcdev_port,
+                                                                    upcdev_db))
+
         metadata = MetaData(bind=engine)
 
 
-        class Datafiles(Base):
+        class DataFiles(Base):
             __tablename__ = 'datafiles'
             __table__ =  Table('datafiles', metadata, autoload=True)
 
@@ -32,11 +39,11 @@ class UPC_DB(object):
 
 
 
-#        datamapper = mapper(Datafiles, datafiles)
+#        datamapper = mapper(DataFiles, datafiles)
         Session = sessionmaker(bind=engine)
         self.session = Session()
 
-        self.datafiles = self.Datafiles()
+        self.datafiles = self.DataFiles()
         self.targets = self.Targets()
 
     def testIsisId(self, isisid):
