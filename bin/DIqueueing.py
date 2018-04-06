@@ -23,25 +23,68 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
 from sqlalchemy.ext.declarative import declarative_base
-from db import Files, Archives, db_connect
 
 from sqlalchemy import or_
+
 import pdb
 
 
 class Args:
+    """
+    Creates an object 'parser', which is populated by the attributes 
+    'archive', 'volume', and 'jobarray'. 
+
+    Attributes
+    ----------
+    archive : str
+    volume : str
+    jobarray : str
+
+    Methods
+    -------
+    _init_(self)
+        constructor
+    parse_args(self)
+        Converts argument strings into objects that are attributes
+        of the namespace
+    """ 
     def __init__(self):
         pass
 
     def parse_args(self):
+        """
+        Defines how to parse command-line arguments
 
+        Parameters
+        ----------
+        name : str 
+              '--archive'
+
+        dest : str
+            name of attribute to be added to parser
+        
+        required : str
+            makes optional arguments required
+
+        help
+            contains brief description of argument
+
+        Returns
+        -------
+        args : 
+            object with attributes 'archive', 'volume', and 'jobarray'
+        """
+        
         parser = argparse.ArgumentParser(description='PDS DI Data Integrity')
-
+        
         parser.add_argument('--archive', '-a', dest="archive", required=True,
                             help="Enter archive - archive to ingest")
 
         parser.add_argument('--volume', '-v', dest="volume",
-                            help="Enter voluem to Ingest")
+
+                          help="Enter volume to Ingest")
+
+
 
         parser.add_argument('--jobarray', '-j', dest="jobarray",
                             help="Enter string to set job array size")
@@ -52,10 +95,10 @@ class Args:
         self.volume = args.volume
         self.jobarray = args.jobarray
 
-
 def main():
 
-    #    pdb.set_trace()
+
+    pdb.set_trace()
 
     args = Args()
     args.parse_args()
@@ -79,8 +122,20 @@ def main():
         logger.info('Queueing %s Volume', args.volume)
 
     try:
-        # Throws away engine information
-        session, files, archives, _ = db_connect('pdsdi')
+        engine = create_engine('postgresql://pdsdi:dataInt@dino.wr.usgs.gov:3309/pds_di_prd')
+        metadata = MetaData(bind=engine)
+        files = Table('files', metadata, autoload=True)
+        archives = Table('archives', metadata, autoload=True)
+
+        class Files(object):
+            pass
+        class Archives(object):
+            pass
+
+        filesmapper = mapper(Files, files)
+        archivesmapper = mapper(Archives, archives)
+        Session = sessionmaker()
+        session = Session()
         logger.info('DataBase Connecton: Success')
     except:
         logger.error('DataBase Connection: Error')
@@ -93,6 +148,7 @@ def main():
 
     if args.volume:
         volstr = '%' + args.volume + '%'
+
         testcount = session.query(Files).filter(
             files.c.archiveid == archiveID, files.c.filename.like(volstr)).filter(
                 or_(cast(files.c.di_date, Date) < testing_date,

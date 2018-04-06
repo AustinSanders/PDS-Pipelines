@@ -4,7 +4,40 @@ import subprocess
 
 
 class HPCjob(object):
+    """
+    Methods
+    -------
+    __init__():
+        constructor
+    setJobName():
 
+    setJobArray():
+
+    setCommand():
+
+    setStOut():
+
+    setStdError():
+
+    setWallClock():
+
+    setPartition():
+
+    setMemory():
+
+    setModule():
+
+    addPath():
+
+    makeJobFile():
+
+    Run():
+
+    Attributes
+    ----------
+    object : 
+
+    """
     def __init__(self):
 
         self.jobstring = "#!/bin/bash"
@@ -20,47 +53,93 @@ class HPCjob(object):
         self.memory = ''
 
     def setJobName(self, name):
+        """
+        Parameters
+        ----------
+        name
+        """
 
         self.name = "#SBATCH -J " + name
 
     def setJobArray(self, number):
-
+        """
+        Parameters
+        ----------
+        number
+        """
         self.array = "#SBATCH --array=1-" + str(number)
 
     def setCommand(self, cmd):
+         """
+        Parameters
+        ----------
+        cmd
+        """
 
         self.cmd = cmd
 
     def setStdOut(self, Ofile):
-
+        """
+        Parameters
+        ----------
+        Ofile
+        """
         self.Sout = "#SBATCH --output=" + Ofile
 
     def setStdError(self, Efile):
-
+        """
+        Parameters
+        ----------
+        Efile
+        """
         self.Serror = "#SBATCH --error=" + Efile
 
     def setWallClock(self, time):
-
+        """
+        Parameters
+        ----------
+        time
+        """
         self.Wall = "#SBATCH -t " + time
 
     def setPartition(self, item):
-
+        """
+        Parameters
+        ----------
+        item
+        """
         self.partition = "#SBATCH --partition=" + item
 
     def setMemory(self, item):
-
+        """
+        Parameters
+        ----------
+        item
+        """
         self.memory = "#SBATCH --mem-per-cpu=" + item
 
     def setModule(self, item):
-
+        """
+        Parameters
+        ----------
+        item
+        """
         self.module = "eval `/usr/bin/modulecmd bash load " + item + "`"
 
     def addPath(self, addpath):
-
+        """
+        Parameters
+        ----------
+        addpath
+        """
         self.path = "export PATH=" + addpath + ":$PATH"
 
     def MakeJobFile(self, filename):
-
+        """
+        Parameters
+        ----------
+        filename
+        """
         self.sbatchfile = filename
 
         file = open(filename, "w")
@@ -95,7 +174,11 @@ class HPCjob(object):
         file.close()
 
     def Run(self):
-
+        """
+        Returns
+        -------
+        result:
+        """
         SB = "sbatch " + str(self.sbatchfile)
         print(SB)
         print("Running sbatch")
