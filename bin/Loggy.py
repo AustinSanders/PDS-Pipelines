@@ -5,6 +5,7 @@ from collections import OrderedDict
 
 from SubLoggy import *
 
+
 class Loggy(object):
 
     def __init__(self, Lfile):
@@ -13,10 +14,8 @@ class Loggy(object):
         self.loggyDict = {}
         self.loggyDict[self.Lfile] = OrderedDict()
 
-
     def setFileStatus(self, item):
         pass
-
 
     def AddProcess(self, PD):
         self.loggyDict[self.Lfile].update(PD)

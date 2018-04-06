@@ -1,11 +1,14 @@
 #!/usgs/apps/anaconda/bin/python
 
-import os, subprocess, sys
+import os
+import subprocess
+import sys
 import json
 import redis
 from collections import OrderedDict
 
 from Recipe import *
+
 
 class Process(object):
 
@@ -15,14 +18,14 @@ class Process(object):
 
     def Process2JSON(self):
 
-#        processSTR = json.dumps(element)
+        #        processSTR = json.dumps(element)
         processSTR = json.dumps(self.process)
         return processSTR
 
     def JSON2Process(self, element):
-        
+
         JSONout = json.loads(element, object_pairs_hook=OrderedDict)
- 
+
         processDict = {}
         for process in JSONout:
             processDict[str(process)] = OrderedDict()
@@ -30,7 +33,7 @@ class Process(object):
             self.processName = process
             for key, value in JSONout[process].items():
                 self.process[self.processName][str(key)] = str(value)
- 
+
         return JSONout
 
     def Process2Redis(self, redisOBJ):
@@ -47,7 +50,7 @@ class Process(object):
         NewDict[newproc] = OrderedDict()
         for k, v, in self.process[self.processName].items():
             NewDict[newproc][k] = v
-        self.process = NewDict        
+        self.process = NewDict
         self.processName = newproc
 
     def getProcess(self):
@@ -63,15 +66,16 @@ class Process(object):
                 subfile = value.split('/')
                 value = subfile[-1]
             tempSTR += ' ' + key + '=' + value
-            
-        commandSTR = tempSTR.replace('from_', 'from')         
+
+        commandSTR = tempSTR.replace('from_', 'from')
         return commandSTR
 
     def LogHelpLink(self):
-        helplink = 'https://isis.astrogeology.usgs.gov/Application/presentation/Tabbed/' + self.processName + '/' + self.processName + '.html'
-        return helplink 
+        helplink = 'https://isis.astrogeology.usgs.gov/Application/presentation/Tabbed/' + \
+            self.processName + '/' + self.processName + '.html'
+        return helplink
 
-    def ProcessFromRecipe(self, process, recipe): 
+    def ProcessFromRecipe(self, process, recipe):
 
         for Rprocess in recipe:
             for key, value in Rprocess.items():
@@ -81,7 +85,7 @@ class Process(object):
         return self.process
 
     def updateParameter(self, param, newValue):
-            
+
         for key, value in self.process[self.processName].items():
             if key == param:
                 self.process[self.processName][key] = newValue
@@ -100,16 +104,16 @@ class Process(object):
         test = []
         test.append(param)
         test.append(newValue)
-        
+
         for k, v in testDict.items():
-            self.process[self.processName][str(k)] = str(v)  
+            self.process[self.processName][str(k)] = str(v)
 
     def GDAL_OBit(self, ibit):
 
         bitDICT = {'unsignedbyte': 'Byte',
                    'signedword': 'Int16',
                    'real': 'Float32'
-                  }
+                   }
 
         return bitDICT[ibit]
 
@@ -121,9 +125,3 @@ class Process(object):
                  }
 
         return cDICT[format]
-
- 
-          
-
-
-

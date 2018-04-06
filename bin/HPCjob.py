@@ -2,6 +2,7 @@
 
 import subprocess
 
+
 class HPCjob(object):
 
     def __init__(self):
@@ -27,7 +28,7 @@ class HPCjob(object):
         self.array = "#SBATCH --array=1-" + str(number)
 
     def setCommand(self, cmd):
- 
+
         self.cmd = cmd
 
     def setStdOut(self, Ofile):
@@ -53,9 +54,9 @@ class HPCjob(object):
     def setModule(self, item):
 
         self.module = "eval `/usr/bin/modulecmd bash load " + item + "`"
-  
+
     def addPath(self, addpath):
-    
+
         self.path = "export PATH=" + addpath + ":$PATH"
 
     def MakeJobFile(self, filename):
@@ -63,20 +64,20 @@ class HPCjob(object):
         self.sbatchfile = filename
 
         file = open(filename, "w")
-        
+
         file.write("#!/bin/bash\n")
         if self.name:
             file.write("\n" + self.name)
         if self.Sout:
-	    file.write("\n" + self.Sout)
-	if self.Serror:
-	    file.write("\n" + self.Serror)
-	if self.partition:
-	    file.write("\n" +self.partition)
-	if self.array:
-	    file.write("\n" + self.array)
+            file.write("\n" + self.Sout)
+        if self.Serror:
+            file.write("\n" + self.Serror)
+        if self.partition:
+            file.write("\n" + self.partition)
+        if self.array:
+            file.write("\n" + self.array)
         if self.Wall:
-	    file.write("\n" + self.Wall)
+            file.write("\n" + self.Wall)
         if self.memory:
             file.write("\n" + self.memory)
 
@@ -87,7 +88,7 @@ class HPCjob(object):
         if self.path:
             file.write("\n\n" + self.path)
             file.write("\necho `printenv PATH`")
- 
+
         if self.cmd:
             file.write("\n\n" + self.cmd)
 
@@ -96,11 +97,8 @@ class HPCjob(object):
     def Run(self):
 
         SB = "sbatch " + str(self.sbatchfile)
-	print SB
-	print "Running sbatch"
+        print(SB)
+        print("Running sbatch")
         result = subprocess.call(SB, shell=True)
 
-	return result
-
-        
-                  
+        return result
