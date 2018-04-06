@@ -5,6 +5,7 @@ from collections import OrderedDict
 
 from SubLoggy import *
 
+
 class Loggy(object):
 """
 Parameters
@@ -27,7 +28,6 @@ Loggy2json
         self.loggyDict = {}
         self.loggyDict[self.Lfile] = OrderedDict()
 
-
     def setFileStatus(self, item):
         """
         Parameters
@@ -35,7 +35,6 @@ Loggy2json
         item
         """"
         pass
-
 
     def AddProcess(self, PD):
         """

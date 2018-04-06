@@ -4,6 +4,7 @@ import pvl
 import json
 from collections import OrderedDict
 
+
 class MakeMap(object):
 """
 Parameters
@@ -35,10 +36,10 @@ Map2File
 """
 
     def __init__(self):
-        
+
         self.mapDICT = {}
         self.mapDICT = OrderedDict()
-        self.mapDICT['Group'] =  'Mapping'
+        self.mapDICT['Group'] = 'Mapping'
 
     def Projection(self, proj):
     """
@@ -71,14 +72,16 @@ Map2File
     firstParallel
     """
         self.mapDICT['FirstStandardParallel'] = firstParallel
-   
+
     def SecondParallel(self, secondParallel):
+
     """
     Parameters
     ----------
     secondParallel
     """
         self.mapDICT['SecondStandardParallel'] = secondParallel 
+      
 
     def Target(self, target):
     """
@@ -159,7 +162,7 @@ Map2File
     item
     """
         self.mapDICT['MaximumLongitude'] = item
- 
+
     def PixelRes(self, res):
     """
     Parameters
@@ -177,7 +180,7 @@ Map2File
         self.mapDICT['End_Group'] = 'Mapping'
 
         mappvl = pvl.dumps(self.mapDICT)
-        self.mappvl = mappvl 
+        self.mappvl = mappvl
 
         return mappvl
 
@@ -202,4 +205,3 @@ Map2File
         file = open(filename, 'w')
         file.write(tempPVL)
         file.close()
-

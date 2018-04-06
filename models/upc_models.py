@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import (Table, MetaData, Column, Integer, Float,
+from sqlalchemy import (Column, Integer, Float,
                         Time, String, Boolean, PrimaryKeyConstraint)
 from geoalchemy2 import Geometry
 
@@ -52,7 +52,7 @@ class Instruments(Base):
 
 
 class Targets(Base):
-    __table__ = Table('targets_meta', metadata, autoload=True)
+    __tablename__ = 'targets_meta'
     targetid = Column(Integer, primary_key = True, autoincrement = True)
     naifid = Column(Integer)
     targetname = Column(String(20), nullable = False)

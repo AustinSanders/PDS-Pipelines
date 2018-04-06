@@ -2,6 +2,7 @@
 
 from collections import OrderedDict
 
+
 class SubLoggy(object):
 """
 Parameters
@@ -18,6 +19,7 @@ errorOut
 getSLprocess
 """
     def __init__(self, process):
+    
         self.process = process
         self.PDict = {}
         self.PDict[self.process] = OrderedDict()
@@ -28,6 +30,7 @@ getSLprocess
     ----------
     stat
     """
+  
         self.PDict[self.process]['status'] = stat 
 
     def setCommand(self, cmd):
@@ -61,5 +64,3 @@ getSLprocess
     self.PDict
     """
         return self.PDict 
-
-
