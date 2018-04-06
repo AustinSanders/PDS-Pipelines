@@ -17,13 +17,12 @@ from Recipe import *
 from UPCkeywords import *
 from UPC_test import *
 from db import db_connect
-import upc_models
+from models import upc_models, pds_models
 
 
 from sqlalchemy import *
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import mapper
-from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
 from sqlalchemy.ext.declarative import declarative_base
@@ -72,30 +71,23 @@ def AddProcessDB(inputfile, outvalue):
     # pdb.set_trace()
 
     Base = declarative_base()
-    session, _, _, engine = db_connect('pdsdi')
+    session, _, _, engine = db_connect('pdsdi_dev')
     metadata = MetaData(bind=engine)
     Session = sessionmaker(bind=engine)
     session = Session()
-
-    # @TODO move to pds_models.py
-    class files(Base):
-        __table__ = Table('files', metadata, autoload=True)
-
-    class process_runs(Base):
-        __table__ = Table('process_runs', metadata, autoload=True)
 
     parts = inputfile.split("/")
 
     testfile = parts[-3] + "/" + parts[-2] + "/" + parts[-1]
     testfile2 = '%' + testfile + '%'
 
-    fileQobj = session.query(files).filter(
-        files.filename.like(testfile2)).first()
+    fileQobj = session.query(pds_models.Files).filter(
+        pds_models.Files.filename.like(testfile2)).first()
     fileid = fileQobj.fileid
 
     date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
 
-    processDB = process_runs(fileid=fileQobj.fileid,
+    processDB = pds_models.ProcessRuns(fileid=fileQobj.fileid,
                              process_date=date,
                              process_typeid='5',
                              process_out=outvalue)
@@ -117,13 +109,15 @@ def main():
     Base = declarative_base()
 
     # Throws away file and archive information
-    session, _, _, engine = create_engine('upcprd')
+    session, _, _, engine = db_connect('upcdev')
     metadata = MetaData(bind=engine)
 
     # ***************** Set up logging *****************
     logger = logging.getLogger('UPC_Process')
     logger.setLevel(logging.INFO)
-    logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Process.log')
+    #logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Process.log')
+    # @TODO change before production
+    logFileHandle = logging.FileHandler('/home/arsanders/PDS-Pipelines/Process.log')
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
@@ -391,11 +385,14 @@ def main():
                 checksum = stdout.split()[0]
 
                 # set typeid to 5 on the prod DB - 101 for dev
+                # production typeid 5 = checksum
+                # dev typeid 101 = checksum
                 DBinput = meta_string(upcid=UPCid,
                                       typeid='101',
                                       value=checksum)
                 session.add(DBinput)
                 # add error keyword to UPC
+                # typeid 595 = error flag
                 DBinput = meta_boolean(upcid=UPCid,
                                        typeid='595',
                                        value='false')
@@ -438,30 +435,42 @@ def main():
                     errorMSG = 'Error running {} on file {}'.format(
                         processError, inputfile)
 
+                    # typeid 84 = processdate
                     DBinput = MetaTime(upcid=UPCid,
                                        typeid='84',  # 84 in prod
                                        value=date)
                     session.add(DBinput)
+
+                    # typeid 673 = errortype
                     DBinput = MetaString(upcid=UPCid,
                                          typeid='673',  # 673 in prod
                                          value=processError)
                     session.add(DBinput)
+
+                    # typeid 596 = errormessage
                     DBinput = MetaString(upcid=UPCid,
                                          typeid='596',  # 596 in prod
                                          value=errorMSG)
                     session.add(DBinput)
+
+                    # typeid 595 = error
                     DBinput = MetaBoolean(upcid=UPCid,
                                           typeid='595',  # 595 in prod
                                           value='true')
                     session.add(DBinput)
+
+                    # typeid 597 = isisfootprint
                     DBinput = MetaGeometry(upcid=UPCid,
                                            typeid='597',  # 597 in prod
                                            value='POINT(361 0)')
                     session.add(DBinput)
+
+                    # typeid 598 = isiscentroid
                     DBinput = MetaGeometry(upcid=UPCid,
                                            typeid='598',  # 598 in prod
                                            value='POINT(361 0)')
                     session.add(DBinput)
+
                     session.commit()
 
                 else:
@@ -495,38 +504,54 @@ def main():
                     errorMSG = 'Error running {} on file {}'.format(
                         processError, inputfile)
 
+                    # typeid 84 = processdate
                     DBinput = MetaTime(upcid=UPCid,
                                        typeid='84',  # 84 in prod
                                        value=date)
                     session.add(DBinput)
+
+                    # typeid 673 = errortype
                     DBinput = MetaString(upcid=UPCid,
                                          typeid='673',  # 673 in prod
                                          value=processError)
                     session.add(DBinput)
+
+                    # typeid 596 = errormessage
                     DBinput = MetaString(upcid=UPCid,
                                          typeid='596',  # 596 in prod
                                          value=errorMSG)
                     session.add(DBinput)
+
+                    # typeid 595 = error flag
                     DBinput = MetaBoolean(upcid=UPCid,
                                           typeid='595',  # 595 in prod
                                           value='true')
                     session.add(DBinput)
+
+                    # typeid 597 = isisfootprint
                     DBinput = MetaGeometry(upcid=UPCid,
                                            typeid='597',  # 597 in prod
                                            value='POINT(361 0)')
                     session.add(DBinput)
+
+                    # typeid 598 = isiscentroid
                     DBinput = MetaGeometry(upcid=UPCid,
                                            typeid='598',  # 598 in prod
                                            value='POINT(361 0)')
                     session.add(DBinput)
+
+                    # typeid 52 = starttime
                     DBinput = MetaTime(upcid=UPCid,
                                        typeid='52',  # 52 in prod
                                        value=label['IsisCube']['Instrument']['StartTime'])
                     session.add(DBinput)
+
+                    # typeid 47 = stoptime
                     DBinput = MetaTime(upcid=UPCid,
                                        typeid='47',  # 47 in prod
                                        value=label['IsisCube']['Instrument']['StopTime'])
                     session.add(DBinput)
+
                     session.commit()
 
                 AddProcessDB(inputfile, 'f')
