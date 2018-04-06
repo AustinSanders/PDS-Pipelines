@@ -16,13 +16,16 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
 from sqlalchemy.ext.declarative import declarative_base
-from db import Files, Archives, db_connect
 
 
 import pdb
 
 def getArchiveID(inputfile):
-
+"""
+Parameters
+----------
+inputfile
+""""
     if 'Mars_Reconnaissance_Orbiter/CTX' in inputfile:
         archive = 'mroCTX'
     elif 'Mars_Reconnaissance_Orbiter/MARCI' in inputfile:
@@ -92,8 +95,20 @@ def main():
     RQ_pilotB = RedisQueue('PilotB_ReadyQueue')
 
     try:
-        # Throws away engine information
-        session, files, archives, _ = db_connect('pdsdi')
+        engine = create_engine('postgresql://pdsdi:dataInt@dino.wr.usgs.gov:3309/pds_di_prd')
+        metadata = MetaData(bind=engine)
+        files = Table('files', metadata, autoload=True)
+        archives = Table('archives', metadata, autoload=True)
+
+        class Files(object):
+            pass
+        class Archives(object):
+            pass
+
+        filesmapper = mapper(Files, files)
+        archivesmapper = mapper(Archives, archives)
+        Session = sessionmaker()
+        session = Session()
         logger.info('DataBase Connecton: Success')
     except:   
         logger.error('DataBase Connection: Error')

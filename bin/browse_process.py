@@ -11,7 +11,12 @@ from Recipe import *
 import pdb
 
 def scaleFactor(line, sample):
-
+"""
+Parameters
+----------
+line : 
+sample :
+"""
     maxLine = 900
     maxSample = 900
     minLine = 300
@@ -34,7 +39,11 @@ def scaleFactor(line, sample):
     return scalefactor
 
 def makedir(inputfile):
-
+"""
+Parameters
+----------
+inputfile
+"""
     temppath = os.path.dirname(inputfile).lower()
     finalpath = temppath.replace('/pds_san/pds_archive/', '/pds_san/PDS_Derived/UPC/images/')
 
