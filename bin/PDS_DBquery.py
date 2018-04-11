@@ -13,15 +13,6 @@ class PDS_DBquery(PDS_DBsessions):
 Parameters
 ----------
 PDS_DBsessions
-
-Methods
--------
-jobKey
-jobXML4Key
-setJobsQueued
-setJobsStarted
-setJobsFinished
-addErrors
 """
     def jobKey(self):
 
@@ -69,7 +60,14 @@ addErrors
 
     def setJobsStarted(self, inkey):
     """
-    
+    Parameters
+    ----------
+    inkey
+
+    Returns
+    -------
+    Success
+    Error
     """
         date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
         try:
@@ -82,6 +80,16 @@ addErrors
             return 'Error'
 
     def setJobsFinished(self, inkey):
+    """
+    Parameters
+    ----------
+    inkey
+
+    Reurns
+    ------
+    Success
+    Error
+    """
         date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
         try:
             queryOBJ = self.session.query(self.processingTAB).filter(
@@ -93,6 +101,17 @@ addErrors
             return 'Error'
 
     def addErrors(self, key, errorxml):
+    """
+    Parameters
+    ----------
+    key
+    errorxml
+
+    Returns
+    -------
+    Success
+    Error
+    """
         try:
             queryOBJ = self.session.query(self.processingTAB).filter(
                 self.processingTAB.key == key).one()

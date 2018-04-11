@@ -11,18 +11,36 @@ from Recipe import *
 
 
 class Process(object):
-
+"""
+Attributes
+----------
+processName
+"""
     def __init__(self):
 
         self.processName = ""
 
     def Process2JSON(self):
+    """
+    Returns
+    ------
+    processSTR
+    """
 
         #        processSTR = json.dumps(element)
         processSTR = json.dumps(self.process)
         return processSTR
 
     def JSON2Process(self, element):
+    """
+    Parameters
+    ----------
+    element
+
+    Returns
+    -------
+    JSONout
+    """
 
         JSONout = json.loads(element, object_pairs_hook=OrderedDict)
 
@@ -37,14 +55,29 @@ class Process(object):
         return JSONout
 
     def Process2Redis(self, redisOBJ):
+    """
+    Parameters
+    ----------
+    redisOBJ
+    """
 
         jsonSTR = json.dumps(self.process)
         redisOBJ.QueueAdd(jsonSTR)
 
     def setProcess(self, process):
+    """
+    Parameters
+    ----------
+    process
+    """
         self.processName = str(process)
 
     def ChangeProcess(self, newproc):
+    """
+    Parameters
+    ----------
+    newproc
+    """
 
         NewDict = {}
         NewDict[newproc] = OrderedDict()
@@ -54,12 +87,27 @@ class Process(object):
         self.processName = newproc
 
     def getProcess(self):
+    """
+    Returns
+    -------
+    process
+    """
         return self.process
 
     def getProcessName(self):
+    """
+    Reurns
+    ------
+    processName
+    """
         return self.processName
 
     def LogCommandline(self):
+    """
+    Returns
+    -------
+    commandSTr
+    """
         tempSTR = self.processName
         for key, value in self.process[self.processName].items():
             if key == 'from_' or key == 'to' or key == 'map':
@@ -71,12 +119,21 @@ class Process(object):
         return commandSTR
 
     def LogHelpLink(self):
+    """
+    Returns
+    -------
+    helplink
+    """
         helplink = 'https://isis.astrogeology.usgs.gov/Application/presentation/Tabbed/' + \
             self.processName + '/' + self.processName + '.html'
         return helplink
 
     def ProcessFromRecipe(self, process, recipe):
-
+    """
+    Returns
+    -------
+    process
+    """
         for Rprocess in recipe:
             for key, value in Rprocess.items():
                 if key == process:
@@ -85,12 +142,23 @@ class Process(object):
         return self.process
 
     def updateParameter(self, param, newValue):
+    """
+    Parameters
+    ----------
+    param
+    newValue
+    """
 
         for key, value in self.process[self.processName].items():
             if key == param:
                 self.process[self.processName][key] = newValue
 
     def newProcess(self, process):
+    """
+    Parameters
+    ----------
+    process
+    """
 
         processDict = {}
         processDict[process] = OrderedDict()
@@ -98,7 +166,12 @@ class Process(object):
         self.processName = process
 
     def AddParameter(self, param, newValue):
-
+    """
+    Parameters
+    ----------
+    param
+    newValue
+    """
         testDict = {param: newValue}
 
         test = []
@@ -109,7 +182,15 @@ class Process(object):
             self.process[self.processName][str(k)] = str(v)
 
     def GDAL_OBit(self, ibit):
+    """
+    Parameters
+    ----------
+    ibit
 
+    Returns
+    -------
+    bitDICT[ibit]
+    """
         bitDICT = {'unsignedbyte': 'Byte',
                    'signedword': 'Int16',
                    'real': 'Float32'
@@ -118,6 +199,15 @@ class Process(object):
         return bitDICT[ibit]
 
     def GDAL_Creation(self, format):
+    """
+    Parameters
+    ----------
+    format
+
+    Returns
+    -------
+    cDICT[format]
+    """
 
         cDICT = {'JPEG': 'quality=100',
                  'JP2KAK': 'quality=100',

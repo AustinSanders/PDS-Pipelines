@@ -5,37 +5,19 @@ import subprocess
 
 class HPCjob(object):
     """
-    Methods
-    -------
-    __init__():
-        constructor
-    setJobName():
-
-    setJobArray():
-
-    setCommand():
-
-    setStOut():
-
-    setStdError():
-
-    setWallClock():
-
-    setPartition():
-
-    setMemory():
-
-    setModule():
-
-    addPath():
-
-    makeJobFile():
-
-    Run():
-
     Attributes
     ----------
-    object : 
+    jobstring
+    name
+    array
+    cmd
+    Sout
+    Serror
+    Wall
+    module
+    path
+    partition
+    memory
 
     """
     def __init__(self):

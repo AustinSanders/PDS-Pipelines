@@ -19,6 +19,10 @@ Parameters
 ----------
 line : 
 sample :
+
+Returns
+-------
+scalefactor
 """
     maxLine = 900
     maxSample = 900
@@ -47,6 +51,10 @@ def makedir(inputfile):
 Parameters
 ----------
 inputfile
+
+Returns
+-------
+finalpath
 """
     temppath = os.path.dirname(inputfile).lower()
     finalpath = temppath.replace(

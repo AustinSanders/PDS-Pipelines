@@ -39,14 +39,6 @@ class Args:
     archive : str
     volume : str
     jobarray : str
-
-    Methods
-    -------
-    _init_(self)
-        constructor
-    parse_args(self)
-        Converts argument strings into objects that are attributes
-        of the namespace
     """ 
     def __init__(self):
         pass

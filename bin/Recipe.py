@@ -13,12 +13,26 @@ from RedisQueue import *
 
 
 class Recipe(Process):
+"""
+Parameters
+----------
+Process
+
+Attributes
+----------
+recipe
+"""
 
     def __init__(self):
 
         self.recipe = []
 
     def AddJsonFile(self, file):
+    """
+    Parameters
+    ----------
+    file
+    """
 
         testjson = json.loads(open(file).read(), object_pairs_hook=OrderedDict)
 
@@ -32,10 +46,24 @@ class Recipe(Process):
             self.recipe.append(processDict)
 
     def getRecipe(self):
-
+    """
+    Returns
+    -------
+    self.recipe
+    """
         return self.recipe
 
     def getRecipeJSON(self, mission, process):
+    """
+    Parameters
+    ----------
+    mission
+    process
+
+    Returns
+    -------
+    output
+    """
 
         if process == 'service':
             servicedict = {'ISSNA': '/usgs/cdev/PDS/recipe/POWrecipeISSNA.json',
@@ -85,6 +113,11 @@ class Recipe(Process):
         return output
 
     def getProcesses(self):
+    """
+    Returns
+    -------
+    processList
+    """
 
         processList = []
         for Tkey in self.recipe:
@@ -94,10 +127,23 @@ class Recipe(Process):
         return processList
 
     def AddProcess(self, process):
-
+    """
+    Parameters
+    ----------
+    process
+    """
         self.recipe.append(process)
 
     def TestgetStep(self, file):
+    """
+    Parameters
+    ----------
+    file
+
+    Returns
+    -------
+    stepList
+    """
         stepList = []
         testjson = json.loads(open(file).read(), object_pairs_hook=OrderedDict)
 
@@ -107,7 +153,12 @@ class Recipe(Process):
         return stepList
 
     def TestRecipe(self, file, element):
-
+    """
+    Parameters
+    ----------
+    file
+    element
+    """
         testjson = json.loads(open(file).read(), object_pairs_hook=OrderedDict)
 
         for IP in testjson['recipe'][element]:

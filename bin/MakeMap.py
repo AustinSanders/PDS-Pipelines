@@ -7,32 +7,10 @@ from collections import OrderedDict
 
 class MakeMap(object):
 """
-Parameters
+Attributes
 ----------
-object
+mapDICT
 
-Methods
--------
-__init__
-Projection
-CLat
-CLon
-FirstParallel
-SecondParallel
-Target
-ERadius
-PRadius
-LatType
-LonDirection
-LonDomain
-MinLat
-MaxLat
-MinLon
-MaxLon
-PixelRes
-Map2pvl
-Map2JSON
-Map2File
 """
 
     def __init__(self):

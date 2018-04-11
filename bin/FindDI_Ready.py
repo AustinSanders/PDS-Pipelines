@@ -23,6 +23,12 @@ import pdb
 
 
 class Args:
+    """
+    Attributes
+    ----------
+    archive
+    volume
+    """
     def __init__(self):
         pass
 
@@ -41,6 +47,18 @@ class Args:
 
 
 def archive_expired(session, archiveID, files, testing_date=None):
+    """
+    Parameters
+    ----------
+    session
+    archiveID
+    files
+    testing_date
+
+    Returns
+    -------
+    expired
+    """
     if testing_date == None:
         td = (datetime.datetime.now(pytz.utc)
               - datetime.timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
@@ -56,6 +74,18 @@ def archive_expired(session, archiveID, files, testing_date=None):
 
 
 def volume_expired(session, archiveID, files, testing_date=None):
+    """
+    Parameters
+    ----------
+    session
+    archiveID
+    files
+    testing_date
+
+    Returns
+    -------
+    expired
+    """
     if testing_date == None:
         td = (datetime.datetime.now(pytz.utc)
               - datetime.timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")

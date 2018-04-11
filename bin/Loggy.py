@@ -8,22 +8,18 @@ from SubLoggy import *
 
 class Loggy(object):
 """
-Parameters
-----------
-object
-Methods
--------
-__init__
-setFileStatus
-addProcess
-Loggy2json
+Attributes
+---------
+Lfile
+loggyDict
+
 """
     def __init__(self, Lfile):
         """
         Parameters
         ----------
         Lfile
-        """"
+        """
         self.Lfile = Lfile
         self.loggyDict = {}
         self.loggyDict[self.Lfile] = OrderedDict()
@@ -33,7 +29,7 @@ Loggy2json
         Parameters
         ----------
         item
-        """"
+        """
         pass
 
     def AddProcess(self, PD):
@@ -41,7 +37,7 @@ Loggy2json
         Parameters
         ----------
         PD
-        """"
+        """
         self.loggyDict[self.Lfile].update(PD)
 
     def Loggy2json(self):
@@ -49,6 +45,6 @@ Loggy2json
         Returns
         ----------
         Ljson
-        """"
+        """
         Ljson = json.dumps(self.loggyDict)
         return Ljson

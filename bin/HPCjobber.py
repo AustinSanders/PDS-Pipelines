@@ -15,6 +15,12 @@ import pdb
 
 
 class Args:
+    """
+    Attributes
+    ----------
+    process
+    jobarray
+    """
     def __init__(self):
         pass
 
