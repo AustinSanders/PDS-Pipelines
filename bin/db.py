@@ -13,6 +13,18 @@ class Archives(object):
 
 
 def db_connect(cred):
+"""
+Parameters
+----------
+cred:
+
+Returns
+-------
+session
+files
+archives
+engine
+"""
     try:
         engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(c[cred]['user'],
                                                                     c[cred]['pass'],

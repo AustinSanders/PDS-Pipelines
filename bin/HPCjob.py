@@ -7,17 +7,17 @@ class HPCjob(object):
     """
     Attributes
     ----------
-    jobstring:str
-    name:str
-    array:str
-    cmd:str
-    Sout:str
-    Serror:str
-    Wall:str
-    module:str
-    path:str
-    partition:str
-    memory:str
+    jobstring : str
+    name : str
+    array : str
+    cmd : str
+    Sout : str
+    Serror : str
+    Wall : str
+    module : str
+    path : str
+    partition : str
+    memory : str
     """
     def __init__(self):
 
@@ -35,47 +35,60 @@ class HPCjob(object):
 
     def setJobName(self, name):
         """
-        creates a string from two other strings
+        Concatenates strings
 
-        adds 'name' to the string "#SBATCH -J "
+        Adds 'name' to the string "#SBATCH -J "
 
         Parameters
         ----------
-        name:str
+        name : str
         """
 
         self.name = "#SBATCH -J " + name
 
     def setJobArray(self, number):
         """
+        Concatenates strings
+
+        Converts 'number' to a string an concatenates it with 
+        "#SBATCH --array=1-"
+
         Parameters
         ----------
-        number:int
+        number : int
         """
         self.array = "#SBATCH --array=1-" + str(number)
 
     def setCommand(self, cmd):
-         """
+        """
         Parameters
         ----------
-        cmd:str
+        cmd : str
         """
 
         self.cmd = cmd
 
     def setStdOut(self, Ofile):
         """
+        Concatenates strings
+
+        Concatenates 'Ofile' and "#SBATCH --output="
+
         Parameters
         ----------
-        Ofile:str
+        Ofile : str
         """
         self.Sout = "#SBATCH --output=" + Ofile
 
     def setStdError(self, Efile):
         """
+        Concatenates strings
+
+        Concatenates "#SBATCH --error=" and 'Efile'
+
         Parameters
         ----------
-        Efile
+        Efile : str
         """
         self.Serror = "#SBATCH --error=" + Efile
 
@@ -83,7 +96,7 @@ class HPCjob(object):
         """
         Parameters
         ----------
-        time
+        time : str
         """
         self.Wall = "#SBATCH -t " + time
 
@@ -91,7 +104,8 @@ class HPCjob(object):
         """
         Parameters
         ----------
-        item
+        item : str
+
         """
         self.partition = "#SBATCH --partition=" + item
 
@@ -99,7 +113,8 @@ class HPCjob(object):
         """
         Parameters
         ----------
-        item
+        item : str
+
         """
         self.memory = "#SBATCH --mem-per-cpu=" + item
 
@@ -107,7 +122,7 @@ class HPCjob(object):
         """
         Parameters
         ----------
-        item
+        item : str
         """
         self.module = "eval `/usr/bin/modulecmd bash load " + item + "`"
 
@@ -115,7 +130,7 @@ class HPCjob(object):
         """
         Parameters
         ----------
-        addpath
+        addpath : str
         """
         self.path = "export PATH=" + addpath + ":$PATH"
 

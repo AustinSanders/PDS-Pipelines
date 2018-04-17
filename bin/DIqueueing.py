@@ -30,10 +30,7 @@ import pdb
 
 
 class Args:
-    """
-    Creates an object 'parser', which is populated by the attributes 
-    'archive', 'volume', and 'jobarray'. 
-
+    """ 
     Attributes
     ----------
     archive : str

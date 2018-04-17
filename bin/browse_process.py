@@ -25,7 +25,7 @@ sample:int
 Returns
 -------
 scalefactor:int
-ratio of 'line' to maxLine or minLine and 'sample' to maxSample or minSample
+    ratio of 'line' to maxLine or minLine and 'sample' to maxSample or minSample
 """
     maxLine = 900
     maxSample = 900
