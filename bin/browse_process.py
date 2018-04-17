@@ -15,14 +15,17 @@ import pdb
 
 def scaleFactor(line, sample):
 """
+
 Parameters
 ----------
-line : 
-sample :
+line:int
+
+sample:int
 
 Returns
 -------
-scalefactor
+scalefactor:int
+ratio of 'line' to maxLine or minLine and 'sample' to maxSample or minSample
 """
     maxLine = 900
     maxSample = 900

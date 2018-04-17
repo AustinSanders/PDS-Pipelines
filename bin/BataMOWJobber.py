@@ -21,12 +21,20 @@ import pdb
 
 class jobXML(object):
     """
+
     Attributes
     ----------
-    root
+    root:string
+        parses an XML section from a string constant
+        returns an Element instance
     """
 
     def __init__(self, xml):
+    """
+    Parameters
+    ----------
+    xml:str
+    """
 
         self.root = ET.fromstring(str(xml))
 

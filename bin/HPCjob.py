@@ -7,18 +7,17 @@ class HPCjob(object):
     """
     Attributes
     ----------
-    jobstring
-    name
-    array
-    cmd
-    Sout
-    Serror
-    Wall
-    module
-    path
-    partition
-    memory
-
+    jobstring:str
+    name:str
+    array:str
+    cmd:str
+    Sout:str
+    Serror:str
+    Wall:str
+    module:str
+    path:str
+    partition:str
+    memory:str
     """
     def __init__(self):
 
@@ -36,9 +35,13 @@ class HPCjob(object):
 
     def setJobName(self, name):
         """
+        creates a string from two other strings
+
+        adds 'name' to the string "#SBATCH -J "
+
         Parameters
         ----------
-        name
+        name:str
         """
 
         self.name = "#SBATCH -J " + name
@@ -47,7 +50,7 @@ class HPCjob(object):
         """
         Parameters
         ----------
-        number
+        number:int
         """
         self.array = "#SBATCH --array=1-" + str(number)
 
@@ -55,7 +58,7 @@ class HPCjob(object):
          """
         Parameters
         ----------
-        cmd
+        cmd:str
         """
 
         self.cmd = cmd
@@ -64,7 +67,7 @@ class HPCjob(object):
         """
         Parameters
         ----------
-        Ofile
+        Ofile:str
         """
         self.Sout = "#SBATCH --output=" + Ofile
 
