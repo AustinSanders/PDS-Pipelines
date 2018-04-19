@@ -5,6 +5,7 @@ import subprocess
 
 class HPCjob(object):
     """
+
     Attributes
     ----------
     jobstring : str
@@ -177,7 +178,7 @@ class HPCjob(object):
         """
         Returns
         -------
-        result:
+        result : int
         """
         SB = "sbatch " + str(self.sbatchfile)
         print(SB)

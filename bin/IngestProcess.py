@@ -29,11 +29,11 @@ def getArchiveID(inputfile):
 """
 Parameters
 ----------
-inputfile
+inputfile : str
 
 Returns
 -------
-archive
+archive : str
 """
     if 'Mars_Reconnaissance_Orbiter/CTX' in inputfile:
         archive = 'mroCTX'

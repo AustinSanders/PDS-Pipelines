@@ -109,8 +109,8 @@ PDS_DBsessions
 
     Returns
     -------
-    Success
-    Error
+    Success : str
+    Error : str
     """
         try:
             queryOBJ = self.session.query(self.processingTAB).filter(

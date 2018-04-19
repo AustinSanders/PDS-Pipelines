@@ -44,7 +44,7 @@ loggyDict
         """
         Returns
         ----------
-        Ljson
+        Ljson : str
         """
         Ljson = json.dumps(self.loggyDict)
         return Ljson
