@@ -178,7 +178,8 @@ class HPCjob(object):
         """
         Returns
         -------
-        result : int
+        int
+            result
         """
         SB = "sbatch " + str(self.sbatchfile)
         print(SB)

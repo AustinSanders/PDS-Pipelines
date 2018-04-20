@@ -6,12 +6,11 @@ from collections import OrderedDict
 
 
 class MakeMap(object):
-"""
-Attributes
-----------
-mapDICT
-
-"""
+    """
+    Attributes
+    ----------
+    mapDICT : dict
+    """
 
     def __init__(self):
 
@@ -20,141 +19,141 @@ mapDICT
         self.mapDICT['Group'] = 'Mapping'
 
     def Projection(self, proj):
-    """
-    Parameters
-    ----------
-    proj
-    """
+        """
+        Parameters
+        ----------
+        proj
+        """
         self.mapDICT['ProjectionName'] = proj
 
     def CLat(self, clat):
-    """
-    Parameters
-    ----------
-    clat
-    """
+        """
+        Parameters
+        ----------
+        clat
+        """
         self.mapDICT['CenterLatitude'] = clat
 
     def CLon(self, clon):
-    """
-    Parameters
-    ----------
-    clon
-    """
+        """
+        Parameters
+        ----------
+        clon
+        """
         self.mapDICT['CenterLongitude'] = clon
 
     def FirstParallel(self, firstParallel):
-    """
-    Parameters
-    ----------
-    firstParallel
-    """
+        """
+        Parameters
+        ----------
+        firstParallel
+        """
         self.mapDICT['FirstStandardParallel'] = firstParallel
 
     def SecondParallel(self, secondParallel):
 
-    """
-    Parameters
-    ----------
-    secondParallel
-    """
+        """
+        Parameters
+        ----------
+        secondParallel
+        """
         self.mapDICT['SecondStandardParallel'] = secondParallel 
       
 
     def Target(self, target):
-    """
-    Parameters
-    ----------
-    target
-    """
+        """
+        Parameters
+        ----------
+        target
+        """
         self.mapDICT['TargetName'] = target
 
     def ERadius(self, ER):
-    """
-    Parameters
-    ----------
-    ER
-    """
+        """
+        Parameters
+        ----------
+        ER
+        """
         self.mapDICT['EquatorialRadius'] = ER
 
     def PRadius(self, PR):
-    """
-    Parameters
-    ----------
-    PR
-    """
+        """
+        Parameters
+        ----------
+        PR
+        """
         self.mapDICT['PolarRadius'] = PR
 
     def LatType(self, lattype):
-    """
-    Parameters
-    ----------
-    lattype
-    """
+        """
+        Parameters
+        ----------
+        lattype
+        """
         self.mapDICT['LatitudeType'] = lattype
 
     def LonDirection(self, londir):
-    """
-    Parameters
-    ----------
-    londir
-    """
+        """
+        Parameters
+        ----------
+        londir
+        """
         self.mapDICT['LongitudeDirection'] = londir
 
     def LonDomain(self, londom):
-    """
-    Parameters
-    ----------
-    londom
-    """
+        """
+        Parameters
+        ----------
+        londom
+        """
         self.mapDICT['LongitudeDomain'] = londom
 
     def MinLat(self, item):
-    """
-    Parameters
-    ----------
-    item
-    """
+        """
+        Parameters
+        ----------
+        item
+        """
         self.mapDICT['MinimumLatitude'] = item
 
     def MaxLat(self, item):
-    """
-    Parameters
-    ----------
-    item
-    """
+        """
+        Parameters
+        ----------
+        item
+        """
         self.mapDICT['MaximumLatitude'] = item
 
     def MinLon(self, item):
-    """
-    Parameters
-    ----------
-    item
-    """
+        """
+        Parameters
+        ----------
+        item
+        """
         self.mapDICT['MinimumLongitude'] = item
 
     def MaxLon(self, item):
-    """
-    Parameters
-    ----------
-    item
-    """
+        """
+        Parameters
+        ----------
+        item
+        """
         self.mapDICT['MaximumLongitude'] = item
 
     def PixelRes(self, res):
-    """
-    Parameters
-    ----------
-    res
-    """
+        """
+        Parameters
+        ----------
+        res
+        """
         self.mapDICT['PixelResolution'] = res
 
     def Map2pvl(self):
-    """
-    Returns
-    ----------
-    mappvl
-    """
+        """
+        Returns
+        ----------
+        mappvl
+        """
         self.mapDICT['End_Group'] = 'Mapping'
 
         mappvl = pvl.dumps(self.mapDICT)
@@ -163,20 +162,20 @@ mapDICT
         return mappvl
 
     def Map2JSON(self):
-    """
-    Returns
-    ----------
-    JSONout
-    """
+        """
+        Returns
+        ----------
+        JSONout
+        """
         JSONout = json.dumps(self.mapDICT)
         return JSONout
 
     def Map2File(self, filename):
-    """
-    Parameters
-    ----------
-    filename
-    """
+        """
+        Parameters
+        ----------
+        filename
+        """
         self.mapDICT['End_Group'] = 'Mapping'
         tempPVL = pvl.dumps(self.mapDICT)
 

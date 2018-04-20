@@ -9,12 +9,18 @@ from PDS_DBsessions import *
 
 
 class PDS_DBquery(PDS_DBsessions):
-"""
-Parameters
-----------
-PDS_DBsessions
-"""
+    """
+    Parameters
+    ----------
+    PDS_DBsessions
+    """
     def jobKey(self):
+        """
+        Returns
+        ------
+        str
+            key
+        """
 
         queryOBJ = self.session.query(self.processingTAB.key).filter(
             self.processingTAB.queued == None).order_by(self.processingTAB.submitted).first()
@@ -23,31 +29,31 @@ PDS_DBsessions
             return key
 
     def jobXML4Key(self, key):
-    """
-    Parameters
-    ----------
-    key
+        """
+        Parameters
+        ----------
+        key
 
-
-    Returns
-    -------
-    queryOBJ.xml
-    """
+        Returns
+        -------
+        xml
+            queryOBJ.xml
+        """
         queryOBJ = self.session.query(self.processingTAB.xml).filter(
             self.processingTAB.key == key).first()
         return queryOBJ.xml
 
     def setJobsQueued(self, inkey):
-    """
-    Parameters
-    ----------
-    inkey
+        """
+        Parameters
+        ----------
+        inkey
 
-    Returns
-    -------
-    Success
-    Error
-    """
+        Returns
+        -------
+        str
+            Success is succesful, Error otherwise
+        """
         date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
         try:
             queryOBJ = self.session.query(self.processingTAB).filter(
@@ -59,16 +65,16 @@ PDS_DBsessions
             return 'Error'
 
     def setJobsStarted(self, inkey):
-    """
-    Parameters
-    ----------
-    inkey
+        """
+        Parameters
+        ----------
+        inkey
 
-    Returns
-    -------
-    Success
-    Error
-    """
+        Returns
+        -------
+        str
+            Success is succesful, Error otherwise
+        """
         date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
         try:
             queryOBJ = self.session.query(self.processingTAB).filter(
@@ -80,16 +86,16 @@ PDS_DBsessions
             return 'Error'
 
     def setJobsFinished(self, inkey):
-    """
-    Parameters
-    ----------
-    inkey
+        """
+        Parameters
+        ----------
+        inkey
 
-    Reurns
-    ------
-    Success
-    Error
-    """
+        Reurns
+        ------
+        str
+            Success is succesful, Error otherwise
+        """
         date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
         try:
             queryOBJ = self.session.query(self.processingTAB).filter(
@@ -101,17 +107,17 @@ PDS_DBsessions
             return 'Error'
 
     def addErrors(self, key, errorxml):
-    """
-    Parameters
-    ----------
-    key
-    errorxml
+        """
+        Parameters
+        ----------
+        key
+        errorxml
 
-    Returns
-    -------
-    Success : str
-    Error : str
-    """
+        Returns
+        -------
+        str
+            Success is succesful, Error otherwise
+        """
         try:
             queryOBJ = self.session.query(self.processingTAB).filter(
                 self.processingTAB.key == key).one()

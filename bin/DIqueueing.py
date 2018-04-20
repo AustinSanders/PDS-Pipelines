@@ -60,8 +60,8 @@ class Args:
 
         Returns
         -------
-        args : 
-            Object with attributes 'archive', 'volume', and 'jobarray'
+        Namespace
+            args
         """
         
         parser = argparse.ArgumentParser(description='PDS DI Data Integrity')
