@@ -14,16 +14,17 @@ import pdb
 
 
 def scaleFactor(line, sample):
-"""
-Parameters
-----------
-line
-sample
+    """
+    Parameters
+    ----------
+    line : int
+    sample : int
 
-Returns
--------
-scalefactor
-"""
+    Returns
+    -------
+    int
+        scalefactor - ratio of sample and minSample or line and minLine
+    """
     maxLine = 1000
     maxSample = 1000
     minLine = 50
@@ -47,15 +48,16 @@ scalefactor
 
 
 def makedir(inputfile):
-"""
-Parameters
-----------
-inputfile
+    """
+    Parameters
+    ----------
+    inputfile : str
 
-Returns
--------
-finalpath
-"""
+    Returns
+    -------
+    str
+        finalpath
+    """
 
     temppath = os.path.dirname(inputfile).lower()
     finalpath = temppath.replace(

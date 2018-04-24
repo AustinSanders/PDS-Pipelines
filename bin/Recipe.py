@@ -13,26 +13,26 @@ from RedisQueue import *
 
 
 class Recipe(Process):
-"""
-Parameters
-----------
-Process
+    """
+    Parameters
+    ----------
+    Process
 
-Attributes
-----------
-recipe
-"""
+    Attributes
+    ----------
+    recipe : list
+    """
 
     def __init__(self):
 
         self.recipe = []
 
     def AddJsonFile(self, file):
-    """
-    Parameters
-    ----------
-    file
-    """
+        """
+        Parameters
+        ----------
+        file : str
+        """
 
         testjson = json.loads(open(file).read(), object_pairs_hook=OrderedDict)
 
@@ -46,24 +46,26 @@ recipe
             self.recipe.append(processDict)
 
     def getRecipe(self):
-    """
-    Returns
-    -------
-    self.recipe
-    """
+        """
+        Returns
+        -------
+        list
+            self.recipe
+        """
         return self.recipe
 
     def getRecipeJSON(self, mission, process):
-    """
-    Parameters
-    ----------
-    mission
-    process
+        """
+        Parameters
+        ----------
+        mission : str
+        process : str
 
-    Returns
-    -------
-    output
-    """
+        Returns
+        -------
+        str
+            output
+        """
 
         if process == 'service':
             servicedict = {'ISSNA': '/usgs/cdev/PDS/recipe/POWrecipeISSNA.json',
@@ -113,11 +115,12 @@ recipe
         return output
 
     def getProcesses(self):
-    """
-    Returns
-    -------
-    processList
-    """
+        """
+        Returns
+        -------
+        list
+            processList
+        """
 
         processList = []
         for Tkey in self.recipe:
@@ -127,23 +130,24 @@ recipe
         return processList
 
     def AddProcess(self, process):
-    """
-    Parameters
-    ----------
-    process
-    """
+        """
+        Parameters
+        ----------
+        process : str
+        """
         self.recipe.append(process)
 
     def TestgetStep(self, file):
-    """
-    Parameters
-    ----------
-    file
+        """
+        Parameters
+        ----------
+        file : str
 
-    Returns
-    -------
-    stepList
-    """
+        Returns
+        -------
+        list
+            stepList
+        """
         stepList = []
         testjson = json.loads(open(file).read(), object_pairs_hook=OrderedDict)
 
@@ -153,12 +157,12 @@ recipe
         return stepList
 
     def TestRecipe(self, file, element):
-    """
-    Parameters
-    ----------
-    file
-    element
-    """
+        """
+        Parameters
+        ----------
+        file : str
+        element : str
+        """
         testjson = json.loads(open(file).read(), object_pairs_hook=OrderedDict)
 
         for IP in testjson['recipe'][element]:
