@@ -21,20 +21,31 @@ import pdb
 
 class jobXML(object):
     """
+
     Attributes
     ----------
-    root
+    root:string
+        parses an XML section from a string constant
+        returns an Element instance
     """
 
     def __init__(self, xml):
+        """
+        Parameters
+        ----------
+        xml
+        """
 
         self.root = ET.fromstring(str(xml))
 
     def getInst(self):
         """
+        Finds all './/Process' in 'root'
+
         Returns
         -------
-        inst
+        str
+            info.find('.//instrument').text
         """
         for info in self.root.findall('.//Process'):
             inst = info.find('.//instrument').text
@@ -44,8 +55,8 @@ class jobXML(object):
         """
         Returns
         -------
-        None
-        info.find('ProjName').text
+        str
+            info.find('ProjName').text if sucessful, None otherwise
         """
         for info in self.root.iter('Projection'):
             proj = info.find('ProjName').text
@@ -58,8 +69,8 @@ class jobXML(object):
         """
         Returns
         -------
-        None
-        info.find('CenterLongitude').text
+        str
+            info.find('CenterLongitude').text if successful, None otherwise
         """
         for info in self.root.iter('Projection'):
             clon = info.find('CenterLongitude')
@@ -72,8 +83,8 @@ class jobXML(object):
         """
         Returns
         -------
-        None
-        info.find('CenterLatitude').text
+        str
+            info.find('CenterLatitude').text if successful, None otherwise
         """
         for info in self.root.iter('Projection'):
             clat = info.find('CenterLatitude')
@@ -86,8 +97,8 @@ class jobXML(object):
         """
         Returns
         -------
-        None
-        info.find('.//MinLatitude').text
+        str
+            info.find('.//MinLatitude').text if successful, None otherwise
         """
         for info in self.root.iter('extents'):
             if info.find('.//MinLatitude') is None:
@@ -99,8 +110,8 @@ class jobXML(object):
         """
         Returns
         -------
-        None
-        info.find('.//MaxLatitude').text
+        str
+            info.find('.//MaxLatitude').text if successful, None otherwise
         """
         for info in self.root.iter('extents'):
             if info.find('.//MaxLatitude') is None:
@@ -112,8 +123,8 @@ class jobXML(object):
         """
         Returns
         -------
-        None
-        info.find('.//MinLongitude').text
+        str
+            info.find('.//MinLongitude').text if successful, None otherwise
         """
         for info in self.root.iter('extents'):
             if info.find('.//MinLongitude') is None:
@@ -125,8 +136,8 @@ class jobXML(object):
         """
         Returns
         -------
-        None
-        info.find('.//MaxLongitude').text
+        str
+            info.find('.//MaxLongitude').text if successful, None otherwise
         """
         for info in self.root.iter('extents'):
             if info.find('.//MaxLongitude') is None:
@@ -138,8 +149,9 @@ class jobXML(object):
         """
         Returns
         -------
-        None
-        info.find('.//OutputResolution').text
+        str
+            info.find('.//OutputResolution').text if successful, None
+            otherwise
         """
         for info in self.root.iter('OutputOptions'):
             if info.find('.//OutputResolution') is None:
@@ -151,7 +163,8 @@ class jobXML(object):
         """
         Returns
         -------
-        info.find('outputFormat').text
+        str
+           outputFormat if successful, None otherwise
         """
         for info in self.root.findall('.//OutputType'):
             outputFormat = info.find('.//Format').text
@@ -161,7 +174,8 @@ class jobXML(object):
         """
         Returns
         -------
-        listArray
+        list
+            listArray
         """
         listArray = []
         for info in self.root.iter('ImageUrl'):

@@ -8,15 +8,6 @@ class SubLoggy(object):
 Parameters
 ----------
 process
-
-Methods
--------
-__init__
-setStatus
-setCommand
-setHelpLink
-errorOut
-getSLprocess
 """
     def __init__(self, process):
     

@@ -26,15 +26,16 @@ import pdb
 
 
 def getArchiveID(inputfile):
-"""
-Parameters
-----------
-inputfile
+    """
+    Parameters
+    ----------
+    inputfile : str
 
-Returns
--------
-archive
-"""
+    Returns
+    -------
+    str
+        archive
+    """
     if 'Mars_Reconnaissance_Orbiter/CTX' in inputfile:
         archive = 'mroCTX'
     elif 'Mars_Reconnaissance_Orbiter/MARCI' in inputfile:

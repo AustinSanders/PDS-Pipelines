@@ -18,8 +18,8 @@ class Args:
     """
     Attributes
     ----------
-    process
-    jobarray
+    process : str
+    jobarray : str
     """
     def __init__(self):
         pass

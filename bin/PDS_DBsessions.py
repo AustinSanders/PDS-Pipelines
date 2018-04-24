@@ -22,7 +22,11 @@ from db import db_connect
 class PDS_DBsessions(object):
 
     def __init__(self, database):
-
+        """
+        Parameters
+        -----------
+        database : str
+        """
         if database == "JOBS":
 
             # files and archives are returned, but we don't care about them so we throw them away
@@ -91,6 +95,11 @@ class PDS_DBsessions(object):
         self.session.close()
 
     def AddFile(self, Tfile):
+        """
+        Parameters
+        ----------
+        Tfile
+        """
         date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
 
         insert = self.files(filename=str(Tfile),

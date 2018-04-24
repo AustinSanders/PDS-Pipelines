@@ -30,10 +30,7 @@ import pdb
 
 
 class Args:
-    """
-    Creates an object 'parser', which is populated by the attributes 
-    'archive', 'volume', and 'jobarray'. 
-
+    """ 
     Attributes
     ----------
     archive : str
@@ -50,21 +47,21 @@ class Args:
         Parameters
         ----------
         name : str 
-              '--archive'
+              name of argument
 
         dest : str
-            name of attribute to be added to parser
+            Name of attribute to be added to parser
         
         required : str
-            makes optional arguments required
+            Makes optional arguments required
 
         help
-            contains brief description of argument
+            Contains brief description of argument
 
         Returns
         -------
-        args : 
-            object with attributes 'archive', 'volume', and 'jobarray'
+        Namespace
+            args
         """
         
         parser = argparse.ArgumentParser(description='PDS DI Data Integrity')

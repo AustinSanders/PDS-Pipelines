@@ -7,13 +7,12 @@ from SubLoggy import *
 
 
 class Loggy(object):
-"""
-Attributes
----------
-Lfile
-loggyDict
-
-"""
+    """
+    Attributes
+    ---------
+    Lfile
+    loggyDict
+    """
     def __init__(self, Lfile):
         """
         Parameters
@@ -44,7 +43,8 @@ loggyDict
         """
         Returns
         ----------
-        Ljson
+        str
+            Ljson
         """
         Ljson = json.dumps(self.loggyDict)
         return Ljson
