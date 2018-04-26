@@ -104,7 +104,8 @@ def main():
 
     # pdb.set_trace()
 
-    workarea = '/scratch/pds_services/workarea/'
+    #workarea = '/scratch/pds_services/workarea/'
+    workarea = '/home/arsanders/PDS-Pipelines/products/'
 
     Base = declarative_base()
 
@@ -130,9 +131,12 @@ def main():
 
     # while there are items in the redis queue
     while int(RQ_main.QueueSize()) > 0:
-
         # get a file from the queue
         inputfile = RQ_main.QueueGet()
+        if os.path.isfile(inputfile):
+            pass
+        else:
+            print("{} is not a file\n".format(inputfile))
         if os.path.isfile(inputfile):
             logger.info('Starting Process: %s', inputfile)
 
@@ -145,7 +149,7 @@ def main():
             outfile = workarea + os.path.splitext(
                 os.path.basename(inputfile))[0] + '.UPCoutput.cub'
             caminfoOUT = workarea + os.path.splitext(
-                os.path.basename(inputfile))[0] + '_caninfo.pvl'
+                os.path.basename(inputfile))[0] + '_caminfo.pvl'
             EDRsource = inputfile.replace(
                 '/pds_san/PDS_Archive/',
                 'https://pdsimage.wr.ugs.gov/Missions/')

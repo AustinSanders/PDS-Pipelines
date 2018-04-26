@@ -1,5 +1,3 @@
-#!/usgs/apps/anaconda/bin/python
-
 import os
 import sys
 import subprocess
@@ -16,6 +14,8 @@ from sqlalchemy import create_engine, MetaData
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
 from sqlalchemy.ext.declarative import declarative_base
+from db import db_connect
+# from models.pds_models import Files
 
 
 from RedisQueue import *
@@ -56,7 +56,8 @@ def main():
 
     logger = logging.getLogger('UPC_Queueing.' + args.archive)
     logger.setLevel(logging.INFO)
-    logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Process.log')
+    # logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Process.log')
+    logFileHandle = logging.FileHandler('/home/arsanders/PDS-Pipelines/logs/Process.log')
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
@@ -70,11 +71,15 @@ def main():
     RQ = RedisQueue('UPC_ReadyQueue')
 
     try:
+        """
         engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(pdsdi_user,
                                                                     pdsdi_pass,
                                                                     pdsdi_host,
                                                                     pdsdi_port,
                                                                     pdsdi_db))
+        """
+
+        DBsession, _, _, engine= db_connect('pdsdi_dev')
 
         metadata = MetaData(bind=engine)
         files = Table('files', metadata, autoload=True)
@@ -85,9 +90,9 @@ def main():
         filesmapper = mapper(Files, files)
         Session = sessionmaker()
         DBsession = Session()
-        print 'Database Connection Success'
+        print('Database Connection Success')
     except:
-        print 'Database Connection Error'
+        print('Database Connection Error')
 
     if args.volume:
         volstr = '%' + args.volume + '%'
@@ -97,16 +102,16 @@ def main():
                                              files.c.upc_required == 't').count()
 
         if Qnum > 0:
-            print "We have files for UPC"
+            print("We have files for UPC")
 
             qOBJ = DBsession.query(Files).filter(files.c.archiveid == archiveID,
                                                  files.c.filename.like(volstr),
                                                  files.c.upc_required == 't')
         else:
-            print "No UPC files found"
+            print("No UPC files found")
 
     else:
-        qOBJ = DBsession.query(Files).filter(files.c.archiveid == archiveid,
+        qOBJ = DBsession.query(Files).filter(files.c.archiveid == archiveID,
                                              files.c.upc_required == 't')
     if qOBJ:
         addcount = 0
@@ -117,7 +122,7 @@ def main():
 
         logger.info('Files Added to UPC Queue: %s', addcount)
 
-    print "Done"
+    print("Done")
 
 
 if __name__ == "__main__":

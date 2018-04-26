@@ -12,6 +12,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from PDS_DBsessions import *
 from config import *
 
+import upc_models
 
 class UPC_DB(object):
 
@@ -27,23 +28,12 @@ class UPC_DB(object):
 
         metadata = MetaData(bind=engine)
 
-        class DataFiles(Base):
-            __tablename__ = 'datafiles'
-            __table__ = Table('datafiles', metadata, autoload=True)
-
-#        class Instruments(Base):
-#            __table__ = Table('instruments_meta', metadata, autoload=True)
-
-        class Targets(Base):
-            __table__ = Table('targets_meta', metadata, autoload=True)
-
-
 #        datamapper = mapper(DataFiles, datafiles)
         Session = sessionmaker(bind=engine)
         self.session = Session()
 
-        self.datafiles = self.DataFiles()
-        self.targets = self.Targets()
+        self.datafiles = upc_models.DataFiles()
+        self.targets = upc_models.Targets()
 
     def testIsisId(self, isisid):
 

@@ -10,6 +10,7 @@ class RedisQueue(object):
 
         # self.__db=redis.Redis(host=ri['host'], port=ri['port'], db=ri['db'])
         #self.__db=redis.StrictRedis(host=ri['host'], port=ri['port'], db=ri['db'])
+        # @TODO change back to non-local queue
         self.__db = redis.StrictRedis()
         self.id_name = '%s:%s' % (namespace, name)
 
