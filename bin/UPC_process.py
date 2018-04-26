@@ -108,16 +108,14 @@ def main():
 
     Base = declarative_base()
 
-    # Throws away file and archive information
+    # Connect to database - ignore archive and volume information
     session, _, _, engine = db_connect('upcdev')
     metadata = MetaData(bind=engine)
 
     # ***************** Set up logging *****************
     logger = logging.getLogger('UPC_Process')
     logger.setLevel(logging.INFO)
-    #logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Process.log')
-    # @TODO change before production
-    logFileHandle = logging.FileHandler('/home/arsanders/PDS-Pipelines/Process.log')
+    logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Process.log')
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
@@ -125,13 +123,15 @@ def main():
 
     PDSinfoDICT = json.load(open('/usgs/cdev/PDS/bin/PDSinfo.json', 'r'))
 
-# Redis Queue Objects
+    # Redis Queue Objects
     RQ_main = RedisQueue('UPC_ReadyQueue')
     RQ_thumbnail = RedisQueue('Thumbnail_ReadyQueue')
     RQ_browse = RedisQueue('Browse_ReadyQueue')
 
+    # while there are items in the redis queue
     while int(RQ_main.QueueSize()) > 0:
 
+        # get a file from the queue
         inputfile = RQ_main.QueueGet()
         if os.path.isfile(inputfile):
             logger.info('Starting Process: %s', inputfile)
@@ -151,7 +151,9 @@ def main():
                 'https://pdsimage.wr.ugs.gov/Missions/')
 
             status = 'success'
+            # Iterate through each process listed in the recipe
             for item in recipeOBJ.getProcesses():
+                # If any of the processes failed, discontinue processing
                 if status == 'error':
                     break
                 elif status == 'success':
@@ -159,6 +161,7 @@ def main():
                     processR = processOBJ.ProcessFromRecipe(
                         item, recipeOBJ.getRecipe())
 
+                    # Handle processing based on string description.
                     if '2isis' in item:
                         processOBJ.updateParameter('from_', inputfile)
                         processOBJ.updateParameter('to', outfile)
@@ -202,12 +205,15 @@ def main():
                         processOBJ.updateParameter('from_', infile)
                         processOBJ.updateParameter('to', outfile)
 
-#                   test of process
+                    # test of process
                     print(processOBJ.getProcess())
 
+                    # iterate through functions listed in process obj
                     for k, v in processOBJ.getProcess().items():
+                        # load a function into func
                         func = getattr(isis, k)
                         try:
+                            # execute function
                             func(**v)
                             if item == 'handmos':
                                 if os.path.isfile(thmproc_odd):
@@ -236,7 +242,7 @@ def main():
                             status = 'error'
                             processError = item
 
-## keyword definition stuff ##
+            # keyword definitions
             if status == 'success':
                 keywordsOBJ = UPCkeywords(caminfoOUT)
 
