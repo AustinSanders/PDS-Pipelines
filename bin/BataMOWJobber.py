@@ -20,17 +20,44 @@ import pdb
 
 
 class jobXML(object):
+    """
+
+    Attributes
+    ----------
+    root:string
+        parses an XML section from a string constant
+        returns an Element instance
+    """
 
     def __init__(self, xml):
+        """
+        Parameters
+        ----------
+        xml
+        """
 
         self.root = ET.fromstring(str(xml))
 
     def getInst(self):
+        """
+        Finds all './/Process' in 'root'
+
+        Returns
+        -------
+        str
+            info.find('.//instrument').text
+        """
         for info in self.root.findall('.//Process'):
             inst = info.find('.//instrument').text
             return inst
 
     def getProjection(self):
+        """
+        Returns
+        -------
+        str
+            info.find('ProjName').text if sucessful, None otherwise
+        """
         for info in self.root.iter('Projection'):
             proj = info.find('ProjName').text
             if proj is None:
@@ -39,6 +66,12 @@ class jobXML(object):
                 return info.find('ProjName').text
 
     def getClon(self):
+        """
+        Returns
+        -------
+        str
+            info.find('CenterLongitude').text if successful, None otherwise
+        """
         for info in self.root.iter('Projection'):
             clon = info.find('CenterLongitude')
             if clon is None:
@@ -47,6 +80,12 @@ class jobXML(object):
                 return info.find('CenterLongitude').text
 
     def getClat(self):
+        """
+        Returns
+        -------
+        str
+            info.find('CenterLatitude').text if successful, None otherwise
+        """
         for info in self.root.iter('Projection'):
             clat = info.find('CenterLatitude')
             if clat is None:
@@ -55,6 +94,12 @@ class jobXML(object):
                 return info.find('CenterLatitude').text
 
     def getMinLat(self):
+        """
+        Returns
+        -------
+        str
+            info.find('.//MinLatitude').text if successful, None otherwise
+        """
         for info in self.root.iter('extents'):
             if info.find('.//MinLatitude') is None:
                 return None
@@ -62,6 +107,12 @@ class jobXML(object):
                 return info.find('.//MinLatitude').text
 
     def getMaxLat(self):
+        """
+        Returns
+        -------
+        str
+            info.find('.//MaxLatitude').text if successful, None otherwise
+        """
         for info in self.root.iter('extents'):
             if info.find('.//MaxLatitude') is None:
                 return None
@@ -69,6 +120,12 @@ class jobXML(object):
                 return info.find('.//MaxLatitude').text
 
     def getMinLon(self):
+        """
+        Returns
+        -------
+        str
+            info.find('.//MinLongitude').text if successful, None otherwise
+        """
         for info in self.root.iter('extents'):
             if info.find('.//MinLongitude') is None:
                 return None
@@ -76,6 +133,12 @@ class jobXML(object):
                 return info.find('.//MinLongitude').text
 
     def getMaxLon(self):
+        """
+        Returns
+        -------
+        str
+            info.find('.//MaxLongitude').text if successful, None otherwise
+        """
         for info in self.root.iter('extents'):
             if info.find('.//MaxLongitude') is None:
                 return None
@@ -83,6 +146,13 @@ class jobXML(object):
                 return info.find('.//MaxLongitude').text
 
     def getResolution(self):
+        """
+        Returns
+        -------
+        str
+            info.find('.//OutputResolution').text if successful, None
+            otherwise
+        """
         for info in self.root.iter('OutputOptions'):
             if info.find('.//OutputResolution') is None:
                 return None
@@ -90,11 +160,23 @@ class jobXML(object):
                 return info.find('.//OutputResolution').text
 
     def getOutFormat(self):
+        """
+        Returns
+        -------
+        str
+           outputFormat if successful, None otherwise
+        """
         for info in self.root.findall('.//OutputType'):
             outputFormat = info.find('.//Format').text
             return outputFormat
 
     def getFileListWB(self):
+        """
+        Returns
+        -------
+        list
+            listArray
+        """
         listArray = []
         for info in self.root.iter('ImageUrl'):
             fileUrl = info.find('url').text

@@ -24,6 +24,11 @@ import pdb
 
 
 def renderError(errorhash):
+    """
+    Parameters
+    ----------
+    errorhash
+    """
     for key in errorhash.getKeys():
         print key
         print val

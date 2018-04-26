@@ -16,6 +16,13 @@ import pdb
 
 
 class Args:
+    """
+    Attributes
+    ----------
+    archive : str
+    volume : str
+    search : str
+    """
     def __init__(self):
         pass
 
