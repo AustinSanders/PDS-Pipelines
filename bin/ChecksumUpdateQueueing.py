@@ -26,7 +26,7 @@ import pdb
 
 
 class Args:
-    """
+    """    
     Attributes
     ----------
     archive
@@ -43,7 +43,7 @@ class Args:
                             help="Enter archive - archive to ingest")
 
         parser.add_argument('--volume', '-v', dest="volume",
-                            help="Enter voluem to Ingest")
+                            help="Enter volume to Ingest")
 
         args = parser.parse_args()
 
