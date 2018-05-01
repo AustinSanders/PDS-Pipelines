@@ -21,16 +21,19 @@ import pdb
 
 class jobXML(object):
     """
+    Information extraction from XML file
 
     Attributes
     ----------
-    root:string
+    root : str
         parses an XML section from a string constant
         returns an Element instance
     """
 
     def __init__(self, xml):
         """
+        Converts XML file to a string
+
         Parameters
         ----------
         xml
@@ -47,17 +50,21 @@ class jobXML(object):
         str
             info.find('.//instrument').text
         """
+
         for info in self.root.findall('.//Process'):
             inst = info.find('.//instrument').text
             return inst
 
     def getProjection(self):
         """
+        Finds 'ProjName' in the XML file
+
         Returns
         -------
         str
             info.find('ProjName').text if sucessful, None otherwise
         """
+
         for info in self.root.iter('Projection'):
             proj = info.find('ProjName').text
             if proj is None:
@@ -67,11 +74,14 @@ class jobXML(object):
 
     def getClon(self):
         """
+        Finds 'CenterLongitude' in the XML file 
+
         Returns
         -------
         str
             info.find('CenterLongitude').text if successful, None otherwise
         """
+
         for info in self.root.iter('Projection'):
             clon = info.find('CenterLongitude')
             if clon is None:
@@ -81,11 +91,14 @@ class jobXML(object):
 
     def getClat(self):
         """
+        Finds 'CenterLatitude' in the XML file
+
         Returns
         -------
         str
             info.find('CenterLatitude').text if successful, None otherwise
         """
+
         for info in self.root.iter('Projection'):
             clat = info.find('CenterLatitude')
             if clat is None:
@@ -95,11 +108,14 @@ class jobXML(object):
 
     def getMinLat(self):
         """
+        Finds './/MinLatitude' in the XML file
+
         Returns
         -------
         str
             info.find('.//MinLatitude').text if successful, None otherwise
         """
+
         for info in self.root.iter('extents'):
             if info.find('.//MinLatitude') is None:
                 return None
@@ -108,11 +124,14 @@ class jobXML(object):
 
     def getMaxLat(self):
         """
+        Finds './/MaxLatitude' in the XML file
+
         Returns
         -------
         str
             info.find('.//MaxLatitude').text if successful, None otherwise
         """
+
         for info in self.root.iter('extents'):
             if info.find('.//MaxLatitude') is None:
                 return None
@@ -121,11 +140,14 @@ class jobXML(object):
 
     def getMinLon(self):
         """
+        Finds './/MinLongitude' in the XML file
+
         Returns
         -------
         str
             info.find('.//MinLongitude').text if successful, None otherwise
         """
+
         for info in self.root.iter('extents'):
             if info.find('.//MinLongitude') is None:
                 return None
@@ -134,11 +156,14 @@ class jobXML(object):
 
     def getMaxLon(self):
         """
+        Finds './/MaxLongitude' in the XML file
+
         Returns
         -------
         str
             info.find('.//MaxLongitude').text if successful, None otherwise
         """
+
         for info in self.root.iter('extents'):
             if info.find('.//MaxLongitude') is None:
                 return None
@@ -147,12 +172,15 @@ class jobXML(object):
 
     def getResolution(self):
         """
+        Finds './/OutputResolution' in the XML file
+
         Returns
         -------
         str
             info.find('.//OutputResolution').text if successful, None
             otherwise
         """
+
         for info in self.root.iter('OutputOptions'):
             if info.find('.//OutputResolution') is None:
                 return None
@@ -161,6 +189,8 @@ class jobXML(object):
 
     def getOutFormat(self):
         """
+        Finds './/MaxLatitude' in the XML file
+
         Returns
         -------
         str
@@ -177,6 +207,7 @@ class jobXML(object):
         list
             listArray
         """
+        
         listArray = []
         for info in self.root.iter('ImageUrl'):
             fileUrl = info.find('url').text

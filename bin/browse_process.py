@@ -15,6 +15,8 @@ import pdb
 
 def scaleFactor(line, sample):
     """
+    Calculates and returns a ratio
+
     Parameters
     ----------
     line:int
@@ -23,9 +25,10 @@ def scaleFactor(line, sample):
     Returns
     -------
     int
-        scalefactor ratio of 'line' to maxLine or minLine and 'sample' to 
-        maxSample or minSample
+        scalefactor: ratio of 'line' to maxLine or minLine and 
+        'sample' to maxSample or minSample
     """
+
     maxLine = 900
     maxSample = 900
     minLine = 300
@@ -50,6 +53,9 @@ def scaleFactor(line, sample):
 
 def makedir(inputfile):
     """
+    Replaces '/pds_san/pds_archive/' in the directory component of 'inputfile'
+    with '/pds_san/PDS_Derived/UPC/images/'
+
     Parameters
     ----------
     inputfile
@@ -59,6 +65,7 @@ def makedir(inputfile):
     str
         finalpath
     """
+
     temppath = os.path.dirname(inputfile).lower()
     finalpath = temppath.replace(
         '/pds_san/pds_archive/', '/pds_san/PDS_Derived/UPC/images/')
