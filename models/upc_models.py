@@ -1,6 +1,6 @@
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy import (Column, Integer, Float,
-                        Time, String, Boolean, PrimaryKeyConstraint)
+                        Time, String, Boolean, PrimaryKeyConstraint, ForeignKey)
 from geoalchemy2 import Geometry
 
 Base = declarative_base()
@@ -36,8 +36,8 @@ class DataFiles(Base):
     productid = Column(String(256))
     edr_source = Column(String(1024))
     edr_detached_label = Column(String(1024))
-    instrumentid = Column(Integer)
-    targetid = Column(Integer)
+    instrumentid = Column(Integer, ForeignKey("instruments_meta.instrumentid"))
+    targetid = Column(Integer, ForeignKey("targets_meta.targetid"))
 
 
 class Instruments(Base):
@@ -68,7 +68,7 @@ class Targets(Base):
 class Keywords(Base):
     __tablename__ = 'keywords'
     typeid = Column(Integer, primary_key=True, autoincrement = True)
-    instrumentid = Column(Integer)
+    instrumentid = Column(Integer, ForeignKey("instruments_meta.instrumentid"))
     datatype = Column(String(20), nullable=False)
     typename = Column(String(256))
     displayname = Column(String(256))
@@ -81,7 +81,9 @@ class Meta(object):
     # Enforce compound primary key constraint
     __table_args__ = (PrimaryKeyConstraint('upcid', 'typeid'),)
     upcid = Column(Integer)
-    typeid = Column(Integer)
+    @declared_attr
+    def typeid(cls):
+        return Column(Integer, ForeignKey("keywords.typeid"))
 
 
 class MetaPrecision(Meta, Base):
