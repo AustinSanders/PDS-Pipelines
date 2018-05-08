@@ -30,7 +30,9 @@ import pdb
 
 
 class Args:
-    """ 
+    """
+    Objects that have the attributes described below
+
     Attributes
     ----------
     archive : str
@@ -55,7 +57,7 @@ class Args:
         required : str
             Makes optional arguments required
 
-        help
+        help : _helper
             Contains brief description of argument
 
         Returns
