@@ -103,9 +103,11 @@ def main():
          if os.path.isfile(cpfile):
 
              CScmd = 'md5sum ' + cpfile
+             logger.info(cpfile)
              process = subprocess.Popen(CScmd, stdout=subprocess.PIPE, shell=True)
              (stdout, stderr) = process.communicate()
              temp_checksum = stdout.split()[0]
+             logger.info(temp_checksum)
 
              if temp_checksum == Qelement.checksum:
                  Qelement.di_pass = 't'
