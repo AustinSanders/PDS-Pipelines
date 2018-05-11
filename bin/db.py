@@ -21,8 +21,8 @@ def db_connect(cred):
     Returns
     -------
     session
-    files
-    archives
+    files : str
+    archives : str
     engine
     """
     try:
