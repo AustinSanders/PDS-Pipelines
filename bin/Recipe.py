@@ -69,7 +69,7 @@ class Recipe(Process):
 
         if process == 'service':
             servicedict = {'ISSNA': '/usgs/cdev/PDS/recipe/POWrecipeISSNA.json',
-                           'CTX': '/usgs/cdev/PDS/recipe/POWrecipeCTX.json',
+                           'mroCTX': '/usgs/cdev/PDS/recipe/POWrecipeCTX.json',
                            'SSI': '/usgs/cdev/PDS/recipe/POWrecipe_galileoSSI.json',
                            'NIR': '/usgs/cdev/PDS/recipe/POWrecipeCLEM_NIR.json',
                            'LWIR': '/usgs/cdev/PDS/recipe/POWrecipeCLEM_LWIR.json',
@@ -89,25 +89,25 @@ class Recipe(Process):
                            }
             output = servicedict[mission]
         elif process == 'upc':
-            upcdict = {'CTX': '/usgs/cdev/PDS/recipe/UPCrecipeCTX.json',
+            upcdict = {'mroCTX': '/usgs/cdev/PDS/recipe/UPCrecipeCTX.json',
                        'themisIR_EDR': '/usgs/cdev/PDS/recipe/UPCrecipeTHMIR.json'
                        }
             output = upcdict[mission]
 
         elif process == 'thumbnail':
-            thumbdict = {'CTX': '/usgs/cdev/PDS/recipe/thumbnailrecipeCTX.json',
+            thumbdict = {'mroCTX': '/usgs/cdev/PDS/recipe/thumbnailrecipeCTX.json',
                          'NACL': '/usgs/cdev/PDS/recipe/thumbnailrecipeLRO_NACL.json'
                          }
             output = thumbdict[mission]
 
         elif process == 'browse':
-            browsedict = {'CTX': '/usgs/cdev/PDS/recipe/browserecipeCTX.json',
+            browsedict = {'mroCTX': '/usgs/cdev/PDS/recipe/browserecipeCTX.json',
                           'NACL': '/usgs/cdev/PDS/recipe/browserecipeLRO_NACL.json'
                           }
             output = browsedict[mission]
 
         elif process == 'projectionbrowse':
-            projectionbrowsedict = {'CTX': '/usgs/cdev/PDS/recipe/projectionbrowserecipeCTX.json',
+            projectionbrowsedict = {'mroCTX': '/usgs/cdev/PDS/recipe/projectionbrowserecipeCTX.json',
                                     'NACL': '/usgs/cdev/PDS/recipe/projectionbrowserecipeLRO_NACL.json'
                                     }
             output = projectionbrowsedict[mission]
