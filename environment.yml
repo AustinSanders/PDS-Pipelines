@@ -1,0 +1,15 @@
+name: PDS-Pipelines
+dependencies:
+    - python=
+    - pvl
+    - xml
+    - lxml
+    - shutil
+    - pysis
+    - pytz
+    - sqlalchemy
+    - config
+    - redis
+    - squalchemy
+    - geoalchemy2
+    - pdb
