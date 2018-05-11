@@ -1,5 +1,5 @@
 name: PDS-Pipelines
-dependencies:
+dependencies: 
     - python=
     - pvl
     - xml
