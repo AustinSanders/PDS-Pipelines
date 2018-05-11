@@ -48,7 +48,7 @@ class Instruments(Base):
     mission = Column(String(256))
     spacecraft = Column(String(256))
     description = Column(String(256))
-    product_type = Column(String(8))
+    #product_type = Column(String(8))
 
 
 class Targets(Base):
@@ -62,7 +62,7 @@ class Targets(Base):
     baxisradius = Column(Float)
     caxisradius = Column(Float)
     description = Column(String(1024))
-    iau_mean_radius = Column(Float)
+    #iau_mean_radius = Column(Float)
 
 
 class Keywords(Base):
