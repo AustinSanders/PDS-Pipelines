@@ -44,6 +44,13 @@ def main():
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s, %(message)s')
         logFileHandle.setFormatter(formatter)
         logger.addHandler(logFileHandle)
+    elif args.process == 'upc':
+        logger = logging.getLogger('UPCprocess_HPCjob')
+        logger.setLevel(logging.INFO)
+        logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/UPC.log')
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s, %(message)s')
+        logFileHandle.setFormatter(formatter)
+        logger.addHandler(logFileHandle)
     elif args.process == 'checksumupdate':
         logger = logging.getLogger('ChceksumUpdateprocess_HPCjob')
         logger.setLevel(logging.INFO)
@@ -93,6 +100,17 @@ def main():
         jobOBJ.setPartition('pds')
         cmd = '/usgs/cdev/PDS/bin/DIprocess.py'
         SBfile = '/usgs/cdev/PDS/output/DIhpc'  + date + '.sbatch'
+
+    elif args.process == 'upc':
+        logger.info('Starting UPC Process HPC Job Submission')
+        jobOBJ.setJobName('PDS_UPCprocess')
+        jobOBJ.setStdOut('/usgs/cdev/PDS/output/UPCprocess_%A_%a.out')
+        jobOBJ.setStdError('/usgs/cdev/PDS/output/UPCprocess_%A_%a.err')
+        jobOBJ.setMemory('8192')
+        jobOBJ.setWallClock('20:00:00')
+        jobOBJ.setPartition('pds')
+        cmd = '/usgs/cdev/PDS/bin/UPC_process.py'
+        SBfile = '/usgs/cdev/PDS/output/CSUhpc'  + date + '.sbatch'
 
     elif args.process == 'checksumupdate':
         logger.info('Starting Checksum Update Process HPC Job Submission')

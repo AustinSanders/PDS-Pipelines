@@ -56,20 +56,25 @@ class Recipe(Process):
                           }
             output = servicedict[mission] 
         elif process == 'upc':
-            upcdict = {'CTX': '/usgs/cdev/PDS/recipe/UPCrecipeCTX.json',
-                       'themisIR_EDR': '/usgs/cdev/PDS/recipe/UPCrecipeTHMIR.json'
+            upcdict = {'mroCTX': '/usgs/cdev/PDS/recipe/UPCrecipeCTX.json',
+                       'themisIR_EDR': '/usgs/cdev/PDS/recipe/UPCrecipeTHMIR.json',
+                       'themisVIS_EDR': '/usgs/cdev/PDS/recipe/UPCrecipeTHMVIS.json',
+                       'lrolrcEDR': '/usgs/cdev/PDS/recipe/UPCrecipeLROLROC_EDR.json'
                       }
             output = upcdict[mission]
         
         elif process == 'thumbnail':
-            thumbdict = {'CTX': '/usgs/cdev/PDS/recipe/thumbnailrecipeCTX.json',  
-                         'NACL': '/usgs/cdev/PDS/recipe/thumbnailrecipeLRO_NACL.json'
+            thumbdict = {'mroCTX': '/usgs/cdev/PDS/recipe/thumbnailrecipeCTX.json',
+                         'themisIR_EDR': '/usgs/cdev/PDS/recipe/thumbnailrecipeTHMIR.json',  
+                         'lrolrcEDR': '/usgs/cdev/PDS/recipe/thumbnailrecipeLROLROC_EDR.json'
+                        
                         }
             output = thumbdict[mission]
 
         elif process == 'browse':
-            browsedict = {'CTX': '/usgs/cdev/PDS/recipe/browserecipeCTX.json', 
-                         'NACL': '/usgs/cdev/PDS/recipe/browserecipeLRO_NACL.json'
+            browsedict = {'mroCTX': '/usgs/cdev/PDS/recipe/browserecipeCTX.json', 
+                          'themisIR_EDR': '/usgs/cdev/PDS/recipe/browserecipeTHMIR.json',
+                          'lrolrcEDR': '/usgs/cdev/PDS/recipe/browserecipeLROLROC_EDR.json'
                          }
             output = browsedict[mission]
 

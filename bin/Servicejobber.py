@@ -283,7 +283,7 @@ def main():
 
     DBQO = PDS_DBquery('JOBS')
     Key = DBQO.jobKey()
-#    Key = '2d7379497fed4c092046b2a06f5471a5'
+#    Key = '2f4adc3d6412b0b4d118e70105dd957d'
     DBQO.setJobsQueued(Key)
     
 #*************** Setup logging ******************
@@ -675,7 +675,7 @@ def main():
                
         processJSON = processOBJ.Process2JSON()
         try:
-            RQ_recipe.QueueAdd(processJSON)
+            RQ_recipe.RecipeAdd(processJSON)
             logger.info('Recipe Element Added to Redis: %s : Success', item)
         except Exception as e:
             logger.warn('Recipe Element NOT Added to Redis: %s', item)

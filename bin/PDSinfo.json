@@ -2,7 +2,9 @@
      "mroCTX" : {
          "archiveid" : "16",
          "path" : "/pds_san/PDS_Archive/Mars_Reconnaissance_Orbiter/CTX/",
-         "mission" : "CTX",
+         "UPCerrorSpacecraft": "Mars_Reconnaissance_Orbiter",
+         "UPCerrorInstrument": "CTX",
+         "bandbinQuery" : "FilterName",
          "UPCrecipe" : "/usgs/cdev/PDS/recipe/UPCrecipeCTX.json",
          "THUMBrecipe" : "/usgs/cdev/PDS/recipe/thumbnailrecipeCTX.json",
          "BROWSErecipe" : "/usgs/cdev/PDS/recipe/browserecipeCTX.json",
@@ -25,9 +27,9 @@
      "lrolrcEDR" : {
          "archiveid" : "74",
          "path" : "/pds_san/PDS_Archive/Lunar_Reconnaissance_Orbiter/LROC/EDR/",
-         "UPCrecipe" : "/usgs/cdev/PDS/recipe/UPCrecipeLRO_EDR.json",
-         "THUMBrecipe" : "/usgs/cdev/PDS/recipe/thumbnailrecipeLRO_EDR.json",
-         "BROWSErecipe" : "/usgs/cdev/PDS/recipe/browserecipeLRO_EDR.json"
+         "bandbinQuery" : "FilterName",
+         "UPCerrorSpacecraft": "LUNAR RECONNAISSANCE ORBITER",
+         "UPCerrorInstrument": "NARROW ANGLE CAMERA"
      },
      "lroLAMP" : {
          "archiveid" : "84",
@@ -84,12 +86,18 @@
      "themisIR_EDR" : {
          "archiveid" : "116",
          "path" : "/pds_san/PDS_Archive/Mars_Odyssey/THEMIS/USA_NASA_PDS_ODTSDP_100XX/",
+         "UPCerrorSpacecraft": "MARS_ODYSSEY",
+         "UPCerrorInstrument": "THEMIS_IR",
          "bandbinQuery" : "FilterNumber",
          "bandorder" : ["9", "8", "7", "6", "5", "4", "3", "2", "1"]
      },
      "themisVIS_EDR" : {
          "archiveid" : "117",
-         "path" : "/pds_san/PDS_Archive/Mars_Odyssey/THEMIS/USA_NASA_PDS_ODTSDP_100XX/"
+         "path" : "/pds_san/PDS_Archive/Mars_Odyssey/THEMIS/USA_NASA_PDS_ODTSDP_100XX/",
+         "UPCerrorSpacecraft": "MARS_ODYSSEY",
+         "UPCerrorInstrument": "THEMIS_VIS",
+         "bandbinQuery" : "FilterNumber",
+         "bandorder" : ["3", "2", "5", "4", "1"]
      },
      "themisGEO" : {
          "archiveid" : "118",
