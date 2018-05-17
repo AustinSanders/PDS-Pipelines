@@ -1,14 +1,11 @@
-from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.types import TIMESTAMP
 from sqlalchemy import (Column, Integer, Float, String, Boolean,
                         PrimaryKeyConstraint)
 
 Base = declarative_base()
 
-class Reflected(DeferredReflection, Base):
-    __abstract__ = True
-
-class ProcessRuns(Reflected, Base):
+class ProcessRuns(Base):
     __tablename__ = 'process_runs'
     processid = Column(Integer, primary_key=True)
     fileid = Column(Integer)
@@ -17,7 +14,7 @@ class ProcessRuns(Reflected, Base):
     process_out = Column(Boolean)
 
 
-class Files(Reflected, Base):
+class Files(Base):
     __tablename__ = 'files'
     fileid = Column(Integer, primary_key=True)
     # @TODO set as foreign key for archive
@@ -34,3 +31,13 @@ class Files(Reflected, Base):
     file_size = Column(Integer)
     di_pass = Column(Boolean)
     di_date = Column(TIMESTAMP)
+
+
+class Archives(Base):
+    __tablename__ = 'archives'
+    # @TODO auto increment
+    archiveid = Column(Integer, primary_key=True)
+    archive_name = Column(String(1024))
+    missionid = Column(Integer)
+    pds_archive = Column(Boolean)
+    primary_node = Column(String(64))
