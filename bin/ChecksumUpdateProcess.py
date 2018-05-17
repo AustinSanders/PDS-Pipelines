@@ -23,7 +23,8 @@ from sqlalchemy.ext.declarative import declarative_base
 
 
 import pdb
-from db import Files, db_connect
+from db import db_connect
+from models.pds_models import Files
 
 
 def main():
@@ -47,8 +48,8 @@ def main():
     logger.info('Starting DI Process')
 
     try:
-        # Throws away archive and engine information
-        session, files, _, _ = db_connect('pdsdi')
+        # Throws away engine information
+        session, _ = db_connect('pdsdi_dev')
         logger.info('DataBase Connecton: Success')
     except:
         logger.error('DataBase Connection: Error')
@@ -62,7 +63,7 @@ def main():
         inputfile = RQ.QueueGet()
 
         Qelement = session.query(Files).filter(
-            files.c.filename == inputfile).one()
+            Files.filename == inputfile).one()
         cpfile = archiveID[Qelement.archiveid] + Qelement.filename
         if os.path.isfile(cpfile):
 

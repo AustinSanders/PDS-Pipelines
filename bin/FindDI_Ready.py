@@ -17,7 +17,8 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
 from sqlalchemy.ext.declarative import declarative_base
 
-from db import Files, Archives, db_connect
+from db import db_connect
+from models.pds_models import Files, Archives 
 
 import pdb
 
@@ -46,7 +47,7 @@ class Args:
         self.volume = args.volume
 
 
-def archive_expired(session, archiveID, files, testing_date=None):
+def archive_expired(session, archiveID, testing_date=None):
     """
     Checks to see if archive is expired
     
@@ -54,7 +55,6 @@ def archive_expired(session, archiveID, files, testing_date=None):
     ----------
     session
     archiveID
-    files
     testing_date
 
     Returns
@@ -68,14 +68,14 @@ def archive_expired(session, archiveID, files, testing_date=None):
         testing_date = datetime.datetime.strptime(str(td), "%Y-%m-%d %H:%M:%S")
 
     expired = session.query(Files).filter(
-        files.c.archiveid == archiveID).filter(or_(
-            cast(files.c.di_date, Date) < testing_date,
-            cast(files.c.di_date, Date) == None))
+        Files.archiveid == archiveID).filter(or_(
+            cast(Files.di_date, Date) < testing_date,
+            cast(Files.di_date, Date) == None))
 
     return expired
 
 
-def volume_expired(session, archiveID, files, testing_date=None):
+def volume_expired(session, archiveID, testing_date=None):
     """
     Checks to see if the volume is expired
     
@@ -83,7 +83,6 @@ def volume_expired(session, archiveID, files, testing_date=None):
     ----------
     session
     archiveID
-    files
     testing_date
 
     Returns
@@ -97,11 +96,11 @@ def volume_expired(session, archiveID, files, testing_date=None):
         testing_date = datetime.datetime.strptime(str(td), "%Y-%m-%d %H:%M:%S")
 
     volstr = '%' + args.volume + '%'
-    expired = session.query(Files).filter(files.c.archiveid == archiveID,
-                                          files.c.filename.like(volstr)).filter(or_(
-                                              cast(files.c.di_date,
+    expired = session.query(Files).filter(Files.archiveid == archiveID,
+                                          Files.filename.like(volstr)).filter(or_(
+                                              cast(Files.di_date,
                                                    Date) < testing_date,
-                                              cast(files.c.di_date, Date) == None))
+                                              cast(Files.di_date, Date) == None))
 
     return expired
 
@@ -116,7 +115,7 @@ def main():
 
     try:
         # Throws away 'engine' information
-        session, files, archives, _ = db_connect('pdsdi')
+        session, _ = db_connect('pdsdi_dev')
         print(args.archive)
         print('Database Connection Success')
     except Exception as e:
@@ -128,14 +127,14 @@ def main():
         testing_date = datetime.datetime.strptime(str(td), "%Y-%m-%d %H:%M:%S")
 
         if args.volume:
-            expired = volume_expired(session, archiveID, files, testing_date)
+            expired = volume_expired(session, archiveID, testing_date)
             if expired.count():
                 print('Volume {} DI Ready: {} Files'.format(
                     args.volume, str(expired.count())))
             else:
                 print('Volume {} DI Current'.format(args.volume))
         else:
-            expired = archive_expired(session, archiveID, files, testing_date)
+            expired = archive_expired(session, archiveID, testing_date)
             if expired.count():
                 print('Archive {} DI Ready: {} Files'.format(
                     args.archive, str(expired.count())))

@@ -21,8 +21,11 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
 from sqlalchemy.ext.declarative import declarative_base
 
+from db import db_connect
 
 import pdb
+
+from models.pds_models import Files, Archives
 
 
 def getArchiveID(inputfile):
@@ -107,6 +110,7 @@ def main():
     RQ_pilotB = RedisQueue('PilotB_ReadyQueue')
 
     try:
+        """
         engine = create_engine('postgresql://pdsdi:dataInt@dino.wr.usgs.gov:3309/pds_di_prd')
         metadata = MetaData(bind=engine)
         files = Table('files', metadata, autoload=True)
@@ -116,9 +120,12 @@ def main():
             pass
         class Archives(object):
             pass
-
         filesmapper = mapper(Files, files)
         archivesmapper = mapper(Archives, archives)
+        """
+
+        session, engine = db_connect('pdsdi_dev')
+
         Session = sessionmaker()
         session = Session()
         logger.info('DataBase Connecton: Success')

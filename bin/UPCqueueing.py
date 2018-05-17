@@ -15,8 +15,7 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
 from sqlalchemy.ext.declarative import declarative_base
 from db import db_connect
-# from models.pds_models import Files
-
+from models.pds_models import Files
 
 from RedisQueue import *
 
@@ -79,17 +78,8 @@ def main():
                                                                     pdsdi_db))
         """
 
-        DBsession, _, _, engine= db_connect('pdsdi_dev')
+        DBsession, _ = db_connect('pdsdi_dev')
 
-        metadata = MetaData(bind=engine)
-        files = Table('files', metadata, autoload=True)
-
-        class Files(object):
-            pass
-
-        filesmapper = mapper(Files, files)
-        Session = sessionmaker()
-        DBsession = Session()
         print('Database Connection Success')
     except:
         print('Database Connection Error')
@@ -97,22 +87,22 @@ def main():
     if args.volume:
         volstr = '%' + args.volume + '%'
 
-        Qnum = DBsession.query(Files).filter(files.c.archiveid == archiveID,
-                                             files.c.filename.like(volstr),
-                                             files.c.upc_required == 't').count()
+        Qnum = DBsession.query(Files).filter(Files.archiveid == archiveID,
+                                             Files.filename.like(volstr),
+                                             Files.upc_required == 't').count()
 
         if Qnum > 0:
             print("We have files for UPC")
 
-            qOBJ = DBsession.query(Files).filter(files.c.archiveid == archiveID,
-                                                 files.c.filename.like(volstr),
-                                                 files.c.upc_required == 't')
+            qOBJ = DBsession.query(Files).filter(Files.archiveid == archiveID,
+                                                 Files.filename.like(volstr),
+                                                 Files.upc_required == 't')
         else:
             print("No UPC files found")
 
     else:
-        qOBJ = DBsession.query(Files).filter(files.c.archiveid == archiveID,
-                                             files.c.upc_required == 't')
+        qOBJ = DBsession.query(Files).filter(Files.archiveid == archiveID,
+                                             Files.upc_required == 't')
     if qOBJ:
         addcount = 0
         for element in qOBJ:

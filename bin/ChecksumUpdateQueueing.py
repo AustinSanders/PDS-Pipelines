@@ -20,7 +20,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
 from sqlalchemy.ext.declarative import declarative_base
-from db import Files, Archives, db_connect
+from db import db_connect
+from models.pds_models import Files
 
 import pdb
 
@@ -87,7 +88,8 @@ def main():
         logger.info('Queueing %s Volume', args.volume)
 
     try:
-        session, files, archives, _ = db_connect('pdsdi')
+        # Throws away engine information
+        session, _ = db_connect('pdsdi_dev')
         logger.info('DataBase Connecton: Success')
     except:
         logger.error('DataBase Connection: Error')
@@ -96,10 +98,10 @@ def main():
     if args.volume:
         volstr = '%' + args.volume + '%'
         QueryOBJ = session.query(Files).filter(
-            files.c.archiveid == archiveID[args.archive], files.c.filename.like(volstr))
+            Files.archiveid == archiveID[args.archive], Files.filename.like(volstr))
     else:
         QueryOBJ = session.query(Files).filter(
-            files.c.archiveid == archiveID[args.archive])
+            Files.archiveid == archiveID[args.archive])
     addcount = 0
     for element in QueryOBJ:
         try:

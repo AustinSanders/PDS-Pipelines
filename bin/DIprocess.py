@@ -20,7 +20,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
 from sqlalchemy.ext.declarative import declarative_base
-from db import Files, db_connect
+from db import db_connect
+from models.pds_models import Files
 
 
 import pdb
@@ -80,8 +81,8 @@ def main():
     logger.info('Starting DI Process')
 
     try:
-        # Throws away archive and engine information
-        session, files, _, _ = db_connect('pdsdi')
+        # ignores engine information
+        session, _ = db_connect('pdsdi')
         logger.info('DataBase Connecton: Success')
     except:
         logger.error('DataBase Connection: Error')
@@ -93,7 +94,7 @@ def main():
         inputfile = RQ.QueueGet()
         try:
             Qelement = session.query(Files).filter(
-                files.c.filename == inputfile).one()
+                Files.filename == inputfile).one()
         except:
             logger.error('Query for File: %s', inputfile)
 

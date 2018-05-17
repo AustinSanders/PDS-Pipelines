@@ -12,6 +12,8 @@ import json
 
 from RedisQueue import *
 from HPCjob import *
+from db import db_connect
+from models.pds_models import Files
 
 from sqlalchemy import Date, cast
 
@@ -113,20 +115,8 @@ def main():
         logger.info('Queueing %s Volume', args.volume)
 
     try:
-        engine = create_engine('postgresql://pdsdi:dataInt@dino.wr.usgs.gov:3309/pds_di_prd')
-        metadata = MetaData(bind=engine)
-        files = Table('files', metadata, autoload=True)
-        archives = Table('archives', metadata, autoload=True)
+        session, _ = db_connect('pdsdi_dev')
 
-        class Files(object):
-            pass
-        class Archives(object):
-            pass
-
-        filesmapper = mapper(Files, files)
-        archivesmapper = mapper(Archives, archives)
-        Session = sessionmaker()
-        session = Session()
         logger.info('DataBase Connecton: Success')
     except:
         logger.error('DataBase Connection: Error')
@@ -141,21 +131,21 @@ def main():
         volstr = '%' + args.volume + '%'
 
         testcount = session.query(Files).filter(
-            files.c.archiveid == archiveID, files.c.filename.like(volstr)).filter(
-                or_(cast(files.c.di_date, Date) < testing_date,
-                    cast(files.c.di_date, Date) == None)).count()
+            Files.archiveid == archiveID, Files.filename.like(volstr)).filter(
+                or_(cast(Files.di_date, Date) < testing_date,
+                    cast(Files.di_date, Date) == None)).count()
 #        logger.info('Query Count %s', testcount)
         testQ = session.query(Files).filter(
-            files.c.archiveid == archiveID, files.c.filename.like(volstr)).filter(
-                or_(cast(files.c.di_date, Date) < testing_date,
-                    cast(files.c.di_date, Date) == None))
+            Files.archiveid == archiveID, Files.filename.like(volstr)).filter(
+                or_(cast(Files.di_date, Date) < testing_date,
+                    cast(Files.di_date, Date) == None))
     else:
-        testcount = session.query(Files).filter(files.c.archiveid == archiveID).filter(
-            or_(cast(files.c.di_date, Date) < testing_date,
-                cast(files.c.di_date, Date) == None)).count()
-        testQ = session.query(Files).filter(files.c.archiveid == archiveID).filter(
-            or_(cast(files.c.di_date, Date) < testing_date,
-                cast(files.c.di_date, Date) == None))
+        testcount = session.query(Files).filter(Files.archiveid == archiveID).filter(
+            or_(cast(Files.di_date, Date) < testing_date,
+                cast(Files.di_date, Date) == None)).count()
+        testQ = session.query(Files).filter(Files.archiveid == archiveID).filter(
+            or_(cast(Files.di_date, Date) < testing_date,
+                cast(Files.di_date, Date) == None))
 
     addcount = 0
     for element in testQ:
