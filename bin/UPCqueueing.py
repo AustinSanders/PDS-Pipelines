@@ -70,15 +70,7 @@ def main():
     RQ = RedisQueue('UPC_ReadyQueue')
 
     try:
-        """
-        engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(pdsdi_user,
-                                                                    pdsdi_pass,
-                                                                    pdsdi_host,
-                                                                    pdsdi_port,
-                                                                    pdsdi_db))
-        """
-
-        DBsession, _ = db_connect('pdsdi_dev')
+        session, _ = db_connect('pdsdi_dev')
 
         print('Database Connection Success')
     except:
@@ -87,21 +79,21 @@ def main():
     if args.volume:
         volstr = '%' + args.volume + '%'
 
-        Qnum = DBsession.query(Files).filter(Files.archiveid == archiveID,
+        Qnum = session.query(Files).filter(Files.archiveid == archiveID,
                                              Files.filename.like(volstr),
                                              Files.upc_required == 't').count()
 
         if Qnum > 0:
             print("We have files for UPC")
 
-            qOBJ = DBsession.query(Files).filter(Files.archiveid == archiveID,
+            qOBJ = session.query(Files).filter(Files.archiveid == archiveID,
                                                  Files.filename.like(volstr),
                                                  Files.upc_required == 't')
         else:
             print("No UPC files found")
 
     else:
-        qOBJ = DBsession.query(Files).filter(Files.archiveid == archiveID,
+        qOBJ = session.query(Files).filter(Files.archiveid == archiveID,
                                              Files.upc_required == 't')
     if qOBJ:
         addcount = 0

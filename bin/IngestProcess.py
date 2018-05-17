@@ -110,20 +110,6 @@ def main():
     RQ_pilotB = RedisQueue('PilotB_ReadyQueue')
 
     try:
-        """
-        engine = create_engine('postgresql://pdsdi:dataInt@dino.wr.usgs.gov:3309/pds_di_prd')
-        metadata = MetaData(bind=engine)
-        files = Table('files', metadata, autoload=True)
-        archives = Table('archives', metadata, autoload=True)
-
-        class Files(object):
-            pass
-        class Archives(object):
-            pass
-        filesmapper = mapper(Files, files)
-        archivesmapper = mapper(Archives, archives)
-        """
-
         session, engine = db_connect('pdsdi_dev')
 
         Session = sessionmaker()
