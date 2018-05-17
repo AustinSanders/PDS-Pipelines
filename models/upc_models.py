@@ -74,7 +74,7 @@ class Keywords(Base):
     displayname = Column(String(256))
     description = Column(String(2048))
     shapecol = Column(String(10))
-    unitid = Column(Integer)
+    #unitid = Column(Integer)
 
 
 class Meta(object):
@@ -111,6 +111,15 @@ class MetaBoolean(Meta, Base):
     __tablename__ = 'meta_boolean'
     value = Column(Boolean)
 
+
+class MetaBands(Base):
+    __tablename__ = 'meta_bands'
+    __table_args__ = (PrimaryKeyConstraint('upcid', 'filter', 'centerwave'),)
+    upcid = Column(Integer)
+    # @TODO filter is a keyword, we should refactor this here and in db
+    filter = Column(String(255))
+    centerwave = Column(Float)
+    
 
 class MetaGeometry(Meta, Base):
     __tablename__ = 'meta_geometry'
