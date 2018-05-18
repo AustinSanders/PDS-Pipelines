@@ -2,7 +2,6 @@
 
 import os
 import sys
-import subprocess
 import datetime
 import pytz
 import logging
@@ -94,13 +93,22 @@ def main():
 
         cpfile = archiveID[Qelement.archiveid] + Qelement.filename
         if os.path.isfile(cpfile):
+            """
             CScmd = 'md5sum ' + cpfile
             process = subprocess.Popen(CScmd,
                                        stdout=subprocess.PIPE,
                                        shell=True)
             (stdout, stderr) = process.communicate()
             temp_checksum = stdout.split()[0]
-            if temp_checksum == Qelement.checksum:
+            """
+
+            f_hash = hashlib.md5()
+            with open(cpfile, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    f_hash.update(chunk)
+            checksum = f_hash.hexdigest()
+
+            if checksum == Qelement.checksum:
                 Qelement.di_pass = 't'
             else:
                 Qelement.di_pass = 'f'

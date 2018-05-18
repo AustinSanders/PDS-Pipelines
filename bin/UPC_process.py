@@ -401,11 +401,20 @@ def main():
                     session.add(DBinput)
                 session.commit()
 
+                """
                 CScmd = 'md5sum ' + inputfile
                 process = subprocess.Popen(CScmd,
                                            stdout=subprocess.PIPE, shell=True)
                 (stdout, stderr) = process.communicate()
                 checksum = stdout.split()[0]
+                """
+
+                f_hash = hashlib.md5()
+                with open(inputfile, "rb") as f:
+                    for chunk in iter(lambda: f.read(4096), b""):
+                        f_hash.update(chunk)
+                checksum = f_hash.hexdigest()
+
 
                 # set typeid to 5 on the prod DB - 101 for dev
                 # production typeid 5 = checksum

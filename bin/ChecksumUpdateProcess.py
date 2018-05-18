@@ -2,7 +2,6 @@
 
 import os
 import sys
-import subprocess
 import datetime
 import pytz
 import logging
@@ -61,6 +60,7 @@ def main():
         cpfile = archiveID[Qelement.archiveid] + Qelement.filename
         if os.path.isfile(cpfile):
 
+            """
             CScmd = 'md5sum ' + cpfile
             process = subprocess.Popen(
                 CScmd, stdout=subprocess.PIPE, shell=True)
@@ -69,9 +69,17 @@ def main():
 
 #             temp_checksum = hashlib.md5(open(tempfile, 'rb').read()).hexdigest()
 #             os.remove(tempfile)
+            """
 
-            if temp_checksum != Qelement.checksum:
-                Qelement.checksum = temp_checksum
+            # Calculate checksum in chunks of 4096
+            f_hash = hashlib.md5()
+            with open(cpfile, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    f_hash.update(chunk)
+            checksum = f_hash.hexdigest()
+
+            if checksum != Qelement.checksum:
+                Qelement.checksum = checksum
                 Qelement.di_pass = 't'
                 Qelement.di_date = datetime.datetime.now(
                     pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
