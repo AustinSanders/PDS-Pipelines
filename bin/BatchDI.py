@@ -12,7 +12,7 @@ def main():
     reddis_queue = RedisQueue('DI_ReadyQueue')
 
     try:
-        session, _ = db_connect('pdsdi')
+        session, _ = db_connect('pdsdi_dev')
     # @TODO Catch exceptions by type.  Bad practice to 'except Exception,' but
     #   I don't know what exception could happen here.
     except Exception as e:

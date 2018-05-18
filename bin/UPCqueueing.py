@@ -4,22 +4,16 @@ import subprocess
 import logging
 import argparse
 import json
+import pdb
 
 
 import sqlalchemy
 from sqlalchemy import *
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import mapper
-from sqlalchemy import create_engine, MetaData
-from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
-from sqlalchemy.ext.declarative import declarative_base
+
 from db import db_connect
 from models.pds_models import Files
-
 from RedisQueue import *
-
-import pdb
 from config import *
 
 

@@ -1,13 +1,10 @@
 import datetime
 import pytz
 import json
-from sqlalchemy import MetaData, Table
-from sqlalchemy.orm import mapper, sessionmaker
 from FindDI_Ready import archive_expired, volume_expired
 from RedisQueue import RedisQueue
 from db import db_connect
 from models.pds_models import Files, Archives
-# from models import upc_models, pds_models
 
 
 def main():
@@ -16,7 +13,7 @@ def main():
 
     try:
         # Safe to use prd database here because there are no writes/edits.
-        session, _ = db_connect('pdsdi')
+        session, _ = db_connect('pdsdi_dev')
 
     # @TODO Catch exceptions by type.  Bad practice to 'except Exception,' but
     #   I don't know what exception could happen here.

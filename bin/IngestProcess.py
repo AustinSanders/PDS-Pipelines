@@ -14,12 +14,7 @@ import shutil
 
 import sqlalchemy
 from sqlalchemy import *
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import mapper
-from sqlalchemy import create_engine
-from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
-from sqlalchemy.ext.declarative import declarative_base
 
 from db import db_connect
 
@@ -110,10 +105,7 @@ def main():
     RQ_pilotB = RedisQueue('PilotB_ReadyQueue')
 
     try:
-        session, engine = db_connect('pdsdi_dev')
-
-        Session = sessionmaker()
-        session = Session()
+        session, _ = db_connect('pdsdi_dev')
         logger.info('DataBase Connecton: Success')
     except:
         logger.error('DataBase Connection: Error')

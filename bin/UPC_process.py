@@ -20,14 +20,9 @@ from db import db_connect
 from models import upc_models, pds_models
 
 from sqlalchemy import *
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import mapper
-from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
-from sqlalchemy.ext.declarative import declarative_base
 from geoalchemy2 import Geometry
 # from geoalchemy2.shape import to_shape
-
 
 import pdb
 
@@ -128,15 +123,9 @@ def main():
     workarea = '/home/arsanders/PDS-Pipelines/products/'
 
     pds_session, pds_engine = db_connect('pdsdi_dev')
-    pds_metadata = MetaData(bind=pds_engine)
-    pds_Session = sessionmaker(bind=pds_engine)
-    pds_session = pds_Session()
 
     # Connect to database - ignore archive and volume information
     session, engine = db_connect('upcdev')
-    metadata = MetaData(bind=engine)
-    Session = sessionmaker(bind=engine)
-    session = Session()
 
     # ***************** Set up logging *****************
     logger = logging.getLogger('UPC_Process')

@@ -14,15 +14,9 @@ from PDS_DBquery import *
 
 import sqlalchemy
 from sqlalchemy import *
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import mapper
-from sqlalchemy import create_engine
-from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
-from sqlalchemy.ext.declarative import declarative_base
 from db import db_connect
 from models.pds_models import Files
-
 
 import pdb
 

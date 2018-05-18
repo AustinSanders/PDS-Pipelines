@@ -48,7 +48,7 @@ class Args:
 
 def main():
 
-    #    pdb.set_trace()
+    # pdb.set_trace()
 
     args = Args()
     args.parse_args()
@@ -58,7 +58,8 @@ def main():
 # ********* Set up logging *************
     logger = logging.getLogger(args.archive + '_INGEST')
     logger.setLevel(logging.INFO)
-    logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Ingest.log')
+    #logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Ingest.log')
+    logFileHandle = logging.FileHandler('/home/arsanders/PDS-Pipelines/logs/Ingest.log')
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
@@ -75,9 +76,11 @@ def main():
     for dirpath, dirs, files in os.walk(archivepath):
         for filename in files:
             fname = os.path.join(dirpath, filename)
+            print(fname)
             if args.search:
                 if args.search in fname:
                     try:
+                        print("{} added to queue".format(fname))
                         RQ.QueueAdd(fname)
                     except:
                         logger.error(
@@ -86,6 +89,7 @@ def main():
                     continue
             else:
                 try:
+                    print("{} added to queue".format(fname))
                     RQ.QueueAdd(fname)
                 except:
                     logger.error('File %s NOT added to Ingest Queue', fname)
