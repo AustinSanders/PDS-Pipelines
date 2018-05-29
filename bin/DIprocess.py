@@ -2,7 +2,6 @@
 
 import os
 import sys
-import subprocess
 import datetime
 import pytz
 import logging
@@ -14,14 +13,9 @@ from PDS_DBquery import *
 
 import sqlalchemy
 from sqlalchemy import *
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import mapper
-from sqlalchemy import create_engine
-from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
-from sqlalchemy.ext.declarative import declarative_base
-from db import Files, db_connect
-
+from db import db_connect
+from models.pds_models import Files
 
 import pdb
 
@@ -80,8 +74,8 @@ def main():
     logger.info('Starting DI Process')
 
     try:
-        # Throws away archive and engine information
-        session, files, _, _ = db_connect('pdsdi')
+        # ignores engine information
+        session, _ = db_connect('pdsdi')
         logger.info('DataBase Connecton: Success')
     except:
         logger.error('DataBase Connection: Error')
@@ -93,19 +87,28 @@ def main():
         inputfile = RQ.QueueGet()
         try:
             Qelement = session.query(Files).filter(
-                files.c.filename == inputfile).one()
+                Files.filename == inputfile).one()
         except:
             logger.error('Query for File: %s', inputfile)
 
         cpfile = archiveID[Qelement.archiveid] + Qelement.filename
         if os.path.isfile(cpfile):
+            """
             CScmd = 'md5sum ' + cpfile
             process = subprocess.Popen(CScmd,
                                        stdout=subprocess.PIPE,
                                        shell=True)
             (stdout, stderr) = process.communicate()
             temp_checksum = stdout.split()[0]
-            if temp_checksum == Qelement.checksum:
+            """
+
+            f_hash = hashlib.md5()
+            with open(cpfile, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    f_hash.update(chunk)
+            checksum = f_hash.hexdigest()
+
+            if checksum == Qelement.checksum:
                 Qelement.di_pass = 't'
             else:
                 Qelement.di_pass = 'f'

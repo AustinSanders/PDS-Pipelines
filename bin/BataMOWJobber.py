@@ -231,6 +231,9 @@ def main():
     #    pdb.set_trace()
 
     DBQO = PDS_DBquery('JOBS')
+
+    # @TODO figure out what this magic number is and get rid of it
+    #  or at least document it.
     Key = '682c4db174f41db7cb6a661ea9342d61'
 
     xmlOBJ = jobXML(DBQO.jobXML4Key(Key))

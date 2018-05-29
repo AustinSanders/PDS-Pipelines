@@ -8,15 +8,10 @@ import pytz
 
 import sqlalchemy
 from sqlalchemy import *
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import mapper
-from sqlalchemy import create_engine
-from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
-from sqlalchemy.orm import eagerload
 
-from sqlalchemy.ext.declarative import declarative_base
 from db import db_connect
+from models.pds_models import Files, Archives
 
 
 class PDS_DBsessions(object):
@@ -28,20 +23,16 @@ class PDS_DBsessions(object):
         database : str
         """
         if database == "JOBS":
-
-            # files and archives are returned, but we don't care about them so we throw them away
-            self.session, _, _, engine = db_connect('clusterjob_prd')
+            self.session, _ =  db_connect('clusterjob_prd')
             DBsession = self.session
             Base = automap_base()
             Base.prepare(engine, reflect=True)
             self.processingTAB = Base.classes.processing
         elif database == "DI":
             base = automap_base()
-            # files and archives are returned, but we don't care about them so we throw them away
-            self.session, _, _, engine = db_connect('pdsdi')
-            base.prepare(engine, reflect=True)
-            self.files = base.classes.files
-            self.archives = base.classes.archives
+            self.session, _ =  db_connect('pdsdi')
+            self.files = Files
+            self.archives = Archives
             DBsession = self.session
             self.DB_files = self.files
 

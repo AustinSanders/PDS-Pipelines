@@ -31,3 +31,13 @@ class Files(Base):
     file_size = Column(Integer)
     di_pass = Column(Boolean)
     di_date = Column(TIMESTAMP)
+
+
+class Archives(Base):
+    __tablename__ = 'archives'
+    # @TODO auto increment
+    archiveid = Column(Integer, primary_key=True)
+    archive_name = Column(String(1024))
+    missionid = Column(Integer)
+    pds_archive = Column(Boolean)
+    primary_node = Column(String(64))

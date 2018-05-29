@@ -1,6 +1,6 @@
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy import (Column, Integer, Float,
-                        Time, String, Boolean, PrimaryKeyConstraint)
+                        Time, String, Boolean, PrimaryKeyConstraint, ForeignKey)
 from geoalchemy2 import Geometry
 
 Base = declarative_base()
@@ -36,8 +36,8 @@ class DataFiles(Base):
     productid = Column(String(256))
     edr_source = Column(String(1024))
     edr_detached_label = Column(String(1024))
-    instrumentid = Column(Integer)
-    targetid = Column(Integer)
+    instrumentid = Column(Integer, ForeignKey("instruments_meta.instrumentid"))
+    targetid = Column(Integer, ForeignKey("targets_meta.targetid"))
 
 
 class Instruments(Base):
@@ -48,7 +48,7 @@ class Instruments(Base):
     mission = Column(String(256))
     spacecraft = Column(String(256))
     description = Column(String(256))
-    product_type = Column(String(8))
+    #product_type = Column(String(8))
 
 
 class Targets(Base):
@@ -62,26 +62,28 @@ class Targets(Base):
     baxisradius = Column(Float)
     caxisradius = Column(Float)
     description = Column(String(1024))
-    iau_mean_radius = Column(Float)
+    #iau_mean_radius = Column(Float)
 
 
 class Keywords(Base):
     __tablename__ = 'keywords'
     typeid = Column(Integer, primary_key=True, autoincrement = True)
-    instrumentid = Column(Integer)
+    instrumentid = Column(Integer, ForeignKey("instruments_meta.instrumentid"))
     datatype = Column(String(20), nullable=False)
     typename = Column(String(256))
     displayname = Column(String(256))
     description = Column(String(2048))
     shapecol = Column(String(10))
-    unitid = Column(Integer)
+    #unitid = Column(Integer)
 
 
 class Meta(object):
     # Enforce compound primary key constraint
     __table_args__ = (PrimaryKeyConstraint('upcid', 'typeid'),)
     upcid = Column(Integer)
-    typeid = Column(Integer)
+    @declared_attr
+    def typeid(cls):
+        return Column(Integer, ForeignKey("keywords.typeid"))
 
 
 class MetaPrecision(Meta, Base):
@@ -109,6 +111,15 @@ class MetaBoolean(Meta, Base):
     __tablename__ = 'meta_boolean'
     value = Column(Boolean)
 
+
+class MetaBands(Base):
+    __tablename__ = 'meta_bands'
+    __table_args__ = (PrimaryKeyConstraint('upcid', 'filter', 'centerwave'),)
+    upcid = Column(Integer)
+    # @TODO filter is a keyword, we should refactor this here and in db
+    filter = Column(String(255))
+    centerwave = Column(Float)
+    
 
 class MetaGeometry(Meta, Base):
     __tablename__ = 'meta_geometry'

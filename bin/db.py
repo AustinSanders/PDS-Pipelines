@@ -3,15 +3,6 @@ from config import credentials as c
 from sqlalchemy import MetaData, Table
 from sqlalchemy.orm import mapper, sessionmaker
 
-
-class Files(object):
-    pass
-
-
-class Archives(object):
-    pass
-
-
 def db_connect(cred):
     """
     Parameters
@@ -21,8 +12,6 @@ def db_connect(cred):
     Returns
     -------
     session
-    files : str
-    archives : str
     engine
     """
     try:
@@ -35,16 +24,6 @@ def db_connect(cred):
         print("Credentials not found for {}".format(cred))
     else:
         metadata = MetaData(bind=engine)
-        files = None
-        archives = None
-        try:
-            files = Table('files', metadata, autoload=True)
-            archives = Table('archives', metadata, autoload=True)
-            filesmapper = mapper(Files, files)
-            archivesmapper = mapper(Archives, archives)
-        except:
-            pass
-        Session = sessionmaker()
+        Session = sessionmaker(bind=engine)
         session = Session()
-
-        return session, files, archives, engine
+        return session, engine

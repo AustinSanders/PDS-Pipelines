@@ -1,26 +1,19 @@
-#!/usgs/apps/anaconda/bin/python
-
 import os
 import sys
 import subprocess
 import logging
 import argparse
 import json
+import pdb
 
 
 import sqlalchemy
 from sqlalchemy import *
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import mapper
-from sqlalchemy import create_engine, MetaData
-from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
-from sqlalchemy.ext.declarative import declarative_base
 
-
+from db import db_connect
+from models.pds_models import Files
 from RedisQueue import *
-
-import pdb
 from config import *
 
 
@@ -56,7 +49,8 @@ def main():
 
     logger = logging.getLogger('UPC_Queueing.' + args.archive)
     logger.setLevel(logging.INFO)
-    logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Process.log')
+    # logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Process.log')
+    logFileHandle = logging.FileHandler('/home/arsanders/PDS-Pipelines/logs/Process.log')
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
@@ -70,44 +64,31 @@ def main():
     RQ = RedisQueue('UPC_ReadyQueue')
 
     try:
-        engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(pdsdi_user,
-                                                                    pdsdi_pass,
-                                                                    pdsdi_host,
-                                                                    pdsdi_port,
-                                                                    pdsdi_db))
+        session, _ = db_connect('pdsdi_dev')
 
-        metadata = MetaData(bind=engine)
-        files = Table('files', metadata, autoload=True)
-
-        class Files(object):
-            pass
-
-        filesmapper = mapper(Files, files)
-        Session = sessionmaker()
-        DBsession = Session()
-        print 'Database Connection Success'
+        print('Database Connection Success')
     except:
-        print 'Database Connection Error'
+        print('Database Connection Error')
 
     if args.volume:
         volstr = '%' + args.volume + '%'
 
-        Qnum = DBsession.query(Files).filter(files.c.archiveid == archiveID,
-                                             files.c.filename.like(volstr),
-                                             files.c.upc_required == 't').count()
+        Qnum = session.query(Files).filter(Files.archiveid == archiveID,
+                                             Files.filename.like(volstr),
+                                             Files.upc_required == 't').count()
 
         if Qnum > 0:
-            print "We have files for UPC"
+            print("We have files for UPC")
 
-            qOBJ = DBsession.query(Files).filter(files.c.archiveid == archiveID,
-                                                 files.c.filename.like(volstr),
-                                                 files.c.upc_required == 't')
+            qOBJ = session.query(Files).filter(Files.archiveid == archiveID,
+                                                 Files.filename.like(volstr),
+                                                 Files.upc_required == 't')
         else:
-            print "No UPC files found"
+            print("No UPC files found")
 
     else:
-        qOBJ = DBsession.query(Files).filter(files.c.archiveid == archiveid,
-                                             files.c.upc_required == 't')
+        qOBJ = session.query(Files).filter(Files.archiveid == archiveID,
+                                             Files.upc_required == 't')
     if qOBJ:
         addcount = 0
         for element in qOBJ:
@@ -117,7 +98,7 @@ def main():
 
         logger.info('Files Added to UPC Queue: %s', addcount)
 
-    print "Done"
+    print("Done")
 
 
 if __name__ == "__main__":

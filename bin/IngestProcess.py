@@ -1,30 +1,29 @@
 #!/usgs/apps/anaconda/bin/python
 import os
 import sys
-import subprocess
 import datetime
 import pytz
 import logging
 import json
+
+
 from RedisQueue import *
 from PDS_DBquery import *
-
 import hashlib
 import shutil
 
 import sqlalchemy
 from sqlalchemy import *
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import mapper
-from sqlalchemy import create_engine
-from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
-from sqlalchemy.ext.declarative import declarative_base
 
+from db import db_connect
 
 import pdb
 
+from models.pds_models import Files, Archives
 
+
+# @TODO there HAS to be a better way of doing this...
 def getArchiveID(inputfile):
     """
     Parameters
@@ -36,6 +35,7 @@ def getArchiveID(inputfile):
     str
         archive
     """
+    print(inputfile)
     if 'Mars_Reconnaissance_Orbiter/CTX' in inputfile:
         archive = 'mroCTX'
     elif 'Mars_Reconnaissance_Orbiter/MARCI' in inputfile:
@@ -52,6 +52,8 @@ def getArchiveID(inputfile):
         archive = 'dawnCeres'
     elif 'MESSENGER' in inputfile:
         archive = 'messenger'
+    elif 'Magellan' in inputfile:
+        archive = 'magellan'
     elif 'THEMIS/USA_NASA_PDS_ODTSDP_100XX' in inputfile:
         if 'odtvb1' in inputfile or 'odtve1' in inputfile or 'odtvr1' in inputfile:
             archive = 'themisVIS_EDR'
@@ -89,7 +91,8 @@ def main():
 # ********* Set up logging *************
     logger = logging.getLogger('Ingest_Process')
     logger.setLevel(logging.INFO)
-    logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Ingest.log')
+    #logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Ingest.log')
+    logFileHandle = logging.FileHandler('/home/arsanders/PDS-Pipelines/logs/Ingest.log')
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
@@ -107,20 +110,7 @@ def main():
     RQ_pilotB = RedisQueue('PilotB_ReadyQueue')
 
     try:
-        engine = create_engine('postgresql://pdsdi:dataInt@dino.wr.usgs.gov:3309/pds_di_prd')
-        metadata = MetaData(bind=engine)
-        files = Table('files', metadata, autoload=True)
-        archives = Table('archives', metadata, autoload=True)
-
-        class Files(object):
-            pass
-        class Archives(object):
-            pass
-
-        filesmapper = mapper(Files, files)
-        archivesmapper = mapper(Archives, archives)
-        Session = sessionmaker()
-        session = Session()
+        session, _ = db_connect('pdsdi_dev')
         logger.info('DataBase Connecton: Success')
     except:
         logger.error('DataBase Connection: Error')
@@ -129,51 +119,60 @@ def main():
 
     while int(RQ_main.QueueSize()) > 0:
 
-        inputfile = RQ_main.Qfile2Qwork(
-            RQ_main.getQueueName(), RQ_work.getQueueName())
+        inputfile = (RQ_main.Qfile2Qwork(
+            RQ_main.getQueueName(), RQ_work.getQueueName())).decode('utf-8')
         archive = getArchiveID(inputfile)
         subfile = inputfile.replace(PDSinfoDICT[archive]['path'], '')
 
-# Gen a checksum from input file
+        # Gen a checksum from input file
+        """
         CScmd = 'md5sum ' + inputfile
         process = subprocess.Popen(CScmd, stdout=subprocess.PIPE, shell=True)
         (stdout, stderr) = process.communicate()
         filechecksum = stdout.split()[0]
+        """
+
+        # Calculate checksum in chunks of 4096
+        f_hash = hashlib.md5()
+        with open(inputfile, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                f_hash.update(chunk)
+        filechecksum = f_hash.hexdigest()
 
         QOBJ = session.query(Files).filter_by(filename=subfile).first()
 
-        runflag = 'false'
+        runflag = False
         if QOBJ is None:
-            runflag = 'true'
+            runflag = True
         elif filechecksum != QOBJ.checksum:
-            runflag = 'true'
+            runflag = True
 
-        if runflag == 'true':
+        if runflag == True:
             date = datetime.datetime.now(
                 pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
             fileURL = inputfile.replace(
                 '/pds_san/PDS_Archive/', 'pdsimage.wr.usgs.gov/Missions/')
-            upcflag = 'f'
+            upcflag = False
             if int(PDSinfoDICT[archive]['archiveid']) == 124:
                 if '.IMG' in inputfile:
-                    upcflag = 't'
+                    upcflag = True
             elif int(PDSinfoDICT[archive]['archiveid']) == 74:
                 if '/DATA/' in inputfile and '/NAC/' in inputfile and '.IMG' in inputfile:
-                    upcflag = 't'
+                    upcflag = True
             elif int(PDSinfoDICT[archive]['archiveid']) == 16:
                 if '/data/' in inputfile and '.IMG' in inputfile:
-                    upcflag = 't'
+                    upcflag = True
             elif int(PDSinfoDICT[archive]['archiveid']) == 53:
                 if '/data/' in inputfile and '.LBL' in inputfile:
-                    upcflag = 't'
+                    upcflag = True
             elif int(PDSinfoDICT[archive]['archiveid']) == 116:
                 if '/data/odtie1' in inputfile and '.QUB' in inputfile:
-                    upcflag = 't'
+                    upcflag = True
             elif int(PDSinfoDICT[archive]['archiveid']) == 117:
                 if '/data/odtve1' in inputfile and '.QUB' in inputfile:
-                    upcflag = 't'
+                    upcflag = True
 
-            if upcflag == 't':
+            if upcflag == True:
                 RQ_upc.QueueAdd(inputfile)
                 RQ_thumb.QueueAdd(inputfile)
                 RQ_browse.QueueAdd(inputfile)
@@ -188,12 +187,12 @@ def main():
                 testIN.entry_date = date
                 testIN.checksum = filechecksum
                 testIN.upc_required = upcflag
-                testIN.validation_required = 't'
-                testIN.header_only = 'f'
+                testIN.validation_required = True
+                testIN.header_only = False
                 testIN.release_date = date
                 testIN.file_url = fileURL
                 testIN.file_size = filesize
-                testIN.di_pass = 't'
+                testIN.di_pass = True
                 testIN.di_date = date
 
                 session.add(testIN)
@@ -206,7 +205,7 @@ def main():
             except:
                 logger.error("Error During File Insert %s", subfile)
 
-        elif runflag == 'false':
+        elif runflag == False:
             RQ_work.QueueRemove(inputfile)
 
         if index >= 250:

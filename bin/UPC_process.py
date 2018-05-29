@@ -19,22 +19,16 @@ from UPC_test import *
 from db import db_connect
 from models import upc_models, pds_models
 
-
 from sqlalchemy import *
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import mapper
-from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
-from sqlalchemy.ext.declarative import declarative_base
 from geoalchemy2 import Geometry
 # from geoalchemy2.shape import to_shape
-
 
 import pdb
 
 
 def getMission(inputfile):
-
+    inputfile = str(inputfile)
     if 'Mars_Reconnaissance_Orbiter/CTX' in inputfile:
         mission = 'mroCTX'
     elif 'USA_NASA_PDS_ODTSDP_100XX' in inputfile and 'odtie1' in inputfile:
@@ -65,16 +59,37 @@ def find_keyword(obj, key):
             if F_item is not None:
                 return F_item
 
+def db2py(key_type, value):
+    """ Responsible for coercing database syntax to Python 
+        syntax (e.g. 'true' to True)
+    
+    Parameters
+    ----------
+    key_type : str
+        A string type description of the value.
+    value : obj
+        The value of the object being coerced to Python syntax
+    
+    Returns
+    -------
+    out : obj
+        A Python-syntax value based on the keytype and value pair.
+    """
 
-def AddProcessDB(inputfile, outvalue):
+    if key_type == "double":
+        if isinstance(value, pvl.Units):
+            # pvl.Units(value=x, units=y), we are only interested in value
+            value = value.value
+        return value
+    elif key_type == "boolean":
+        return (str(value).lower() == "true")
+    else:
+        return value
+
+
+def AddProcessDB(session, inputfile, outvalue):
 
     # pdb.set_trace()
-
-    Base = declarative_base()
-    session, _, _, engine = db_connect('pdsdi_dev')
-    metadata = MetaData(bind=engine)
-    Session = sessionmaker(bind=engine)
-    session = Session()
 
     parts = inputfile.split("/")
 
@@ -104,18 +119,19 @@ def main():
 
     # pdb.set_trace()
 
-    workarea = '/scratch/pds_services/workarea/'
+    #workarea = '/scratch/pds_services/workarea/'
+    workarea = '/home/arsanders/PDS-Pipelines/products/'
 
-    Base = declarative_base()
+    pds_session, pds_engine = db_connect('pdsdi_dev')
 
     # Connect to database - ignore archive and volume information
-    session, _, _, engine = db_connect('upcdev')
-    metadata = MetaData(bind=engine)
+    session, engine = db_connect('upcdev')
 
     # ***************** Set up logging *****************
     logger = logging.getLogger('UPC_Process')
     logger.setLevel(logging.INFO)
-    logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Process.log')
+    #logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Process.log')
+    logFileHandle = logging.FileHandler('/home/arsanders/PDS-Pipelines/Process.log')
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
@@ -130,22 +146,25 @@ def main():
 
     # while there are items in the redis queue
     while int(RQ_main.QueueSize()) > 0:
-
         # get a file from the queue
-        inputfile = RQ_main.QueueGet()
+        inputfile = (RQ_main.QueueGet()).decode('utf-8')
+        if os.path.isfile(inputfile):
+            pass
+        else:
+            print("{} is not a file\n".format(inputfile))
         if os.path.isfile(inputfile):
             logger.info('Starting Process: %s', inputfile)
 
             recipeOBJ = Recipe()
-            recip_json = recipeOBJ.getRecipeJSON(getMission(inputfile), 'upc')
+            recip_json = recipeOBJ.getRecipeJSON(getMission(str(inputfile)), 'upc')
             recipeOBJ.AddJsonFile(recip_json)
 
             infile = workarea + os.path.splitext(
-                os.path.basename(inputfile))[0] + '.UPCinput.cub'
+                str(os.path.basename(inputfile)))[0] + '.UPCinput.cub'
             outfile = workarea + os.path.splitext(
-                os.path.basename(inputfile))[0] + '.UPCoutput.cub'
+                str(os.path.basename(inputfile)))[0] + '.UPCoutput.cub'
             caminfoOUT = workarea + os.path.splitext(
-                os.path.basename(inputfile))[0] + '_caninfo.pvl'
+                str(os.path.basename(inputfile)))[0] + '_caminfo.pvl'
             EDRsource = inputfile.replace(
                 '/pds_san/PDS_Archive/',
                 'https://pdsimage.wr.ugs.gov/Missions/')
@@ -182,10 +201,10 @@ def main():
                     elif item == 'cubeatt':
                         exband = 'none'
                         for item1 in PDSinfoDICT[getMission(inputfile)]['bandorder']:
-                            print('test of item1: %s' % item1)
+                            print('test of item1: {}'.format(item1))
                             bandcount = 1
                             for item2 in label['IsisCube']['BandBin'][PDSinfoDICT[getMission(inputfile)]['bandbinQuery']]:
-                                print('test of item2: %s' % item2)
+                                print('test of item2: {}'.format(item2))
                                 if str(item1) == str(item2):
                                     exband = bandcount
                                     break
@@ -239,30 +258,31 @@ def main():
                                 infile_centerlist = label['IsisCube']['BandBin']['Center']
 
                         except ProcessError as e:
+                            print(e)
                             status = 'error'
                             processError = item
 
             # keyword definitions
+            keywordsOBJ = None
             if status == 'success':
                 keywordsOBJ = UPCkeywords(caminfoOUT)
-
-                if session.query(datafiles).filter(
-                        datafiles.isisid == keywordsOBJ.getKeyword(
+                if session.query(upc_models.DataFiles).filter(
+                        upc_models.DataFiles.isisid == keywordsOBJ.getKeyword(
                             'Parameters', 'IsisId')).first() == None:
 
-                    target_Qobj = session.query(targets).filter(
-                        targets.targetname == keywordsOBJ.getKeyword(
+                    target_Qobj = session.query(upc_models.Targets).filter(
+                        upc_models.Targets.targetname == keywordsOBJ.getKeyword(
                             'Instrument', 'TargetName').upper()).first()
 
-                    instrument_Qobj = session.query(instruments).filter(
-                        instruments.instrument == keywordsOBJ.getKeyword(
+                    instrument_Qobj = session.query(upc_models.Instruments).filter(
+                        upc_models.Instruments.instrument == keywordsOBJ.getKeyword(
                             'Instrument', 'InstrumentId')).first()
 
                     PVL_productid = keywordsOBJ.getKeyword(
                         'Archive', 'ProductId')
-                    print('Test of productid: %s' % PVL_productid)
+                    print('Test of productid: {}'.format(PVL_productid))
 
-                    test_input = datafiles(
+                    test_input = upc_models.DataFiles(
                         isisid=keywordsOBJ.getKeyword('Parameters', 'IsisId'),
                         productid=keywordsOBJ.getKeyword(
                             'Archive', 'ProductId'),
@@ -274,8 +294,8 @@ def main():
                     session.add(test_input)
                     session.commit()
 
-                Qobj = session.query(datafiles).filter(
-                    datafiles.isisid == keywordsOBJ.getKeyword(
+                Qobj = session.query(upc_models.DataFiles).filter(
+                    upc_models.DataFiles.isisid == keywordsOBJ.getKeyword(
                         'Parameters', 'IsisId')).first()
 
                 UPCid = Qobj.upcid
@@ -283,19 +303,15 @@ def main():
                 if type(infile_bandlist) == list:
                     index = 0
                     while index < len(infile_bandlist):
-                        print('test of filter: %s' %
-                              str(infile_bandlist[index]))
-                        print('test of center: %s' %
-                              str(infile_centerlist[index]))
-                        B_DBinput = meta_bands(upcid=UPCid,
-                                               filter=infile_bandlist[index],
-                                               centerwave=infile_centerlist[index])
+                        print('test of filter: {}'.format(
+                              str(infile_bandlist[index])))
+                        print('test of center: {}'.format(
+                              str(infile_centerlist[index])))
+                        B_DBinput = upc_models.MetaBands(upcid=UPCid, filter=infile_bandlist[index], centerwave=infile_centerlist[index])
                         session.add(B_DBinput)
                         index = index + 1
                 else:
-                    B_DBinput = meta_bands(upcid=UPCid,
-                                           filter=infile_bandlist,
-                                           centerwave=float(infile_centerlist[0]))
+                    B_DBinput = upc_models.MetaBands(upcid=UPCid, filter=infile_bandlist, centerwave=float(infile_centerlist[0]))
                     session.add(B_DBinput)
                 session.commit()
 
@@ -304,26 +320,28 @@ def main():
                     open('/usgs/cdev/PDS/recipe/Keyword_Definition.json', 'r'))
                 for element_1 in testjson['instrument']['COMMON']:
                     keyvalue = ""
-                    print('Inside element_1 test: %s' % element_1)
+                    print('Inside element_1 test: {}'.format(element_1))
                     keytype = testjson['instrument']['COMMON'][element_1]['type']
-                    print('test of keytype: %s' % keytype)
+                    print('test of keytype: {}'.format(keytype))
                     keygroup = testjson['instrument']['COMMON'][element_1]['group']
-                    print('test of keygroup: %s' % keygroup)
+                    print('test of keygroup: {}'.format(keygroup))
                     keyword = testjson['instrument']['COMMON'][element_1]['keyword']
-                    print('test of keyword: %s' % keyword)
+                    print('test of keyword: {}'.format(keyword))
 
                     keyword_Qobj = session.query(
-                        keywords).filter(keywords.typename == element_1).first()
-                    print('test of keyword typeid: %s' %
-                          str(keyword_Qobj.typeid))
+                        upc_models.Keywords).filter(upc_models.Keywords.typename == element_1).first()
+                    print('test of keyword typeid: {}'.format(str(
+                        keyword_Qobj.typeid)))
 
                     if keygroup == 'Polygon':
                         print('Polygon Keyword')
                         keyvalue = keywordsOBJ.getPolygonKeyword(keyword)
+                        print(keyvalue)
                     else:
                         keyvalue = keywordsOBJ.getKeyword(keygroup, keyword)
-                    print('test of keyvalue: %s' % keyvalue)
-
+                        print(keyvalue)
+                    print('test of keyvalue: {}'.format(keyvalue))
+                    keyvalue = db2py(keytype, keyvalue)
                     DBinput = upc_models.create_table(keytype,
                                                   upcid=UPCid,
                                                   typeid=keyword_Qobj.typeid,
@@ -339,25 +357,21 @@ def main():
                     str(keywordsOBJ.getKeyword(
                         'Polygon', 'CentroidLatitude')))
 
-                G_keyword_Qobj = session.query(keywords).filter(
-                    keywords.typename == 'isiscentroid').first()
-                G_DBinput = meta_geometry(upcid=UPCid,
-                                          typeid=G_keyword_Qobj.typeid,
-                                          value=G_centroid)
+                G_keyword_Qobj = session.query(upc_models.Keywords).filter(
+                    upc_models.Keywords.typename == 'isiscentroid').first()
+                G_DBinput = upc_models.MetaGeometry(upcid=UPCid, typeid=G_keyword_Qobj.typeid, value=G_centroid)
                 session.add(G_DBinput)
 
                 G_footprint = keywordsOBJ.getKeyword('Polygon', 'GisFootprint')
-                G_footprint_Qobj = session.query(keywords).filter(
-                    keywords.typename == 'isisfootprint').first()
-                G_DBinput = meta_geometry(upcid=UPCid,
-                                          typeid=G_footprint_Qobj.typeid,
-                                          value=G_footprint)
+                G_footprint_Qobj = session.query(upc_models.Keywords).filter(
+                    upc_models.Keywords.typename == 'isisfootprint').first()
+                G_DBinput = upc_models.MetaGeometry(upcid=UPCid, typeid=G_footprint_Qobj.typeid, value=G_footprint)
                 session.add(G_DBinput)
                 session.commit()
 
                 # block to deal with mission keywords
                 for element_2 in testjson['instrument'][getMission(inputfile)]:
-                    print('Inside element_2 test: %s' % element_2)
+                    print('Inside element_2 test: {}'.format(element_2))
                     M_keytype = testjson['instrument'][getMission(
                         inputfile)][element_2]['type']
                     M_keygroup = testjson['instrument'][getMission(
@@ -365,8 +379,8 @@ def main():
                     M_keyword = testjson['instrument'][getMission(
                         inputfile)][element_2]['keyword']
 
-                    M_keyword_Qobj = session.query(keywords).filter(
-                        keywords.typename == element_2).first()
+                    M_keyword_Qobj = session.query(upc_models.Keywords).filter(
+                        upc_models.Keywords.typename == element_2).first()
 
                     if M_keygroup == 'Polygon':
                         print('Polygon Keyword')
@@ -374,7 +388,10 @@ def main():
                     else:
                         M_keyvalue = keywordsOBJ.getKeyword(
                             M_keygroup, M_keyword)
-                    print('Mission keyvalue is: %s' % M_keyvalue)
+
+                    M_keyvalue = db2py(M_keytype, M_keyvalue)
+
+                    print('Mission keyvalue is: {}'.format(M_keyvalue))
 
                     DBinput = upc_models.create_table(M_keytype,
                                                   upcid=UPCid,
@@ -384,31 +401,37 @@ def main():
                     session.add(DBinput)
                 session.commit()
 
+                """
                 CScmd = 'md5sum ' + inputfile
                 process = subprocess.Popen(CScmd,
                                            stdout=subprocess.PIPE, shell=True)
                 (stdout, stderr) = process.communicate()
                 checksum = stdout.split()[0]
+                """
+
+                f_hash = hashlib.md5()
+                with open(inputfile, "rb") as f:
+                    for chunk in iter(lambda: f.read(4096), b""):
+                        f_hash.update(chunk)
+                checksum = f_hash.hexdigest()
+
 
                 # set typeid to 5 on the prod DB - 101 for dev
                 # production typeid 5 = checksum
                 # dev typeid 101 = checksum
-                DBinput = meta_string(upcid=UPCid,
-                                      typeid='101',
-                                      value=checksum)
+                DBinput = upc_models.MetaString(upcid=UPCid, typeid=101, value=checksum)
                 session.add(DBinput)
                 # add error keyword to UPC
                 # typeid 595 = error flag
-                DBinput = meta_boolean(upcid=UPCid,
-                                       typeid='595',
-                                       value='false')
+                DBinput = upc_models.MetaBoolean(upcid=UPCid, typeid=595, value=False)
                 session.add(DBinput)
                 session.commit()
-                AddProcessDB(inputfile, 't')
+                AddProcessDB(pds_session, inputfile, 't')
                 os.remove(infile)
                 os.remove(caminfoOUT)
 
             elif status == 'error':
+                label = pvl.load(infile)
                 date = datetime.datetime.now(pytz.utc).strftime(
                     "%Y-%m-%d %H:%M:%S")
 
@@ -418,24 +441,35 @@ def main():
                         inputfile)]['UPCerrorSpacecraft']
                     testinst = PDSinfoDICT[getMission(
                         inputfile)]['UPCerrorInstrument']
+                    if session.query(upc_models.DataFiles).filter(
+                            upc_models.DataFiles.edr_source == EDRsource.decode(
+                                "utf-8")).first() == None:
 
-                    if session.query(datafiles).filter(
-                            datafiles.edr_source == EDRsource).first() == None:
-                        target_Qobj = session.query(targets).filter(
-                            targets.targetname == keywordsOBJ.getKeyword(
+                        target_Qobj = session.query(upc_models.Targets).filter(upc_models.Targets.targetname == str(label['IsisCube']['Instrument']['TargetName']) .upper()).first()
+
+                        instrument_Qobj = session.query(upc_models.Instruments).filter(
+                            upc_models.Instruments.instrument == str(
+                                label['IsisCube']
+                                ['Instrument']
+                                ['InstrumentId'])).first()
+
+                        """
+                        target_Qobj = session.query(upc_models.Targets).filter(
+                            upc_models.Targets.targetname == keywordsOBJ.getKeyword(
                                 'Instrument', 'TargetName').upper()).first()
 
-                        instrument_Qobj = session.query(instruments).filter(
-                            instruments.instrument == keywordsOBJ.getKeyword(
+                        instrument_Qobj = session.query(upc_models.Instruments).filter(
+                            upc_models.Instruments.instrument == keywordsOBJ.getKeyword(
                                 'Instrument', 'InstrumentId')).first()
 
-                        error1_input = datafiles(isisid='1',
-                                                 edr_source=EDRsource)
+                        """
+                        error1_input = upc_models.DataFiles(isisid='1',
+                                                            edr_source=EDRsource)
                         session.add(error1_input)
                         session.commit()
 
-                    EQ1obj = session.query(datafiles).filter(
-                        datafiles.edr_source == EDRsource).first()
+                    EQ1obj = session.query(upc_models.DataFiles).filter(
+                        upc_models.DataFiles.edr_source == EDRsource).first()
                     UPCid = EQ1obj.upcid
 
                     errorMSG = 'Error running {} on file {}'.format(
@@ -484,19 +518,19 @@ def main():
 
                     isisSerial = getISISid(infile)
 
-                    if session.query(datafiles).filter(
-                            datafiles.isisid == isisSerial).first() == None:
-                        target_Qobj = session.query(targets).filter(
-                            targets.targetname == str(
+                    if session.query(upc_models.DataFiles).filter(
+                            upc_models.DataFiles.isisid == isisSerial).first() == None:
+                        target_Qobj = session.query(upc_models.Targets).filter(
+                            upc_models.Targets.targetname == str(
                                 label['IsisCube']['Instrument']['TargetName'])
                             .upper()).first()
-                        instrument_Qobj = session.query(instruments).filter(
+                        instrument_Qobj = session.query(upc_models.Instruments).filter(
                             instruments.instrument == str(
                                 label['IsisCube']
                                 ['Instrument']
                                 ['InstrumentId'])).first()
 
-                        error2_input = datafiles(isisid=isisSerial,
+                        error2_input = upc_models.DataFiles(isisid=isisSerial,
                                                  productid=label['IsisCube']['Archive']['ProductId'],
                                                  edr_source=EDRsource,
                                                  instrumentid=instrument_Qobj.instrumentid,
@@ -504,8 +538,8 @@ def main():
                     session.add(error2_input)
                     session.commit()
 
-                    EQ2obj = session.query(datafiles).filter(
-                        datafiles.isisid == isisSerial).first()
+                    EQ2obj = session.query(upc_models.DataFiles).filter(
+                        upc_models.DataFiles.isisid == isisSerial).first()
                     UPCid = EQ2obj.upcid
                     errorMSG = 'Error running {} on file {}'.format(
                         processError, inputfile)
@@ -560,7 +594,7 @@ def main():
 
                     session.commit()
 
-                AddProcessDB(inputfile, 'f')
+                AddProcessDB(pds_session, inputfile, 'f')
                 os.remove(infile)
 
 

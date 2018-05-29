@@ -2,7 +2,6 @@
 
 import os
 import sys
-import subprocess
 import datetime
 import pytz
 import logging
@@ -14,16 +13,11 @@ from PDS_DBquery import *
 
 import sqlalchemy
 from sqlalchemy import *
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import mapper
-from sqlalchemy import create_engine
-from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm.util import *
-from sqlalchemy.ext.declarative import declarative_base
-
 
 import pdb
-from db import Files, db_connect
+from db import db_connect
+from models.pds_models import Files
 
 
 def main():
@@ -47,8 +41,8 @@ def main():
     logger.info('Starting DI Process')
 
     try:
-        # Throws away archive and engine information
-        session, files, _, _ = db_connect('pdsdi')
+        # Throws away engine information
+        session, _ = db_connect('pdsdi_dev')
         logger.info('DataBase Connecton: Success')
     except:
         logger.error('DataBase Connection: Error')
@@ -62,10 +56,11 @@ def main():
         inputfile = RQ.QueueGet()
 
         Qelement = session.query(Files).filter(
-            files.c.filename == inputfile).one()
+            Files.filename == inputfile).one()
         cpfile = archiveID[Qelement.archiveid] + Qelement.filename
         if os.path.isfile(cpfile):
 
+            """
             CScmd = 'md5sum ' + cpfile
             process = subprocess.Popen(
                 CScmd, stdout=subprocess.PIPE, shell=True)
@@ -74,9 +69,17 @@ def main():
 
 #             temp_checksum = hashlib.md5(open(tempfile, 'rb').read()).hexdigest()
 #             os.remove(tempfile)
+            """
 
-            if temp_checksum != Qelement.checksum:
-                Qelement.checksum = temp_checksum
+            # Calculate checksum in chunks of 4096
+            f_hash = hashlib.md5()
+            with open(cpfile, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    f_hash.update(chunk)
+            checksum = f_hash.hexdigest()
+
+            if checksum != Qelement.checksum:
+                Qelement.checksum = checksum
                 Qelement.di_pass = 't'
                 Qelement.di_date = datetime.datetime.now(
                     pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
