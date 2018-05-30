@@ -8,8 +8,8 @@ from SubLoggy import *
 
 class Loggy(object):
     """
-    Object that has the attributes described below
-
+    Writes to the logs file.
+    
     Attributes
     ---------
     Lfile : dict
