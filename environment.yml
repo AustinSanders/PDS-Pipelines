@@ -4,7 +4,7 @@ dependencies:
     - lxml
     - pytz
     - redis
-    - squalchemy
+    - sqlalchemy
     - geoalchemy2
     - pip
     - pip:
