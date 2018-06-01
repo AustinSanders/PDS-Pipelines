@@ -283,7 +283,7 @@ def main():
 
     DBQO = PDS_DBquery('JOBS')
     Key = DBQO.jobKey()
-#    Key = '2d7379497fed4c092046b2a06f5471a5'
+#    Key = '2f4adc3d6412b0b4d118e70105dd957d'
     DBQO.setJobsQueued(Key)
     
 #*************** Setup logging ******************
@@ -675,7 +675,7 @@ def main():
                
         processJSON = processOBJ.Process2JSON()
         try:
-            RQ_recipe.QueueAdd(processJSON)
+            RQ_recipe.RecipeAdd(processJSON)
             logger.info('Recipe Element Added to Redis: %s : Success', item)
         except Exception as e:
             logger.warn('Recipe Element NOT Added to Redis: %s', item)
@@ -686,7 +686,7 @@ def main():
     jobOBJ.setJobName(Key + '_Service')
     jobOBJ.setStdOut('/usgs/cdev/PDS/output/' + Key + '_%A_%a.out')
     jobOBJ.setStdError('/usgs/cdev/PDS/output/' + Key + '_%A_%a.err')
-    jobOBJ.setWallClock('10:00:00')
+    jobOBJ.setWallClock('24:00:00')
 #    jobOBJ.setMemory('8192')
 #    jobOBJ.setMemory('16384')
     jobOBJ.setMemory('24576')
