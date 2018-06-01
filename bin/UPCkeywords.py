@@ -1,6 +1,6 @@
 #!/usgs/apps/anaconda/bin/python
 
-import os, sys, pvl
+import os, sys, pvl, collections
 
 def find_keyword(obj, key):
     if key in obj:
@@ -21,13 +21,29 @@ class UPCkeywords(object):
 
         Gget = find_keyword(self.label, group)
         Gkey = find_keyword(Gget, keyword)
-        return Gkey
+ 
+        if isinstance(Gkey, tuple):
+            key = Gkey[0]
+        else:
+            key = Gkey
+
+        return key
 
     def getPolygonKeyword(self, keyword):
 
         get1 = find_keyword(self.label, 'Polygon')
         Gkey = find_keyword(get1, keyword)
         if keyword == 'CentroidRadius':
-            Gkey = Gkey[0]
-        return Gkey
+            if Gkey[1].lower() == 'micrometers':
+                key = Gkey[0] * 1000
+            else:
+                key = Gkey[0]
+        else:
+            if isinstance(Gkey, tuple):
+                key = Gkey[0]
+            else:
+                key = Gkey
+
+           
+        return key
 
