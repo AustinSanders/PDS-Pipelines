@@ -524,7 +524,7 @@
         "keyword": "GlobalCoverage"
       }
     },
-    "CTX": {
+    "mroCTX": {
       "statsbandfilter": {
         "type": "string",
         "displayname": "Band Filter Used For Statistics",
