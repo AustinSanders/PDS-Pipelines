@@ -2,7 +2,6 @@
 import os
 import sys
 import pvl
-import subprocess
 import datetime
 import pytz
 import logging
@@ -18,12 +17,11 @@ from Recipe import *
 from UPCkeywords import *
 from db import db_connect
 from models import upc_models, pds_models
-from models.upc_models import MetaTime, MetaBands, MetaGeometry, MetaString, MetaBoolean
+from models.upc_models import MetaTime, MetaGeometry, MetaString, MetaBoolean
 
 from sqlalchemy import *
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.util import *
-from geoalchemy2 import Geometry
-# from geoalchemy2.shape import to_shape
 
 import pdb
 
@@ -47,7 +45,7 @@ def getMission(inputfile):
 def getISISid(infile):
     serial_num = getsn(from_=infile)
     # in later versions of getsn, serial_num is returned as bytes
-    if isistance(serial_num, bytes):
+    if isinstance(serial_num, bytes):
         serial_num = serial_num.decode()
     newisisSerial = serial_num.replace('\n', '')
     return newisisSerial
@@ -115,7 +113,7 @@ def AddProcessDB(session, inputfile, outvalue):
                              process_out=outvalue)
 
     try:
-        session.add(processDB)
+        session.merge(processDB)
         session.commit()
         return 'SUCCESS'
     except:
@@ -124,15 +122,12 @@ def AddProcessDB(session, inputfile, outvalue):
 
 def get_tid(keyword, session):
     tid = session.query(upc_models.Keywords.typeid).filter(upc_models.Keywords.typename == keyword).first()[0]
-    print(tid)
     return tid
     
 
 
 # @TODO set back to /usgs/ and /scratch/ directories.
 def main():
-
-    # pdb.set_trace()
 
     #workarea = '/scratch/pds_services/workarea/'
     workarea = '/home/arsanders/PDS-Pipelines/products/'
@@ -298,9 +293,6 @@ def main():
                         upc_models.Instruments.instrument == keywordsOBJ.getKeyword(
                             'Instrument', 'InstrumentId')).first()
 
-                    PVL_productid = keywordsOBJ.getKeyword(
-                        'Archive', 'ProductId')
-
                     test_input = upc_models.DataFiles(
                         isisid=keywordsOBJ.getKeyword('Parameters', 'IsisId'),
                         productid=keywordsOBJ.getKeyword(
@@ -310,7 +302,7 @@ def main():
                         instrumentid=instrument_Qobj.instrumentid,
                         targetid=target_Qobj.targetid)
 
-                    session.add(test_input)
+                    session.merge(test_input)
                     session.commit()
 
                 Qobj = session.query(upc_models.DataFiles).filter(
@@ -323,11 +315,11 @@ def main():
                     index = 0
                     while index < len(infile_bandlist):
                         B_DBinput = upc_models.MetaBands(upcid=UPCid, filter=infile_bandlist[index], centerwave=infile_centerlist[index])
-                        session.add(B_DBinput)
+                        session.merge(B_DBinput)
                         index = index + 1
                 else:
                     B_DBinput = upc_models.MetaBands(upcid=UPCid, filter=infile_bandlist, centerwave=float(infile_centerlist[0]))
-                    session.add(B_DBinput)
+                    session.merge(B_DBinput)
                 session.commit()
 
 #  Block to add common keywords
@@ -338,21 +330,27 @@ def main():
                     keytype = testjson['instrument']['COMMON'][element_1]['type']
                     keygroup = testjson['instrument']['COMMON'][element_1]['group']
                     keyword = testjson['instrument']['COMMON'][element_1]['keyword']
-                    keyword_Qobj = session.query(
-                        upc_models.Keywords).filter(upc_models.Keywords.typename == element_1).first()
+                    keyword_Qobj = session.query(upc_models.Keywords).filter(
+                        upc_models.Keywords.typename == element_1).first()
+                    if keyword_Qobj is None:
+                        continue
                     if keygroup == 'Polygon':
                         keyvalue = keywordsOBJ.getPolygonKeyword(keyword)
                     else:
                         keyvalue = keywordsOBJ.getKeyword(keygroup, keyword)
+                    if keyvalue is None:
+                        continue
                     keyvalue = db2py(keytype, keyvalue)
                     DBinput = upc_models.create_table(keytype,
-                                                  upcid=UPCid,
-                                                  typeid=keyword_Qobj.typeid,
-                                                  value=keyvalue)
-
-                    session.add(DBinput)
+                                                upcid=UPCid,
+                                                typeid=keyword_Qobj.typeid,
+                                                value=keyvalue)
+                    session.merge(DBinput)
+                    try:
+                        session.flush()
+                    except Exception as e:
+                        print(e)
                 session.commit()
-
                 # geometry stuff
                 G_centroid = 'point ({} {})'.format(
                     str(keywordsOBJ.getKeyword(
@@ -360,16 +358,15 @@ def main():
                     str(keywordsOBJ.getKeyword(
                         'Polygon', 'CentroidLatitude')))
 
-                G_keyword_Qobj = session.query(upc_models.Keywords).filter(
+                G_keyword_Qobj = session.query(upc_models.Keywords.typeid).filter(
                     upc_models.Keywords.typename == 'isiscentroid').first()
-                G_DBinput = upc_models.MetaGeometry(upcid=UPCid, typeid=G_keyword_Qobj.typeid, value=G_centroid)
-                session.add(G_DBinput)
-
-                G_footprint = keywordsOBJ.getKeyword('Polygon', 'GisFootprint')
-                G_footprint_Qobj = session.query(upc_models.Keywords).filter(
+                G_footprint_Qobj = session.query(upc_models.Keywords.typeid).filter(
                     upc_models.Keywords.typename == 'isisfootprint').first()
-                G_DBinput = upc_models.MetaGeometry(upcid=UPCid, typeid=G_footprint_Qobj.typeid, value=G_footprint)
-                session.add(G_DBinput)
+                G_footprint = keywordsOBJ.getKeyword('Polygon', 'GisFootprint')
+                G_DBinput = upc_models.MetaGeometry(upcid=UPCid, typeid=G_keyword_Qobj, value=G_centroid)
+                session.merge(G_DBinput)
+                G_DBinput = upc_models.MetaGeometry(upcid=UPCid, typeid=G_footprint_Qobj, value=G_footprint)
+                session.merge(G_DBinput)
                 session.commit()
 
                 # block to deal with mission keywords
@@ -381,8 +378,9 @@ def main():
                     M_keyword = testjson['instrument'][getMission(
                         inputfile)][element_2]['keyword']
 
-                    M_keyword_Qobj = session.query(upc_models.Keywords).filter(
-                        upc_models.Keywords.typename == element_2).first()
+                    with session.no_autoflush:
+                        M_keyword_Qobj = session.query(upc_models.Keywords).filter(
+                            upc_models.Keywords.typename == element_2).first()
 
                     if M_keygroup == 'Polygon':
                         M_keyvalue = keywordsOBJ.getPolygonKeyword(M_keyword)
@@ -393,11 +391,11 @@ def main():
                     M_keyvalue = db2py(M_keytype, M_keyvalue)
 
                     DBinput = upc_models.create_table(M_keytype,
-                                                  upcid=UPCid,
-                                                  typeid=M_keyword_Qobj.typeid,
-                                                  value=M_keyvalue)
+                                                upcid=UPCid,
+                                                typeid=M_keyword_Qobj.typeid,
+                                                value=M_keyvalue)
 
-                    session.add(DBinput)
+                    session.merge(DBinput)
                 session.commit()
 
                 """
@@ -418,12 +416,13 @@ def main():
                 # set typeid to 5 on the prod DB - 101 for dev
                 # production typeid 5 = checksum
                 # dev typeid 101 = checksum
+                # @TODO get typeid
                 DBinput = upc_models.MetaString(upcid=UPCid, typeid=101, value=checksum)
-                session.add(DBinput)
+                session.merge(DBinput)
                 # add error keyword to UPC
                 # typeid 595 = error flag
-                DBinput = upc_models.MetaBoolean(upcid=UPCid, typeid=595, value=False)
-                session.add(DBinput)
+                DBinput = upc_models.MetaBoolean(upcid=UPCid, typeid=err_flag_tid, value=False)
+                session.merge(DBinput)
                 session.commit()
                 AddProcessDB(pds_session, inputfile, True)
                 os.remove(infile)
@@ -434,9 +433,7 @@ def main():
                 date = datetime.datetime.now(pytz.utc).strftime(
                     "%Y-%m-%d %H:%M:%S")
 
-                print(processError)
                 if '2isis' in processError or processError == 'thmproc':
-
                     testspacecraft = PDSinfoDICT[getMission(
                         inputfile)]['UPCerrorSpacecraft']
                     testinst = PDSinfoDICT[getMission(
@@ -455,7 +452,7 @@ def main():
 
                         error1_input = upc_models.DataFiles(isisid='1',
                                                             edr_source=EDRsource)
-                        session.add(error1_input)
+                        session.merge(error1_input)
                         session.commit()
 
                     EQ1obj = session.query(upc_models.DataFiles).filter(
@@ -466,37 +463,36 @@ def main():
                         processError, inputfile)
 
                     DBinput = MetaTime(upcid=UPCid,
-                                       typeid=proc_date_tid,
-                                       value=date)
-                    session.add(DBinput)
+                                    typeid=proc_date_tid,
+                                    value=date)
+                    session.merge(DBinput)
 
                     DBinput = MetaString(upcid=UPCid,
-                                         typeid=err_type_tid,
-                                         value=processError)
-                    session.add(DBinput)
+                                        typeid=err_type_tid,
+                                        value=processError)
+                    session.merge(DBinput)
 
                     DBinput = MetaString(upcid=UPCid,
-                                         typeid=err_msg_tid,
-                                         value=errorMSG)
-                    session.add(DBinput)
+                                        typeid=err_msg_tid,
+                                        value=errorMSG)
+                    session.merge(DBinput)
 
                     DBinput = MetaBoolean(upcid=UPCid,
-                                          typeid=err_flag_tid,
-                                          value='true')
-                    session.add(DBinput)
+                                        typeid=err_flag_tid,
+                                        value='true')
+                    session.merge(DBinput)
 
                     DBinput = MetaGeometry(upcid=UPCid,
-                                           typeid=isis_footprint_tid,
-                                           value='POINT(361 0)')
-                    session.add(DBinput)
+                                        typeid=isis_footprint_tid,
+                                        value='POINT(361 0)')
+                    session.merge(DBinput)
 
                     DBinput = MetaGeometry(upcid=UPCid,
-                                           typeid=isis_centroid_tid,
-                                           value='POINT(361 0)')
-                    session.add(DBinput)
+                                        typeid=isis_centroid_tid,
+                                        value='POINT(361 0)')
+                    session.merge(DBinput)
 
                     session.commit()
-
                 else:
                     label = pvl.load(infile)
 
@@ -519,7 +515,7 @@ def main():
                                                  edr_source=EDRsource,
                                                  instrumentid=instrument_Qobj.instrumentid,
                                                  targetid=target_Qobj.targetid)
-                    session.add(error2_input)
+                    session.merge(error2_input)
                     session.commit()
 
                     EQ2obj = session.query(upc_models.DataFiles).filter(
@@ -529,44 +525,44 @@ def main():
                         processError, inputfile)
 
                     DBinput = MetaTime(upcid=UPCid,
-                                       typeid=proc_date_tid,
-                                       value=date)
-                    session.add(DBinput)
+                                    typeid=proc_date_tid,
+                                    value=date)
+                    session.merge(DBinput)
 
                     DBinput = MetaString(upcid=UPCid,
-                                         typeid=err_type_tid,
-                                         value=processError)
-                    session.add(DBinput)
+                                        typeid=err_type_tid,
+                                        value=processError)
+                    session.merge(DBinput)
 
                     DBinput = MetaString(upcid=UPCid,
-                                         typeid=err_msg_tid,
-                                         value=errorMSG)
-                    session.add(DBinput)
+                                        typeid=err_msg_tid,
+                                        value=errorMSG)
+                    session.merge(DBinput)
 
                     DBinput = MetaBoolean(upcid=UPCid,
-                                          typeid=err_flag_tid,
-                                          value='true')
-                    session.add(DBinput)
+                                        typeid=err_flag_tid,
+                                        value='true')
+                    session.merge(DBinput)
 
                     DBinput = MetaGeometry(upcid=UPCid,
-                                           typeid=isis_footprint_tid,
-                                           value='POINT(361 0)')
-                    session.add(DBinput)
+                                        typeid=isis_footprint_tid,
+                                        value='POINT(361 0)')
+                    session.merge(DBinput)
 
                     DBinput = MetaGeometry(upcid=UPCid,
-                                           typeid=isis_centroid_tid,
-                                           value='POINT(361 0)')
-                    session.add(DBinput)
+                                        typeid=isis_centroid_tid,
+                                        value='POINT(361 0)')
+                    session.merge(DBinput)
 
                     DBinput = MetaTime(upcid=UPCid,
-                                       typeid=star_time_tid,
-                                       value=label['IsisCube']['Instrument']['StartTime'])
-                    session.add(DBinput)
+                                    typeid=star_time_tid,
+                                    value=label['IsisCube']['Instrument']['StartTime'])
+                    session.merge(DBinput)
 
                     DBinput = MetaTime(upcid=UPCid,
-                                       typeid=stop_time_tid,
-                                       value=label['IsisCube']['Instrument']['StopTime'])
-                    session.add(DBinput)
+                                    typeid=stop_time_tid,
+                                    value=label['IsisCube']['Instrument']['StopTime'])
+                    session.merge(DBinput)
 
                     session.commit()
 

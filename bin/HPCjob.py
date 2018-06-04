@@ -144,36 +144,35 @@ class HPCjob(object):
         """
         self.sbatchfile = filename
 
-        file = open(filename, "w")
+        with open(filename, "w") as f:
+            f.write("#!/bin/bash\n")
+            if self.name:
+                f.write("\n" + self.name)
+            if self.Sout:
+                f.write("\n" + self.Sout)
+            if self.Serror:
+                f.write("\n" + self.Serror)
+            if self.partition:
+                f.write("\n" + self.partition)
+            if self.array:
+                f.write("\n" + self.array)
+            if self.Wall:
+                f.write("\n" + self.Wall)
+            if self.memory:
+                f.write("\n" + self.memory)
 
-        file.write("#!/bin/bash\n")
-        if self.name:
-            file.write("\n" + self.name)
-        if self.Sout:
-            file.write("\n" + self.Sout)
-        if self.Serror:
-            file.write("\n" + self.Serror)
-        if self.partition:
-            file.write("\n" + self.partition)
-        if self.array:
-            file.write("\n" + self.array)
-        if self.Wall:
-            file.write("\n" + self.Wall)
-        if self.memory:
-            file.write("\n" + self.memory)
+            f.write("\n#SBATCH --spread-job")
 
-        if self.module:
-            file.write("\n\n" + self.module)
-            file.write("\necho `printenv PATH`")
+            if self.module:
+                f.write("\n\n" + self.module)
+                f.write("\necho `printenv PATH`")
 
-        if self.path:
-            file.write("\n\n" + self.path)
-            file.write("\necho `printenv PATH`")
+            if self.path:
+                f.write("\n\n" + self.path)
+                f.write("\necho `printenv PATH`")
 
-        if self.cmd:
-            file.write("\n\n" + self.cmd)
-
-        file.close()
+            if self.cmd:
+                f.write("\n\n" + self.cmd)
 
     def Run(self):
         """

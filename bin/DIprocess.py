@@ -65,7 +65,8 @@ def main():
 # ********* Set up logging *************
     logger = logging.getLogger('DI_Process')
     logger.setLevel(logging.INFO)
-    logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/DI.log')
+    #logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/DI.log')
+    logFileHandle = logging.FileHandler('/home/arsanders/PDS-Pipelines/logs/DI.log')
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
@@ -75,7 +76,7 @@ def main():
 
     try:
         # ignores engine information
-        session, _ = db_connect('pdsdi')
+        session, _ = db_connect('pdsdi_dev')
         logger.info('DataBase Connecton: Success')
     except:
         logger.error('DataBase Connection: Error')
@@ -84,7 +85,7 @@ def main():
     index = 0
 
     while int(RQ.QueueSize()) > 0:
-        inputfile = RQ.QueueGet()
+        inputfile = RQ.QueueGet().decode('utf-8')
         try:
             Qelement = session.query(Files).filter(
                 Files.filename == inputfile).one()
@@ -109,9 +110,9 @@ def main():
             checksum = f_hash.hexdigest()
 
             if checksum == Qelement.checksum:
-                Qelement.di_pass = 't'
+                Qelement.di_pass = True
             else:
-                Qelement.di_pass = 'f'
+                Qelement.di_pass = False
             Qelement.di_date = datetime.datetime.now(
                 pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
             session.flush()

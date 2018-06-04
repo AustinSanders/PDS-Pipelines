@@ -6,7 +6,9 @@ import pvl
 
 
 def find_keyword(obj, key):
-    if key in obj:
+    if key is None or obj is None:
+        return None
+    elif key in obj:
         return obj[key]
     for k, v in obj.items():
         if isinstance(v, dict):

@@ -35,7 +35,6 @@ def getArchiveID(inputfile):
     str
         archive
     """
-    print(inputfile)
     if 'Mars_Reconnaissance_Orbiter/CTX' in inputfile:
         archive = 'mroCTX'
     elif 'Mars_Reconnaissance_Orbiter/MARCI' in inputfile:
@@ -50,6 +49,8 @@ def getArchiveID(inputfile):
         archive = 'dawnVesta'
     elif 'Dawn/Ceres' in inputfile:
         archive = 'dawnCeres'
+    elif 'Galileo/SSI' in inputfile:
+        archive= 'galileoSSI'
     elif 'MESSENGER' in inputfile:
         archive = 'messenger'
     elif 'Magellan' in inputfile:

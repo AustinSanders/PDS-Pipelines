@@ -1,7 +1,6 @@
-import datetime
-import pytz
+#!/usgs/apps/anaconda/bin/python
+
 import json
-from FindDI_Ready import archive_expired, volume_expired
 from RedisQueue import RedisQueue
 from db import db_connect
 from models.pds_models import Files, Archives
@@ -33,6 +32,7 @@ def main():
 
         # No archive name = no path.  Skip these values.
         if (archive_name is None):
+            # @TODO log an error
             continue
 
         try:
