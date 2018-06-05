@@ -159,7 +159,7 @@ def main():
     err_type_tid = get_tid('errortype', session)
     err_msg_tid = get_tid('errormessage', session)
     err_flag_tid = get_tid('error', session)
-    isis_footprint_id = get_tid('isisfootprint', session)
+    isis_footprint_tid = get_tid('isisfootprint', session)
     isis_centroid_tid = get_tid('isiscentroid', session)
     start_time_tid = get_tid('starttime', session)
     stop_time_tid = get_tid('stoptime', session)
@@ -434,6 +434,7 @@ def main():
                     "%Y-%m-%d %H:%M:%S")
 
                 if '2isis' in processError or processError == 'thmproc':
+                    # @TODO unused variables testspacecraft and testinst
                     testspacecraft = PDSinfoDICT[getMission(
                         inputfile)]['UPCerrorSpacecraft']
                     testinst = PDSinfoDICT[getMission(
@@ -555,7 +556,7 @@ def main():
                     session.merge(DBinput)
 
                     DBinput = MetaTime(upcid=UPCid,
-                                    typeid=star_time_tid,
+                                    typeid=start_time_tid,
                                     value=label['IsisCube']['Instrument']['StartTime'])
                     session.merge(DBinput)
 
