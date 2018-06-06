@@ -7,6 +7,7 @@ import pytz
 import logging
 import json
 import hashlib
+from ast import literal_eval
 
 from pysis import isis
 from pysis.exceptions import ProcessError
@@ -88,10 +89,11 @@ def db2py(key_type, value):
         return value
 
 
-def AddProcessDB(session, inputfile, outvalue):
+def AddProcessDB(session, fid, outvalue):
 
     # pdb.set_trace()
 
+    """
     parts = inputfile.split("/")
 
     testfile = parts[-3] + "/" + parts[-2] + "/" + parts[-1]
@@ -99,15 +101,18 @@ def AddProcessDB(session, inputfile, outvalue):
 
     fileQobj = session.query(pds_models.Files).filter(
         pds_models.Files.filename.like(testfile2)).first()
+    fileQobj = session.query(pds_models.Files).filter(
+        pds_models.Files.fileid == fid)
 
     if fileQobj is None:
         return 'ERROR'
 
     fileid = fileQobj.fileid
 
+    """
     date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
 
-    processDB = pds_models.ProcessRuns(fileid=fileQobj.fileid,
+    processDB = pds_models.ProcessRuns(fileid=fid,
                              process_date=date,
                              process_typeid='5',
                              process_out=outvalue)
@@ -167,7 +172,10 @@ def main():
     # while there are items in the redis queue
     while int(RQ_main.QueueSize()) > 0:
         # get a file from the queue
-        inputfile = (RQ_main.QueueGet()).decode('utf-8')
+        item = literal_eval(RQ_main.QueueGet().decode("utf-8"))
+        inputfile = item[0]
+        fid = item[1]
+        #inputfile = (RQ_main.QueueGet()).decode('utf-8')
         if os.path.isfile(inputfile):
             pass
         else:
@@ -222,14 +230,24 @@ def main():
                         exband = 'none'
                         for item1 in PDSinfoDICT[getMission(inputfile)]['bandorder']:
                             bandcount = 1
-                            for item2 in label['IsisCube']['BandBin'][PDSinfoDICT[getMission(inputfile)]['bandbinQuery']]:
-                                if str(item1) == str(item2):
-                                    exband = bandcount
+                            # @TODO causes a type error "int is not iterable."  Need to figure out what this is supposed to do + how to fix it.
+                            print(type(label['IsisCube']['BandBin'][PDSinfoDICT[getMission(inputfile)]['bandbinQuery']]))
+                            print(PDSinfoDICT[getMission(inputfile)]['bandbinQuery'])
+                            print(label['IsisCube']['BandBin'])
+                            bands = label['IsisCube']['BandBin'][PDSinfoDICT[getMission(inputfile)]['bandbinQuery']]
+                            # Sometime 'bands' is iterable, sometimes it is a single int.  Need to handle both.
+                            try:
+                                for item2 in bands:
+                                    if str(item1) == str(item2):
+                                        exband = bandcount
+                                        break
+                                    bandcount = bandcount + 1
+                                if exband != 'none':
                                     break
-                                bandcount = bandcount + 1
-                            if exband != 'none':
-                                break
-
+                            except TypeError:
+                                if str(item1) == str(bands):
+                                    exband = 1
+                                    break
                         band_infile = infile + '+' + str(exband)
                         processOBJ.updateParameter('from_', band_infile)
                         processOBJ.updateParameter('to', outfile)
@@ -310,11 +328,11 @@ def main():
                         'Parameters', 'IsisId')).first()
 
                 UPCid = Qobj.upcid
-# block to add band information to meta_bands
-                if type(infile_bandlist) == list:
+                # block to add band information to meta_bands
+                if isinstance(infile_bandlist, list):
                     index = 0
                     while index < len(infile_bandlist):
-                        B_DBinput = upc_models.MetaBands(upcid=UPCid, filter=infile_bandlist[index], centerwave=infile_centerlist[index])
+                        B_DBinput = upc_models.MetaBands(upcid=UPCid, filter=str(infile_bandlist[index]), centerwave=infile_centerlist[index])
                         session.merge(B_DBinput)
                         index = index + 1
                 else:
@@ -322,7 +340,7 @@ def main():
                     session.merge(B_DBinput)
                 session.commit()
 
-#  Block to add common keywords
+                #  Block to add common keywords
                 testjson = json.load(
                     open('/usgs/cdev/PDS/recipe/Keyword_Definition.json', 'r'))
                 for element_1 in testjson['instrument']['COMMON']:
@@ -424,7 +442,7 @@ def main():
                 DBinput = upc_models.MetaBoolean(upcid=UPCid, typeid=err_flag_tid, value=False)
                 session.merge(DBinput)
                 session.commit()
-                AddProcessDB(pds_session, inputfile, True)
+                AddProcessDB(pds_session, fid, True)
                 os.remove(infile)
                 os.remove(caminfoOUT)
 
@@ -480,7 +498,7 @@ def main():
 
                     DBinput = MetaBoolean(upcid=UPCid,
                                         typeid=err_flag_tid,
-                                        value='true')
+                                        value=True)
                     session.merge(DBinput)
 
                     DBinput = MetaGeometry(upcid=UPCid,
@@ -541,8 +559,8 @@ def main():
                     session.merge(DBinput)
 
                     DBinput = MetaBoolean(upcid=UPCid,
-                                        typeid=err_flag_tid,
-                                        value='true')
+                                          typeid=err_flag_tid,
+                                          value=True)
                     session.merge(DBinput)
 
                     DBinput = MetaGeometry(upcid=UPCid,
@@ -567,7 +585,7 @@ def main():
 
                     session.commit()
 
-                AddProcessDB(pds_session, inputfile, 'f')
+                AddProcessDB(pds_session, fid, 'f')
                 os.remove(infile)
 
 
