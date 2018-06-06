@@ -65,35 +65,24 @@ def main():
 
     try:
         session, _ = db_connect('pdsdi_dev')
-
         print('Database Connection Success')
     except:
         print('Database Connection Error')
 
     if args.volume:
         volstr = '%' + args.volume + '%'
-
-        Qnum = session.query(Files).filter(Files.archiveid == archiveID,
-                                             Files.filename.like(volstr),
-                                             Files.upc_required == 't').count()
-
-        if Qnum > 0:
-            print("We have files for UPC")
-
-            qOBJ = session.query(Files).filter(Files.archiveid == archiveID,
-                                                 Files.filename.like(volstr),
-                                                 Files.upc_required == 't')
-        else:
-            print("No UPC files found")
-
+        qOBJ = session.query(Files).filter(Files.archiveid == archiveID,
+                                           Files.filename.like(volstr),
+                                           Files.upc_required == 't')
     else:
         qOBJ = session.query(Files).filter(Files.archiveid == archiveID,
                                              Files.upc_required == 't')
     if qOBJ:
         addcount = 0
         for element in qOBJ:
-            Qfile = PDSinfoDICT[args.archive]['path'] + element.filename
-            RQ.QueueAdd(Qfile)
+            fname = PDSinfoDICT[args.archive]['path'] + element.filename
+            fid = element.fileid
+            RQ.QueueAdd((fname, fid))
             addcount = addcount + 1
 
         logger.info('Files Added to UPC Queue: %s', addcount)

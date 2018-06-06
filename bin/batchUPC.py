@@ -44,8 +44,9 @@ def main():
 
         # Add each file in the archive to the redis queue.
         for element in result:
-            fName = fpath + element.filename
-            reddis_queue.QueueAdd(fName)
+            fname = fpath + element.filename
+            fid = element.fileid
+            reddis_queue.QueueAdd((fname, fid))
     return 0
 
 
