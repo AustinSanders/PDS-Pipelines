@@ -230,10 +230,6 @@ def main():
                         exband = 'none'
                         for item1 in PDSinfoDICT[getMission(inputfile)]['bandorder']:
                             bandcount = 1
-                            # @TODO causes a type error "int is not iterable."  Need to figure out what this is supposed to do + how to fix it.
-                            print(type(label['IsisCube']['BandBin'][PDSinfoDICT[getMission(inputfile)]['bandbinQuery']]))
-                            print(PDSinfoDICT[getMission(inputfile)]['bandbinQuery'])
-                            print(label['IsisCube']['BandBin'])
                             bands = label['IsisCube']['BandBin'][PDSinfoDICT[getMission(inputfile)]['bandbinQuery']]
                             # Sometime 'bands' is iterable, sometimes it is a single int.  Need to handle both.
                             try:
