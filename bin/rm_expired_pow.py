@@ -35,7 +35,7 @@ def main():
     paths = ['/pds_san/PDS_Services/MAP2/','/pds_san/PDS_Services/POW/']
 
     try:
-        n_days = sys.argv[2]
+        n_days = sys.argv[1]
     except IndexError:
         n_days = 14
 
