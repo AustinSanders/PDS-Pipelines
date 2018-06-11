@@ -1,47 +1,87 @@
 import os
-import time
+from datetime import datetime, timedelta
 import sys
 import shutil
 
-def removeOld(path, n_days=14):
-    now = time.time()
-    cutoff = now - ( n_days * 86400)
-    if not os.path.isdir(path):
-        print("Unable to access {}".format(path))
-        return 1
-    for f in os.listdir(path):
-        f = os.path.join(path, f)
-        if os.stat(f).st_mtime < cutoff:
-            try:
-                if os.path.isfile(f):
-                    #print('rmfile: {}'.format(f))
-                    os.remove(f)
-                else:
-                    #print('rmdir: {}'.format(f))
-                    shutil.rmtree(f)
-            except OSError as e:
-                print(e)
-                pass
-    return 0
+from models import clusterjobs_models
+from db import db_connect
+from sqlalchemy import and_
+
+def remove(paths, keys, id2task, session):
+    """ Removes a job from the supplied path based on its key.
+    
+    Parameters
+    ----------
+    paths : list[String]
+        A list of string paths from which the keys will be deleted
+    keys : list[sqlalchemy.collections.result(String, String)]
+        Tuple of (typeid, key) where 'typeid' determines the path from
+         which the key will be deleted and 'key' is the item to be
+         deleted.
+        A typeid of 1 = POW , 2 = MAP2
+    id2task : dict
+        A mapping between taskid and task description
+    session : sqlAlchemy.Session
+        A session object used to update the 'purged' column related to the
+         deleted file
+    """
+    for item in keys:
+        typeid = int(item[0])
+        # @TODO Should refactor this.  It works, but it's dependent on the fact that POW = 1, Map = 2, and
+        #  these values may change. Maybe create lookup table based on db query on typeid.
+        path = paths[id2task[typeid]]
+        key = item[1]
+        f = os.path.join(path, key)
+        """
+        try:
+            if os.path.isfile(f):
+                os.remove(f)
+            else:
+                shutil.rmtree(f)
+            set_purged(session, key)
+        except OSError as e:
+            print(e)
+            pass
+        """
+
+def set_purged(session, key):
+    now = datetime.now()
+    k = session.query(clusterjobs_models.Processing).filter(
+        clusterjobs_models.Processing.key == key).update({'purged': now})
+    session.commit()
+
+
+def get_old_keys(session, n_days=14):
+    cutoff = datetime.now() - timedelta(days=n_days)
+    old = session.query(clusterjobs_models.Processing.typeid, clusterjobs_models.Processing.key).filter(
+        and_(clusterjobs_models.Processing.notified < cutoff,
+             clusterjobs_models.Processing.purged == None))
+    return old
+
+
+def map_type_ids(session):
+    ids = session.query(clusterjobs_models.ProcessTypes.typeid, clusterjobs_models.ProcessTypes.name)
+    out = dict(ids)
+    return out
+
 
 def main():
-    """
-    try:
-        path = sys.argv[1]
-    except IndexError:
-        print("Usage rm_expired_pow.py <directory> [nDays]")
-        return 1
-    """
-    paths = ['/pds_san/PDS_Services/MAP2/','/pds_san/PDS_Services/POW/']
+    paths = {'MAP2':'/pds_san/PDS_Services/MAP2/',
+             'POW':'/pds_san/PDS_Services/POW/'}
+
+    session, _ = db_connect('clusterjob_prd')
+
+    id2task = map_type_ids(session)
 
     try:
         n_days = sys.argv[1]
     except IndexError:
         n_days = 14
 
-    for path in paths:
-        removeOld(path, n_days)
+    old_files = get_old_keys(session)
+    remove(paths, old_files, id2task, session)
 
+    return 0
 
 
 if __name__ == "__main__":
