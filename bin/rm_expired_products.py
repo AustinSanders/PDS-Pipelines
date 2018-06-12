@@ -32,7 +32,6 @@ def remove(path, keys, id2task, session):
         f_path = os.path.join(path, id2task[typeid])
         key = item[1]
         f = os.path.join(f_path, key)
-        print(f)
         # Remove file or directory matching the key and set purged in db
         try:
             if os.path.isfile(f):
