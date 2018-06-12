@@ -27,8 +27,6 @@ def remove(paths, keys, id2task, session):
     """
     for item in keys:
         typeid = int(item[0])
-        # @TODO Should refactor this.  It works, but it's dependent on the fact that POW = 1, Map = 2, and
-        #  these values may change. Maybe create lookup table based on db query on typeid.
         path = paths[id2task[typeid]]
         key = item[1]
         f = os.path.join(path, key)
