@@ -2,8 +2,9 @@ import sys
 import os
 from json import dump
 from xmljson import badgerfish as bf
-from xml.etree.ElementTree import fromstring
+from xml.etree.ElementTree import fromstring, ParseError
 import keyword
+import glob
 from collections import OrderedDict
 
 
@@ -91,7 +92,6 @@ def set_reduce(in_dict, out_dict, group_name):
 
 
 def set_even_odd(in_dict, out_dict, group_name):
-    # @TODO
     try:
         ctx_eo = in_dict['instrument']['upc']['process']['ctxevenodd']['command']
     except KeyError:
@@ -160,24 +160,26 @@ def main():
         print("No output file specified -- writing output in input directory.")
         out = os.path.dirname(os.path.realpath(infile))
 
-    if os.path.isdir(out):
-        outfile = os.path.join(out, str(os.path.basename(infile)).replace(".xml",".json"))
-    else:
-        outfile = out
+    for xmlfile in glob.glob(infile):
+        with open(xmlfile) as f:
+            if os.path.isdir(out):
+                outfile = os.path.join(out, str(os.path.basename(xmlfile)).replace(".xml",".json"))
+            else:
+                outfile = out
+            try:
+                data = f.read()
+                xml = bf.data(fromstring(data))
+            except ParseError:
+                continue
 
-    with open(infile) as f:
-        data = f.read()
-        xml = bf.data(fromstring(data))
-        outfile = infile.replace('.xml','.json')
+        recipe = {}
+        set_instrument(xml, recipe)
+        set_upc(xml, recipe)
+        set_pow(xml, recipe)
+        set_thumbnail(xml, recipe)
+        set_projected(xml, recipe)
 
-    recipe = {}
-    set_instrument(xml, recipe)
-    set_upc(xml, recipe)
-    set_pow(xml, recipe)
-    set_thumbnail(xml, recipe)
-    set_projected(xml, recipe)
-
-    writejson(outfile, recipe)
+        writejson(outfile, recipe)
 
 
 if __name__ == "__main__":
