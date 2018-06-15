@@ -1,0 +1,67 @@
+{
+    "inst": "cassini_coradr",
+    "upc": {
+        "recipe": {
+            "mroctx2isis": {
+                "from_": "value",
+                "to": "value"
+            },
+            "spiceinit": {
+                "from_": "value",
+                "cknadir": "no"
+            },
+            "caminfo": {
+                "from_": "value",
+                "to": "value",
+                "geometry": "yes",
+                "isislabel": "yes",
+                "originallabel": "yes",
+                "statistics": "yes",
+                "camstats": "yes",
+                "linc": "100",
+                "sinc": "100",
+                "polygon": "yes",
+                "pixinc": "100",
+                "maxemission": "89.5",
+                "maxincidence": "120.0",
+                "spice": "no"
+            }
+        }
+    },
+    "pow": {
+        "recipe": {
+            "mroctx2isis": {
+                "from_": "value",
+                "to": "value"
+            },
+            "spiceinit": {
+                "from_": "value",
+                "cknadir": "no"
+            }
+        }
+    },
+    "reduced": {
+        "recipe": {
+            "mroctx2isis": {
+                "from_": "value",
+                "to": "value"
+            },
+            "spiceinit": {
+                "from_": "value",
+                "cknadir": "no"
+            }
+        }
+    },
+    "projected": {
+        "recipe": {
+            "mroctx2isis": {
+                "from_": "value",
+                "to": "value"
+            },
+            "spiceinit": {
+                "from_": "value",
+                "cknadir": "no"
+            }
+        }
+    }
+}

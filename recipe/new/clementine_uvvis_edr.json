@@ -1,0 +1,42 @@
+{
+    "inst": "clementine_uvvis_edr",
+    "upc": {
+        "recipe": {}
+    },
+    "pow": {
+        "recipe": {
+            "clem2isis": {
+                "from_": "value",
+                "to": "value"
+            },
+            "clemuvviscal": {
+                "from_": "value",
+                "to": "value"
+            },
+            "cam2map": {
+                "from": "value",
+                "to": "value",
+                "map": "value",
+                "matchmap": "no",
+                "pixres": "value",
+                "defaultrange": "value"
+            }
+        }
+    },
+    "reduced": {
+        "recipe": {
+            "clemuvviscal": {
+                "from_": "value",
+                "to": "value"
+            }
+        }
+    },
+    "projected": {
+        "recipe": {
+            "clemuvviscal": {
+                "from_": "value",
+                "to": "value"
+            }
+        }
+    }
+}
