@@ -1,0 +1,42 @@
+{
+    "inst": "voyager",
+    "upc": {
+        "recipe": {}
+    },
+    "pow": {
+        "recipe": {
+            "voy2isis": {
+                "from_": "value",
+                "to": "value"
+            },
+            "voycal": {
+                "from_": "value",
+                "to": "value"
+            },
+            "cam2map": {
+                "from": "value",
+                "to": "value",
+                "map": "value",
+                "matchmap": "no",
+                "pixres": "value",
+                "defaultrange": "value"
+            }
+        }
+    },
+    "reduced": {
+        "recipe": {
+            "voycal": {
+                "from_": "value",
+                "to": "value"
+            }
+        }
+    },
+    "projected": {
+        "recipe": {
+            "voycal": {
+                "from_": "value",
+                "to": "value"
+            }
+        }
+    }
+}

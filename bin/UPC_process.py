@@ -92,24 +92,6 @@ def db2py(key_type, value):
 def AddProcessDB(session, fid, outvalue):
 
     # pdb.set_trace()
-
-    """
-    parts = inputfile.split("/")
-
-    testfile = parts[-3] + "/" + parts[-2] + "/" + parts[-1]
-    testfile2 = '%' + testfile + '%'
-
-    fileQobj = session.query(pds_models.Files).filter(
-        pds_models.Files.filename.like(testfile2)).first()
-    fileQobj = session.query(pds_models.Files).filter(
-        pds_models.Files.fileid == fid)
-
-    if fileQobj is None:
-        return 'ERROR'
-
-    fileid = fileQobj.fileid
-
-    """
     date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
 
     processDB = pds_models.ProcessRuns(fileid=fid,
@@ -569,14 +551,22 @@ def main():
                                         value='POINT(361 0)')
                     session.merge(DBinput)
 
+                    try:
+                        v = label['IsisCube']['Instrument']['StartTime']
+                    except KeyError:
+                        v = None
                     DBinput = MetaTime(upcid=UPCid,
                                     typeid=start_time_tid,
-                                    value=label['IsisCube']['Instrument']['StartTime'])
+                                    value=v)
                     session.merge(DBinput)
 
+                    try:
+                        v = label['IsisCube']['Instrument']['StopTime']
+                    except KeyError:
+                        v = None
                     DBinput = MetaTime(upcid=UPCid,
                                     typeid=stop_time_tid,
-                                    value=label['IsisCube']['Instrument']['StopTime'])
+                                    value=v)
                     session.merge(DBinput)
 
                     session.commit()

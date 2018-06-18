@@ -1,0 +1,50 @@
+{
+    "inst": "mgs_moc_na",
+    "upc": {
+        "recipe": {}
+    },
+    "pow": {
+        "recipe": {
+            "moc2isis": {
+                "from_": "value",
+                "to": "value"
+            },
+            "moccal": {
+                "from_": "value",
+                "to": "value"
+            },
+            "mocnoise50": {
+                "from_": "value",
+                "to": "value"
+            },
+            "mocevenodd": {
+                "from_": "value",
+                "to": "value"
+            },
+            "cam2map": {
+                "from": "value",
+                "to": "value",
+                "map": "value",
+                "matchmap": "no",
+                "pixres": "value",
+                "defaultrange": "value"
+            }
+        }
+    },
+    "reduced": {
+        "recipe": {
+            "moccal": {
+                "from_": "value",
+                "to": "value"
+            }
+        }
+    },
+    "projected": {
+        "recipe": {
+            "moccal": {
+                "from_": "value",
+                "to": "value"
+            }
+        }
+    }
+}
