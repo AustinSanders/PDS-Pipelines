@@ -1,23 +1,21 @@
 {
-    "inst": "messenger_mission",
+    "inst": "clementine_edr",
     "upc": {
         "recipe": {
-            "mdis2isis": {
+            "clem2isis": {
                 "from_": "value",
                 "to": "value"
             },
             "spiceinit": {
                 "from_": "value",
-                "ckrecon": "yes",
-                "ckpredicted": "yes",
-                "spkrecon": "yes",
-                "spkpredicted": "yes"
+                "cknadir": "yes",
+                "cksmithed": "yes"
             },
             "footprintinit": {
                 "from_": "value",
                 "increaseprecision": "yes",
                 "inctype": "vertices",
-                "numvertices": "40",
+                "numvertices": "20",
                 "maxemission": "89.5",
                 "maxincidence": "120.0"
             },
@@ -33,7 +31,7 @@
                 "sinc": "10",
                 "polygon": "yes",
                 "inctype": "vertices",
-                "numvertices": "40",
+                "numvertices": "20",
                 "maxemission": "89.5",
                 "maxincidence": "120.0",
                 "spice": "no"
@@ -42,58 +40,64 @@
     },
     "pow": {
         "recipe": {
-            "mdis2isis": {
+            "clem2isis": {
                 "from_": "value",
                 "to": "value"
             },
             "spiceinit": {
                 "from_": "value",
-                "ckrecon": "yes",
-                "ckpredicted": "yes",
-                "spkrecon": "yes",
-                "spkpredicted": "yes"
-            },
-	    "mdiscal": {
-            "from_": "value",
-            "to": "value"
-            },
-            "cam2map": {
-		    "from_": "value",
-		    "to": "value",
-		    "map": "value",
-		    "matchmap": "no",
-		    "pixres": "value",
-		    "defaultrange": "value"
+                "cknadir": "yes",
+                "cksmithed": "yes"
             }
         }
     },
     "reduced": {
         "recipe": {
-            "mdis2isis": {
+            "clem2isis": {
                 "from_": "value",
                 "to": "value"
             },
             "spiceinit": {
                 "from_": "value",
-                "ckrecon": "yes",
-                "ckpredicted": "yes",
-                "spkrecon": "yes",
-                "spkpredicted": "yes"
+                "cknadir": "yes",
+                "cksmithed": "yes"
+            },
+            "reduce": {
+                "from_": "value",
+                "to": "value",
+                "algorithm": "average",
+                "mode": "scale",
+                "sscale": "value",
+                "lscale": "value",
+                "validper": "1",
+                "vper_replace": "nearest"
+            },
+            "isis2std": {
+                "from_": "value",
+                "to": "value",
+                "format": "jpeg",
+                "quality": "60",
+                "stretch": "linear"
             }
         }
     },
     "projected": {
         "recipe": {
-            "mdis2isis": {
+            "clem2isis": {
                 "from_": "value",
                 "to": "value"
             },
             "spiceinit": {
                 "from_": "value",
-                "ckrecon": "yes",
-                "ckpredicted": "yes",
-                "spkrecon": "yes",
-                "spkpredicted": "yes"
+                "cknadir": "yes",
+                "cksmithed": "yes"
+            },
+            "isis2std": {
+                "from_": "value",
+                "to": "value",
+                "format": "jpeg",
+                "quality": "60",
+                "stretch": "linear"
             }
         }
     }

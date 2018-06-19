@@ -15,23 +15,26 @@ def set_instrument(in_dict, out_dict):
 def set_upc(in_dict, out_dict):
     out_dict['upc'] = {'recipe': OrderedDict()}
     excluded = set(['isis2std', 'reduce'])
-    for proc in in_dict['instrument']['upc']['process']:
-        k =  in_dict['instrument']['upc']['process'][proc]['command']['name']['$']
-        if k in excluded:
-            continue
-        out_dict['upc']['recipe'][k] = {}
-        for val in list(in_dict['instrument']['upc']['process'][proc]['command']['param']):
-            # trim the '=' off of each parameter's name
-            arg = val['argument']['$'][0:-1]
-            # parameters that are python keywords have an affixed '_', e.g. from = from_
-            if keyword.iskeyword(arg):
-                arg = arg + '_'
-            value = str(val['value']['$'])
-            # values surrounded by % are considered variables.  New recipes simply use the
-            #  word 'value' as a keyword for variables
-            if value.startswith('%'):
-                value = 'value'
-            out_dict['upc']['recipe'][k][arg] = value
+    try:
+        for proc in in_dict['instrument']['upc']['process']:
+            k =  in_dict['instrument']['upc']['process'][proc]['command']['name']['$']
+            if k in excluded:
+                continue
+            out_dict['upc']['recipe'][k] = {}
+            for val in list(in_dict['instrument']['upc']['process'][proc]['command']['param']):
+                # trim the '=' off of each parameter's name
+                arg = val['argument']['$'][0:-1]
+                # parameters that are python keywords have an affixed '_', e.g. from = from_
+                if keyword.iskeyword(arg):
+                    arg = arg + '_'
+                value = str(val['value']['$'])
+                # values surrounded by % are considered variables.  New recipes simply use the
+                #  word 'value' as a keyword for variables
+                if value.startswith('%'):
+                    value = 'value'
+                out_dict['upc']['recipe'][k][arg] = value
+    except KeyError as e:
+        pass
 
 
 def set_pow(in_dict, out_dict):
@@ -39,18 +42,53 @@ def set_pow(in_dict, out_dict):
     out_dict['pow'] = {'recipe':{}}
     # Copy the "*2isis" and spice init steps from the upc dictionary
     for i in range(2):
-        k,v = list(out_dict['upc']['recipe'].items())[i]
+        try:
+            k,v = list(out_dict['upc']['recipe'].items())[i]
+        except IndexError as e:
+            break
         out_dict['pow']['recipe'].update({k:v})
 
+    try:
+        for proc in in_dict['instrument']['pow']['process']:
+            k =  in_dict['instrument']['pow']['process'][proc]['command']['name']['$']
+            out_dict['pow']['recipe'][k] = {}
+            for val in list(in_dict['instrument']['pow']['process'][proc]['command']['param']):
+                # trim the '=' off of each parameter's name
+                arg = val['argument']['$'][0:-1]
+                # parameters that are python keywords have an affixed '_', e.g. from = from_
+                if keyword.iskeyword(arg):
+                    arg = arg + '_'
+                value = str(val['value']['$'])
+                # values surrounded by % are considered variables.  New recipes simply use the
+                #  word 'value' as a keyword for variables
+                if value.startswith('%'):
+                    value = 'value'
+                out_dict['pow']['recipe'][k][arg] = value
+    except KeyError as e:
+        return
+
+
     set_cal(in_dict, out_dict, 'pow')
-    # @TODO cam2map (missing from config)
+    set_default_c2m(in_dict, out_dict, 'pow')
+
+
+def set_default_c2m(in_dict, out_dict, group_name):
+    out_dict[group_name]['recipe']['cam2map'] = {'from': 'value',
+                                                 'to': 'value',
+                                                 'map':'value',
+                                                 'matchmap':'no',
+                                                 'pixres':'value',
+                                                 'defaultrange':'value'}
 
 
 def set_thumbnail(in_dict, out_dict):
     out_dict['reduced'] = {'recipe':{}}
     # Copy the "*2isis" and spice init steps from the upc dictionary
     for i in range(2):
-        k,v = list(out_dict['upc']['recipe'].items())[i]
+        try:
+            k,v = list(out_dict['upc']['recipe'].items())[i]
+        except IndexError as e:
+            break
         out_dict['reduced']['recipe'].update({k:v})
 
     set_cal(in_dict, out_dict, 'reduced')
@@ -63,7 +101,10 @@ def set_projected(in_dict, out_dict):
     out_dict['projected'] = {'recipe':{}}
     # Copy the "*2isis" and spice init steps from the upc dictionary
     for i in range(2):
-        k,v = list(out_dict['upc']['recipe'].items())[i]
+        try:
+            k,v = list(out_dict['upc']['recipe'].items())[i]
+        except IndexError as e:
+            break
         out_dict['projected']['recipe'].update({k:v})
 
     set_cal(in_dict, out_dict, 'projected')
@@ -161,6 +202,7 @@ def main():
         out = os.path.dirname(os.path.realpath(infile))
 
     for xmlfile in glob.glob(infile):
+        out = os.path.dirname(os.path.realpath(xmlfile))
         with open(xmlfile) as f:
             if os.path.isdir(out):
                 outfile = os.path.join(out, str(os.path.basename(xmlfile)).replace(".xml",".json"))
@@ -171,6 +213,7 @@ def main():
                 xml = bf.data(fromstring(data))
             except ParseError:
                 continue
+        print(xmlfile)
 
         recipe = {}
         set_instrument(xml, recipe)

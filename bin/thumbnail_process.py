@@ -104,8 +104,8 @@ def main():
             finalpath = makedir(inputfile)
 
             recipeOBJ = Recipe()
-            recip_json = recipeOBJ.getRecipeJSON(mission, 'thumbnail')
-            recipeOBJ.AddJsonFile(recip_json)
+            recip_json = recipeOBJ.getRecipeJSON(mission)
+            recipeOBJ.AddJsonFile(recip_json, 'pow')
 
             infile = workarea + \
                 os.path.splitext(os.path.basename(inputfile))[
