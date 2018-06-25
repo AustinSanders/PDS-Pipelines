@@ -1,16 +1,10 @@
 #!/usgs/apps/anaconda/bin/python
 
 import os
-import subprocess
 import sys
 import pvl
-import xml.etree.ElementTree as ET
 import lxml.etree as ET
-import json
 import logging
-
-from hashlib import md5
-from collections import OrderedDict
 
 from PDS_DBquery import *
 from RedisQueue import *
@@ -18,6 +12,7 @@ from RedisHash import *
 from Recipe import *
 from MakeMap import *
 from HPCjob import *
+from config import recipe_dict
 
 import pdb
 
@@ -554,27 +549,6 @@ def main():
 
     logger.info('Working Area: %s', directory)
 
-    recipeDICT = {'ISSNA': '/usgs/cdev/PDS/recipe/POWrecipeISSNA.json',
-                  'ISSWA': '/usgs/cdev/PDS/recipe/POWrecipeISSWA.json',
-                  'CTX': '/usgs/cdev/PDS/recipe/POWrecipeCTX.json',
-                  'SOLID STATE IMAGING SYSTEM': '/usgs/cdev/PDS/recipe/POWrecipe_galileoSSI.json',
-                  'NIR': '/usgs/cdev/PDS/recipe/POWrecipeCLEM_NIR.json',
-                  'LWIR': '/usgs/cdev/PDS/recipe/POWrecipeCLEM_LWIR.json',
-                  'HIRES': '/usgs/cdev/PDS/recipe/POWrecipeCLEM_HIRES.json',
-                  'HRSC': '/usgs/cdev/PDS/recipe/POWrecipeMEX_HRSC.json',
-                  'UVVIS': '/usgs/cdev/PDS/recipe/POWrecipeCLEM_UVVIS.json',
-                  'THEMIS_IR': '/usgs/cdev/PDS/recipe/POWrecipeTHMIR.json',
-                  'NACL': '/usgs/cdev/PDS/recipe/POWrecipeLRO_NACL.json',
-                  'NACR': '/usgs/cdev/PDS/recipe/POWrecipeLRO_NACR.json',
-                  'MOC-NA': '/usgs/cdev/PDS/recipe/POWrecipe_MOCNA.json',
-                  'MOC-WA': '/usgs/cdev/PDS/recipe/POWrecipe_MOCWA.json',
-                  'MDIS-NAC': '/usgs/cdev/PDS/recipe/POWrecipeMDIS_NAC.json',
-                  'MDIS-WAC': '/usgs/cdev/PDS/recipe/POWrecipeMDIS_WAC.json',
-                  'MOC-WA': '/usgs/cdev/PDS/recipe/POWrecipeMGS_MOCWA.json',
-                  'VISUAL_IMAGING_SUBSYSTEM_CAMERA_A': '/usgs/cdev/PDS/recipe/POWrecipeVikVisA.json',
-                  'VISUAL_IMAGING_SUBSYSTEM_CAMERA_B': '/usgs/cdev/PDS/recipe/POWrecipeVikVisB.json',
-                  'MAP': '/usgs/cdev/PDS/recipe/MAPrecipe.json'
-                  }
 
 # ******************** Setup Redis Hash for ground range *********
 
@@ -752,9 +726,9 @@ def main():
     logger.info('Building Recipe')
     recipeOBJ = Recipe()
     if xmlOBJ.getProcess() == 'POW':
-        recipeOBJ.AddJsonFile(recipeDICT[xmlOBJ.getInst()])
+        recipeOBJ.AddJsonFile(recipe_dict[xmlOBJ.getInst()])
     elif xmlOBJ.getProcess() == 'MAP2':
-        recipeOBJ.AddJsonFile(recipeDICT['MAP'])
+        recipeOBJ.AddJsonFile(recipe_dict['MAP'])
 # ************** Test for stretch and add to recipe **********************
 # if MAP2 and 8 or 16 bit run stretch to set range
 

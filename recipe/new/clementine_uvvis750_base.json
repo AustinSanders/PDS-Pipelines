@@ -4,7 +4,27 @@
         "recipe": {}
     },
     "pow": {
-        "recipe": {}
+	"recipe": {
+		"clem2isis": {
+		    "from_": "value",
+		    "to": "value"
+		},    
+		"spiceinit": {
+		    "from_": "value"
+		},
+		"clemuvviscal": {
+		    "from_": "value",
+		    "to": "value"
+		},
+		"cam2map": {
+		    "from_": "value",
+		    "to": "value",
+		    "map": "value",
+		    "matchmap": "no",
+		    "pixres": "value",
+		    "defaultrange": "value"
+		}
+   	 } 
     },
     "reduced": {
         "recipe": {}

@@ -1,3 +1,5 @@
+#!/usgs/apps/anaconda/bin/python
+
 import datetime
 import pytz
 import json

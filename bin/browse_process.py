@@ -110,8 +110,8 @@ def main():
             finalpath = makedir(inputfile)
 
             recipeOBJ = Recipe()
-            recip_json = recipeOBJ.getRecipeJSON(mission, 'browse')
-            recipeOBJ.AddJsonFile(recip_json)
+            recip_json = recipeOBJ.getRecipeJSON(mission)
+            recipeOBJ.AddJsonFile(recip_json, 'reduced')
 
             infile = workarea + \
                 os.path.splitext(os.path.basename(inputfile))[

@@ -166,8 +166,8 @@ def main():
             logger.info('Starting Process: %s', inputfile)
 
             recipeOBJ = Recipe()
-            recip_json = recipeOBJ.getRecipeJSON(getMission(str(inputfile)), 'upc')
-            recipeOBJ.AddJsonFile(recip_json)
+            recip_json = recipeOBJ.getRecipeJSON(getMission(str(inputfile)))
+            recipeOBJ.AddJsonFile(recip_json, 'upc')
 
             infile = workarea + os.path.splitext(
                 str(os.path.basename(inputfile)))[0] + '.UPCinput.cub'
