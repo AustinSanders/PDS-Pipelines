@@ -10,6 +10,7 @@ from pds_pipelines.RedisQueue import RedisQueue
 import hashlib
 import shutil
 import os
+import pytz
 
 
 archiveID = {53: '/pds_san/PDS_Archive/Cassini/ISS/',
@@ -89,19 +90,30 @@ def hash_file(ds, **kwargs):
             with open(cpfile, "rb") as f:
                 for chunk in iter(lambda: f.read(4096), b""):
                     f_hash.update(chunk)
-            out.append(f_hash.hexdigest())
+            out.append((item,f_hash.hexdigest()))
         else:
             print('Unable to locate {}'.format(cpfile))
+            out.append((item,0))
     return out
 
+def cmp_checksum(ds, **kwargs):
+    ti = kwargs['ti']
+    in_list = ti.xcom_pull(task_ids='hash_file')
+    session = kwargs['session']
+    print(session)
+    for old, new in in_list:
+        if old.checksum == new:
+            old.di_pass = True
+            print("PASS")
+        else:
+            old.di_pass = False
+            print("FAIL")
+        old.di_date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
+        session.merge(old)
+    session.flush()
+    session.commit()
 
 
-# 1: connect to db
-# 2: pop n items from queue
-# 3: query db for each filename
-# 4: hash file
-# 5: test new checksum == old checksum
-# 6: commit
 
 # @TODO find a way to make these separate tasks.  Difficult because they
 #  can't be pickled, therefore they can't be returned via a task.
@@ -128,5 +140,11 @@ hash_file_operator = PythonOperator(task_id='hash_file',
         op_kwargs={'session':session, 'archiveID':archiveID},
         dag=dag)
 
+cmp_checksum_operator = PythonOperator(task_id='cmp_checksum',
+        provide_context=True,
+        python_callable=cmp_checksum,
+        op_kwargs={'session':session},
+        dag=dag)
 
-dummy_operator >> get_items_operator >> file_lookup_operator >> hash_file_operator
+
+dummy_operator >> get_items_operator >> file_lookup_operator >> hash_file_operator >> cmp_checksum_operator
