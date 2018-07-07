@@ -2,10 +2,12 @@ import datetime
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.subdag_operator import SubDagOperator
 
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files
 from pds_pipelines.RedisQueue import RedisQueue
+from dags.di_checksum import process_subdag
 
 import hashlib
 import shutil
@@ -56,6 +58,7 @@ dag = DAG('di_process', description='Data integrity check for PDS products',
           schedule_interval='0 12 * * *',
           start_date=datetime.datetime.now())
 
+
 def get_items(ds, **kwargs):
     outlist = list()
     n_items = kwargs.get('n_items')
@@ -77,6 +80,7 @@ def file_lookup(ds, **kwargs):
         out.append(Qelement)
     return out
 
+
 def hash_file(ds, **kwargs):
     ti = kwargs['ti']
     archiveID = kwargs['archiveID']
@@ -96,6 +100,7 @@ def hash_file(ds, **kwargs):
             out.append((item,0))
     return out
 
+
 def cmp_checksum(ds, **kwargs):
     ti = kwargs['ti']
     in_list = ti.xcom_pull(task_ids='hash_file')
@@ -114,37 +119,23 @@ def cmp_checksum(ds, **kwargs):
     session.commit()
 
 
-
 # @TODO find a way to make these separate tasks.  Difficult because they
 #  can't be pickled, therefore they can't be returned via a task.
 session, _ = db_connect('pdsdi_dev')
 rq = RedisQueue('DI_ReadyQueue')
 
 
-dummy_operator = DummyOperator(task_id='dummy_task', retries=3, dag=dag)
 get_items_operator = PythonOperator(task_id='get_items',
         provide_context=True,
         python_callable=get_items,
         op_kwargs={'n_items':50, 'rq':rq},
         dag=dag)
 
-file_lookup_operator = PythonOperator(task_id='file_lookup',
-        provide_context=True,
-        python_callable=file_lookup,
-        op_kwargs={'session':session},
+
+process_operator = SubDagOperator(
+        subdag = process_subdag('di_process', 'di_checksum', session=session, archiveID=archiveID),
+        task_id='di_checksum',
         dag=dag)
 
-hash_file_operator = PythonOperator(task_id='hash_file',
-        provide_context=True,
-        python_callable=hash_file,
-        op_kwargs={'session':session, 'archiveID':archiveID},
-        dag=dag)
-
-cmp_checksum_operator = PythonOperator(task_id='cmp_checksum',
-        provide_context=True,
-        python_callable=cmp_checksum,
-        op_kwargs={'session':session},
-        dag=dag)
-
-
-dummy_operator >> get_items_operator >> file_lookup_operator >> hash_file_operator >> cmp_checksum_operator
+#dummy_operator >> get_items_operator >> file_lookup_operator >> hash_file_operator >> cmp_checksum_operator
+get_items_operator >> process_operator
