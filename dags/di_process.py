@@ -3,11 +3,11 @@ from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.subdag_operator import SubDagOperator
+from airflow.operators.dagrun_operator import TriggerDagRunOperator
 
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files
 from pds_pipelines.RedisQueue import RedisQueue
-from dags.di_checksum import process_subdag
 
 import hashlib
 import shutil
@@ -15,6 +15,7 @@ import os
 import pytz
 
 
+# @TODO this is terrible and should be refactored.
 archiveID = {53: '/pds_san/PDS_Archive/Cassini/ISS/',
                 51: '/pds_san/PDS_Archive/Cassini/RADAR/',
                 75: '/pds_san/PDS_Archive/Cassini/VIMS/',
@@ -72,7 +73,7 @@ def get_items(ds, **kwargs):
 
 def file_lookup(ds, **kwargs):
     ti = kwargs['ti']
-    in_list = ti.xcom_pull(task_ids='get_items')
+    in_list = ti.xcom_pull(task_ids='get_items', dag_id='di_process')
     session = kwargs['session']
     out = list()
     for item in in_list:
@@ -85,7 +86,6 @@ def hash_file(ds, **kwargs):
     ti = kwargs['ti']
     archiveID = kwargs['archiveID']
     in_list = ti.xcom_pull(task_ids='file_lookup')
-    print(in_list)
     out = list()
     for item in in_list:
         cpfile = archiveID[item.archiveid] + item.filename
@@ -94,18 +94,16 @@ def hash_file(ds, **kwargs):
             with open(cpfile, "rb") as f:
                 for chunk in iter(lambda: f.read(4096), b""):
                     f_hash.update(chunk)
-            out.append((item,f_hash.hexdigest()))
+                out.append((item,f_hash.hexdigest()))
         else:
             print('Unable to locate {}'.format(cpfile))
             out.append((item,0))
     return out
 
-
 def cmp_checksum(ds, **kwargs):
     ti = kwargs['ti']
     in_list = ti.xcom_pull(task_ids='hash_file')
     session = kwargs['session']
-    print(session)
     for old, new in in_list:
         if old.checksum == new:
             old.di_pass = True
@@ -117,6 +115,46 @@ def cmp_checksum(ds, **kwargs):
         session.merge(old)
     session.flush()
     session.commit()
+
+
+def process_subdag(parent_dag_name, child_dag_name, **kwargs):
+    schedule_interval = '@once'
+    session = kwargs['session']
+    archiveID = kwargs['archiveID']
+    start_date = datetime.datetime.now()
+    dag = DAG(
+            '%s.%s' % (parent_dag_name, child_dag_name),
+            schedule_interval=schedule_interval,
+            start_date = start_date,
+            )
+    file_lookup_operator = PythonOperator(task_id='file_lookup',
+            provide_context=True,
+            python_callable=file_lookup,
+            op_kwargs={'session':session},
+            dag=dag)
+    hash_file_operator = PythonOperator(task_id='hash_file',
+            provide_context=True,
+            python_callable=hash_file,
+            op_kwargs={'session':session, 'archiveID':archiveID},
+            dag=dag)
+
+    cmp_checksum_operator = PythonOperator(task_id='cmp_checksum',
+            provide_context=True,
+            python_callable=cmp_checksum,
+            op_kwargs={'session':session},
+            dag=dag)
+
+    file_lookup_operator >> hash_file_operator >> cmp_checksum_operator
+    return dag
+
+def repeat_dag(context, dag_run_obj):
+    rq = context['params']['rq']
+    if rq.QueueSize() > 0:
+        print('Rerunning dag with {} items left to process'.format(rq.QueueSize()))
+        return dag_run_obj
+    else:
+        print('Exiting dag due to empty queue.')
+
 
 
 # @TODO find a way to make these separate tasks.  Difficult because they
@@ -137,5 +175,13 @@ process_operator = SubDagOperator(
         task_id='di_checksum',
         dag=dag)
 
-#dummy_operator >> get_items_operator >> file_lookup_operator >> hash_file_operator >> cmp_checksum_operator
-get_items_operator >> process_operator
+
+loop_operator = TriggerDagRunOperator(task_id='loop',
+        provide_context=True,
+        params={'rq':rq},
+        trigger_dag_id='di_process',
+        python_callable=repeat_dag,
+        dag=dag)
+
+
+get_items_operator >> process_operator >> loop_operator
