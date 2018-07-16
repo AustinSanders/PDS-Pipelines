@@ -73,7 +73,8 @@ def get_items(ds, **kwargs):
 
 def file_lookup(ds, **kwargs):
     ti = kwargs['ti']
-    in_list = ti.xcom_pull(task_ids='get_items', dag_id='di_process')
+    upstream_tid = kwargs['task'].upstream_task_ids[0]
+    in_list = ti.xcom_pull(upstream_tid)
     session = kwargs['session']
     out = list()
     for item in in_list:
@@ -84,8 +85,9 @@ def file_lookup(ds, **kwargs):
 
 def hash_file(ds, **kwargs):
     ti = kwargs['ti']
+    upstream_tid = kwargs['task'].upstream_task_ids[0]
     archiveID = kwargs['archiveID']
-    in_list = ti.xcom_pull(task_ids='file_lookup')
+    in_list = ti.xcom_pull(upstream_tid)
     out = list()
     for item in in_list:
         cpfile = archiveID[item.archiveid] + item.filename
@@ -102,7 +104,8 @@ def hash_file(ds, **kwargs):
 
 def cmp_checksum(ds, **kwargs):
     ti = kwargs['ti']
-    in_list = ti.xcom_pull(task_ids='hash_file')
+    upstream_tid = kwargs['task'].upstream_task_ids[0]
+    in_list = ti.xcom_pull(upstream_tid)
     session = kwargs['session']
     for old, new in in_list:
         if old.checksum == new:
@@ -121,30 +124,38 @@ def process_subdag(parent_dag_name, child_dag_name, **kwargs):
     schedule_interval = '@once'
     session = kwargs['session']
     archiveID = kwargs['archiveID']
+    n_procs = int(kwargs['n_procs'])
+    rq =  kwargs['rq']
     start_date = datetime.datetime.now()
     dag = DAG(
             '%s.%s' % (parent_dag_name, child_dag_name),
             schedule_interval=schedule_interval,
             start_date = start_date,
             )
-    file_lookup_operator = PythonOperator(task_id='file_lookup',
-            provide_context=True,
-            python_callable=file_lookup,
-            op_kwargs={'session':session},
-            dag=dag)
-    hash_file_operator = PythonOperator(task_id='hash_file',
-            provide_context=True,
-            python_callable=hash_file,
-            op_kwargs={'session':session, 'archiveID':archiveID},
-            dag=dag)
+    for i in range(n_procs):
+        get_items_operator = PythonOperator(task_id='get_items_{}'.format(i),
+                provide_context=True,
+                python_callable=get_items,
+                op_kwargs={'n_items':50, 'rq':rq},
+                dag=dag)
+        file_lookup_operator = PythonOperator(task_id='file_lookup_{}'.format(i),
+                provide_context=True,
+                python_callable=file_lookup,
+                op_kwargs={'session':session},
+                dag=dag)
+        hash_file_operator = PythonOperator(task_id='hash_file_{}'.format(i),
+                provide_context=True,
+                python_callable=hash_file,
+                op_kwargs={'session':session, 'archiveID':archiveID},
+                dag=dag)
 
-    cmp_checksum_operator = PythonOperator(task_id='cmp_checksum',
-            provide_context=True,
-            python_callable=cmp_checksum,
-            op_kwargs={'session':session},
-            dag=dag)
+        cmp_checksum_operator = PythonOperator(task_id='cmp_checksum_{}'.format(i),
+                provide_context=True,
+                python_callable=cmp_checksum,
+                op_kwargs={'session':session},
+                dag=dag)
 
-    file_lookup_operator >> hash_file_operator >> cmp_checksum_operator
+        get_items_operator >> file_lookup_operator >> hash_file_operator >> cmp_checksum_operator
     return dag
 
 def repeat_dag(context, dag_run_obj):
@@ -163,15 +174,15 @@ session, _ = db_connect('pdsdi_dev')
 rq = RedisQueue('DI_ReadyQueue')
 
 
-get_items_operator = PythonOperator(task_id='get_items',
-        provide_context=True,
-        python_callable=get_items,
-        op_kwargs={'n_items':50, 'rq':rq},
-        dag=dag)
 
 
 process_operator = SubDagOperator(
-        subdag = process_subdag('di_process', 'di_checksum', session=session, archiveID=archiveID),
+        subdag = process_subdag('di_process',
+            'di_checksum',
+            session=session,
+            archiveID=archiveID,
+            n_procs=5,
+            rq=rq),
         task_id='di_checksum',
         dag=dag)
 
@@ -184,4 +195,4 @@ loop_operator = TriggerDagRunOperator(task_id='loop',
         dag=dag)
 
 
-get_items_operator >> process_operator >> loop_operator
+process_operator >> loop_operator
