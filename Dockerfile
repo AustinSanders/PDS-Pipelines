@@ -7,10 +7,6 @@
 FROM puckel/docker-airflow:latest
 ADD . /app
 RUN python -m pip install --user /app \
-    && python -m pip install --user lxml \
-    && python -m pip install --user pytz \
-    && python -m pip install --user redis \
-    && python -m pip install --user sqlalchemy \
     && python -m pip install --user geoalchemy2
     
 
