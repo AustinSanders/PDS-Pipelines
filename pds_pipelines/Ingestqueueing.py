@@ -53,7 +53,8 @@ def main():
     args = Args()
     args.parse_args()
 
-    RQ = RedisQueue('Ingest_ReadyQueue')
+    RQ_ingest = RedisQueue('Ingest_ReadyQueue')
+    RQ_linking = RedisQueue('LinkQueue')
 
 # ********* Set up logging *************
     logger = logging.getLogger(args.archive + '_INGEST')
@@ -66,35 +67,38 @@ def main():
     logger.addHandler(logFileHandle)
 
     PDSinfoDICT = json.load(open('/usgs/cdev/PDS/bin/PDSinfo.json', 'r'))
-
     archivepath = PDSinfoDICT[args.archive]['path'][:-1]
     if args.volume:
         archivepath = archivepath + '/' + args.volume
 
     logger.info('Starting Ingest for: %s', archivepath)
 
+    # Possible bug in RQ?  Can't add to queue in "if fname == voldesc"
+    voldescs = []
     for dirpath, dirs, files in os.walk(archivepath):
         for filename in files:
             fname = os.path.join(dirpath, filename)
-            print(fname)
             if args.search:
                 if args.search in fname:
                     try:
-                        print("{} added to queue".format(fname))
-                        RQ.QueueAdd(fname)
+                        if os.path.basename(fname) == "voldesc.cat":
+                            voldescs.append(fname)
+                        RQ_ingest.QueueAdd(fname)
                     except:
-                        logger.error(
-                            'File %s NOT added to Ingest Queue', fname)
+                        logger.error('File %s NOT added to Ingest Queue', fname)
                 else:
                     continue
             else:
                 try:
-                    print("{} added to queue".format(fname))
-                    RQ.QueueAdd(fname)
+                    if os.path.basename(fname) == "voldesc.cat":
+                        voldescs.append(fname)
+                    RQ_ingest.QueueAdd(fname)
                 except:
                     logger.error('File %s NOT added to Ingest Queue', fname)
 
-    Qsize = RQ.QueueSize()
+    Qsize = RQ_ingest.QueueSize()
+    for fpath in voldescs:
+        RQ_linking.QueueAdd((fpath, args.archive))
     logger.info('Files added to Ingest Queue: %s', Qsize)
 
     logger.info('IngestJobber Complete')
