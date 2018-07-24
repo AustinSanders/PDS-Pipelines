@@ -75,6 +75,7 @@ def file_lookup(ds, **kwargs):
     ti = kwargs['ti']
     upstream_tid = kwargs['task'].upstream_task_ids[0]
     in_list = ti.xcom_pull(upstream_tid)
+    if in_list is None : return
     session = kwargs['session']
     out = list()
     for item in in_list:
@@ -88,6 +89,7 @@ def hash_file(ds, **kwargs):
     upstream_tid = kwargs['task'].upstream_task_ids[0]
     archiveID = kwargs['archiveID']
     in_list = ti.xcom_pull(upstream_tid)
+    if in_list is None : return
     out = list()
     for item in in_list:
         cpfile = archiveID[item.archiveid] + item.filename
@@ -106,14 +108,13 @@ def cmp_checksum(ds, **kwargs):
     ti = kwargs['ti']
     upstream_tid = kwargs['task'].upstream_task_ids[0]
     in_list = ti.xcom_pull(upstream_tid)
+    if in_list is None : return
     session = kwargs['session']
     for old, new in in_list:
         if old.checksum == new:
             old.di_pass = True
-            print("PASS")
         else:
             old.di_pass = False
-            print("FAIL")
         old.di_date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
         session.merge(old)
     session.flush()
@@ -161,10 +162,7 @@ def process_subdag(parent_dag_name, child_dag_name, **kwargs):
 def repeat_dag(context, dag_run_obj):
     rq = context['params']['rq']
     if rq.QueueSize() > 0:
-        print('Rerunning dag with {} items left to process'.format(rq.QueueSize()))
         return dag_run_obj
-    else:
-        print('Exiting dag due to empty queue.')
 
 
 
