@@ -39,12 +39,14 @@ class Args:
         parser.add_argument('--search', '-s', dest="search",
                             help="Enter string to search for")
 
+        parser.add_argument('--link-only', dest='ingest', action='store_false')
+        parser.set_defaults(ingest=True)
         args = parser.parse_args()
 
         self.archive = args.archive
         self.volume = args.volume
         self.search = args.search
-
+        self.ingest = args.ingest
 
 def main():
 
@@ -83,7 +85,8 @@ def main():
                     try:
                         if os.path.basename(fname) == "voldesc.cat":
                             voldescs.append(fname)
-                        RQ_ingest.QueueAdd(fname)
+                        if args.ingest:
+                            RQ_ingest.QueueAdd(fname)
                     except:
                         logger.error('File %s NOT added to Ingest Queue', fname)
                 else:
@@ -92,7 +95,8 @@ def main():
                 try:
                     if os.path.basename(fname) == "voldesc.cat":
                         voldescs.append(fname)
-                    RQ_ingest.QueueAdd(fname)
+                    if args.ingest:
+                        RQ_ingest.QueueAdd(fname)
                 except:
                     logger.error('File %s NOT added to Ingest Queue', fname)
 
