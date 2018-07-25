@@ -21,27 +21,38 @@ def main():
         except(ParseError):
             continue
         link_src_path = xml['instrument']['path']['file']['$']
-        link_dest_path = xml['instrument']['path']['datalink']['$']
+
+        # If datalink doesn't exist or is inaccessible, use dafault location
+        try:
+            link_dest_path = xml['instrument']['path']['datalink']['$']
+        except:
+            link_dest_path = '/pds_san/PDS_Archive_Links/'
 
         voldesc = load_pvl(inputfile)
-        dataset_id = format_id(voldesc['VOLUME']['DATA_SET_ID'])
-        volume_id = format_id(voldesc['VOLUME']['VOLUME_ID'])
+        dataset_id = voldesc['VOLUME']['DATA_SET_ID']
+        volume_id = voldesc['VOLUME']['VOLUME_ID']
+        if isinstance(dataset_id, (list, tuple, set)):
+            [link(link_src_path, link_dest_path, volume_id, x) for x in dataset_id]
+        else:
+            # Not container type
+            link(link_src_path, link_dest_path, volume_id, dataset_id)
+    
 
-        src = os.path.join(link_src_path, volume_id)
-        dest = os.path.join(link_dest_path, dataset_id, volume_id)
-        # Split the path into (/tuple/of/, /paths) 
-        link_path = os.path.split(dest)
-        # Create intermediate directories if they don't exist
-        os.makedirs(link_path[0], exist_ok=True)
-        os.symlink(src, dest)
-
-
-def format_id(ds_id):
+def format_id(f_id):
     # Remove all quotes, braces, brackets, parentheses, commas, spaces
-    formatted_id = ''.join(c for c in ds_id if c not in '\'\"{}[](), ')
+    formatted_id = ''.join(c for c in f_id if c not in '\'\"{}[](), ')
     formatted_id = formatted_id.replace('/','_')
     formatted_id = formatted_id.lower()
     return formatted_id
+
+
+def link(src_path, dest_path, volume_id, dataset_id):
+    dataset_id = format_id(dataset_id)
+    src = os.path.join(src_path, volume_id)
+    dest = os.path.join(dest_path, dataset_id, volume_id)
+    link_path = os.path.split(dest)
+    os.makedirs(link_path[0], exist_ok=True)
+    os.symlink(src, dest)
 
 
 def parse_xml(xml_file_path):
@@ -55,7 +66,7 @@ def load_pvl(pvl_file_path):
     with open(pvl_file_path, 'r') as f:
         f.readline()
         data = f.read()
-    voldesc = pvl.loads(data, strict=False)
+    voldesc = pvl.loads(data)
     return voldesc
 
 
