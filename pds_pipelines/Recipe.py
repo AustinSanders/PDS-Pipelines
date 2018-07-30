@@ -11,7 +11,7 @@ from collections import OrderedDict
 from pds_pipelines.Process import *
 from pds_pipelines.RedisQueue import *
 
-from pds_pipelines.config import recipe_dict
+from pds_pipelines.config import recipe_base
 
 
 class Recipe(Process):
@@ -36,6 +36,7 @@ class Recipe(Process):
         file : str
         """
 
+        # @TODO use 'with' statement for file read
         testjson = json.loads(open(file).read(), object_pairs_hook=OrderedDict)
 
         for IP in testjson[proc]['recipe']:
@@ -68,7 +69,8 @@ class Recipe(Process):
             output
         """
 
-        return recipe_dict[mission]
+        return recipe_base + mission + '.json'
+        #return recipe_dict[mission]
 
 
     def getProcesses(self):
