@@ -244,8 +244,6 @@ def main():
                                 RQ_thumbnail.QueueAdd(inputfile)
                                 RQ_browse.QueueAdd(inputfile)
                                 label = pvl.load(infile)
-                                print(label)
-                                print(PDSinfoDICT[archive])
                                 infile_bandlist = label['IsisCube']['BandBin'][PDSinfoDICT[archive]['bandbinQuery']]
                                 infile_centerlist = label['IsisCube']['BandBin']['Center']
                             elif item == 'thmproc':
