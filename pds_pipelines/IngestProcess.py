@@ -7,8 +7,6 @@ import logging
 import json
 
 
-from pds_pipelines.RedisQueue import *
-from pds_pipelines.PDS_DBquery import *
 import hashlib
 import shutil
 
@@ -16,11 +14,14 @@ import sqlalchemy
 from sqlalchemy import *
 from sqlalchemy.orm.util import *
 
+from pds_pipelines.RedisQueue import *
+from pds_pipelines.PDS_DBquery import *
 from pds_pipelines.db import db_connect
+from pds_pipelines.config import pds_info_loc
+from pds_pipelines.models.pds_models import Files, Archives
 
 import pdb
 
-from pds_pipelines.models.pds_models import Files, Archives
 
 
 # @TODO there HAS to be a better way of doing this...
@@ -100,7 +101,7 @@ def main():
     logger.addHandler(logFileHandle)
 
     logger.info("Starting Process")
-    PDSinfoDICT = json.load(open('/usgs/cdev/PDS/bin/PDSinfo.json', 'r'))
+    PDSinfoDICT = json.load(open(pds_info_loc, 'r'))
 
     RQ_main = RedisQueue('Ingest_ReadyQueue')
     RQ_work = RedisQueue('Ingest_WorkQueue')

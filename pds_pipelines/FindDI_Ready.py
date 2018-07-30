@@ -19,6 +19,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files, Archives 
+from pds_pipelines.config import pds_info_loc
 
 import pdb
 
@@ -110,7 +111,7 @@ def main():
     args = Args()
     args.parse_args()
 
-    PDSinfoDICT = json.load(open('/usgs/cdev/PDS/bin/PDSinfo.json', 'r'))
+    PDSinfoDICT = json.load(open(pds_info_loc, 'r'))
     archiveID = PDSinfoDICT[args.archive]['archiveid']
 
     try:

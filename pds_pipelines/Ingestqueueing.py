@@ -11,6 +11,7 @@ import argparse
 
 from pds_pipelines.RedisQueue import *
 from pds_pipelines.HPCjob import *
+from pds_pipelines.config import pds_info_loc
 
 import pdb
 
@@ -68,7 +69,7 @@ def main():
     logFileHandle.setFormatter(formatter)
     logger.addHandler(logFileHandle)
 
-    PDSinfoDICT = json.load(open('/usgs/cdev/PDS/bin/PDSinfo.json', 'r'))
+    PDSinfoDICT = json.load(open(pds_info_loc, 'r'))
     archivepath = PDSinfoDICT[args.archive]['path'][:-1]
     if args.volume:
         archivepath = archivepath + '/' + args.volume

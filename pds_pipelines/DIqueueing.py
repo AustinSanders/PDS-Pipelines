@@ -14,6 +14,7 @@ from pds_pipelines.RedisQueue import *
 from pds_pipelines.HPCjob import *
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files
+from pds_pipelines.config import pds_info_loc
 
 from sqlalchemy import Date, cast
 
@@ -93,7 +94,7 @@ def main():
 
     RQ = RedisQueue('DI_ReadyQueue')
 
-    PDSinfoDICT = json.load(open('/usgs/cdev/PDS/bin/PDSinfo.json', 'r'))
+    PDSinfoDICT = json.load(open(pds_info_loc, 'r'))
     archiveID = PDSinfoDICT[args.archive]['archiveid']
 
 # ********* Set up logging *************
