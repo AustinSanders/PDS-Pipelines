@@ -6,7 +6,7 @@ import json
 from pds_pipelines.FindDI_Ready import archive_expired, volume_expired
 from pds_pipelines.RedisQueue import RedisQueue
 from pds_pipelines.db import db_connect
-from pds_pipeline.models.pds_models import Files
+from pds_pipelines.models.pds_models import Files
 
 
 def main():
