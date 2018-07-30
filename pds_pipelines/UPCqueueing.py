@@ -23,13 +23,13 @@ class Args:
 
     def parse_args(self):
 
-        parser = argparse.ArgumentParser(description='PDS DI Data Integrity')
+        parser = argparse.ArgumentParser(description='UPC Queueing')
 
         parser.add_argument('--archive', '-a', dest="archive", required=True,
                             help="Enter archive - archive to ingest")
 
         parser.add_argument('--volume', '-v', dest="volume",
-                            help="Enter voluem to Ingest")
+                            help="Enter volume to Ingest")
 
         parser.add_argument('--search', '-s', dest="search",
                             help="Enter string to search for")
@@ -58,7 +58,7 @@ def main():
 
     logger.info('Starting Process')
 
-    PDSinfoDICT = json.load(open('/usgs/cdev/PDS/bin/PDSinfo.json', 'r'))
+    PDSinfoDICT = json.load(open(pds_info_loc, 'r'))
     archiveID = PDSinfoDICT[args.archive]['archiveid']
 
     RQ = RedisQueue('UPC_ReadyQueue')
@@ -82,7 +82,7 @@ def main():
         for element in qOBJ:
             fname = PDSinfoDICT[args.archive]['path'] + element.filename
             fid = element.fileid
-            RQ.QueueAdd((fname, fid))
+            RQ.QueueAdd((fname, fid, args.archive))
             addcount = addcount + 1
 
         logger.info('Files Added to UPC Queue: %s', addcount)

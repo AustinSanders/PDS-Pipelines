@@ -1,8 +1,8 @@
 {
-    "inst": "voyager_jupiter",
+    "inst": "messenger_edr",
     "upc": {
         "recipe": {
-            "voy2isis": {
+            "mdis2isis": {
                 "from_": "value",
                 "to": "value"
             },
@@ -15,7 +15,7 @@
                 "from_": "value",
                 "increaseprecision": "yes",
                 "inctype": "vertices",
-                "numvertices": "20",
+                "numvertices": "40",
                 "maxemission": "89.5",
                 "maxincidence": "120.0"
             },
@@ -31,7 +31,7 @@
                 "sinc": "10",
                 "polygon": "yes",
                 "inctype": "vertices",
-                "numvertices": "20",
+                "numvertices": "40",
                 "maxemission": "89.5",
                 "maxincidence": "120.0",
                 "spice": "no"
@@ -40,7 +40,7 @@
     },
     "pow": {
         "recipe": {
-            "voy2isis": {
+            "mdis2isis": {
                 "from_": "value",
                 "to": "value"
             },
@@ -48,12 +48,24 @@
                 "from_": "value",
                 "cknadir": "yes",
                 "cksmithed": "yes"
+            },
+            "mdiscal": {
+                "from_": "value",
+                "to": "value"
+            },
+            "cam2map": {
+                "from": "value",
+                "to": "value",
+                "map": "value",
+                "matchmap": "no",
+                "pixres": "value",
+                "defaultrange": "value"
             }
         }
     },
     "reduced": {
         "recipe": {
-            "voy2isis": {
+            "mdis2isis": {
                 "from_": "value",
                 "to": "value"
             },
@@ -61,6 +73,10 @@
                 "from_": "value",
                 "cknadir": "yes",
                 "cksmithed": "yes"
+            },
+            "mdiscal": {
+                "from_": "value",
+                "to": "value"
             },
             "reduce": {
                 "from_": "value",
@@ -83,7 +99,7 @@
     },
     "projected": {
         "recipe": {
-            "voy2isis": {
+            "mdis2isis": {
                 "from_": "value",
                 "to": "value"
             },
@@ -91,6 +107,10 @@
                 "from_": "value",
                 "cknadir": "yes",
                 "cksmithed": "yes"
+            },
+            "mdiscal": {
+                "from_": "value",
+                "to": "value"
             },
             "isis2std": {
                 "from_": "value",

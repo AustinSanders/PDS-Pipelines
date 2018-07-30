@@ -524,7 +524,7 @@
         "keyword": "GlobalCoverage"
       }
     },
-    "CTX": {
+    "mro_ctx": {
       "statsbandfilter": {
         "type": "string",
         "displayname": "Band Filter Used For Statistics",
@@ -586,7 +586,7 @@
         "keyword": "DATA_SET_ID"  
       }
     },
-    "themisIR_EDR": {
+    "themis_ir_edr": {
       "gainnumber": {
         "type": "integer",
         "displayname": "Gain Number",

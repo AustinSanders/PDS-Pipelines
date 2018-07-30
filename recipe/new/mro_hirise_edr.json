@@ -1,8 +1,8 @@
 {
-    "inst": "voyager_jupiter",
+    "inst": "mro_hirise_edr_psp",
     "upc": {
         "recipe": {
-            "voy2isis": {
+            "hi2isis": {
                 "from_": "value",
                 "to": "value"
             },
@@ -15,7 +15,7 @@
                 "from_": "value",
                 "increaseprecision": "yes",
                 "inctype": "vertices",
-                "numvertices": "20",
+                "numvertices": "40",
                 "maxemission": "89.5",
                 "maxincidence": "120.0"
             },
@@ -27,11 +27,11 @@
                 "originallabel": "yes",
                 "statistics": "yes",
                 "camstats": "yes",
-                "linc": "10",
-                "sinc": "10",
+                "linc": "100",
+                "sinc": "100",
                 "polygon": "yes",
                 "inctype": "vertices",
-                "numvertices": "20",
+                "numvertices": "40",
                 "maxemission": "89.5",
                 "maxincidence": "120.0",
                 "spice": "no"
@@ -40,7 +40,7 @@
     },
     "pow": {
         "recipe": {
-            "voy2isis": {
+            "hi2isis": {
                 "from_": "value",
                 "to": "value"
             },
@@ -53,7 +53,7 @@
     },
     "reduced": {
         "recipe": {
-            "voy2isis": {
+            "hi2isis": {
                 "from_": "value",
                 "to": "value"
             },
@@ -83,7 +83,7 @@
     },
     "projected": {
         "recipe": {
-            "voy2isis": {
+            "hi2isis": {
                 "from_": "value",
                 "to": "value"
             },

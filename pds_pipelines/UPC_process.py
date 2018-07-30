@@ -19,29 +19,13 @@ from pds_pipelines.UPCkeywords import *
 from pds_pipelines.db import db_connect
 from pds_pipelines.models import upc_models, pds_models
 from pds_pipelines.models.upc_models import MetaTime, MetaGeometry, MetaString, MetaBoolean
+from pds_pipelines.config import pds_info_loc
 
 from sqlalchemy import *
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.util import *
 
 import pdb
-
-
-def getMission(inputfile):
-    inputfile = str(inputfile)
-    if 'Mars_Reconnaissance_Orbiter/CTX' in inputfile:
-        mission = 'mroCTX'
-    elif 'USA_NASA_PDS_ODTSDP_100XX' in inputfile and 'odtie1' in inputfile:
-        mission = 'themisIR_EDR'
-    elif 'USA_NASA_PDS_ODTSDP_100XX' in inputfile and 'odtve1' in inputfile:
-        mission = 'themisVIS_EDR'
-    elif 'Lunar_Reconnaissance_Orbiter/LROC/EDR/' in inputfile:
-        mission = 'lrolrcEDR'
-    elif 'Cassini/ISS/' in inputfile:
-        mission = 'cassiniISS'
-
-    return mission
-
 
 def getISISid(infile):
     serial_num = getsn(from_=infile)
@@ -135,7 +119,7 @@ def main():
     logFileHandle.setFormatter(formatter)
     logger.addHandler(logFileHandle)
 
-    PDSinfoDICT = json.load(open('/usgs/cdev/PDS/bin/PDSinfo.json', 'r'))
+    PDSinfoDICT = json.load(open(pds_info_loc, 'r'))
 
     # Redis Queue Objects
     RQ_main = RedisQueue('UPC_ReadyQueue')
@@ -157,6 +141,7 @@ def main():
         item = literal_eval(RQ_main.QueueGet().decode("utf-8"))
         inputfile = item[0]
         fid = item[1]
+        archive = item[2]
         #inputfile = (RQ_main.QueueGet()).decode('utf-8')
         if os.path.isfile(inputfile):
             pass
@@ -165,9 +150,12 @@ def main():
         if os.path.isfile(inputfile):
             logger.info('Starting Process: %s', inputfile)
 
+            # @TODO refactor this logic.  We're using an object to find a path, returning it,
+            #  then passing it back to the object so that the object can use it.
             recipeOBJ = Recipe()
-            recip_json = recipeOBJ.getRecipeJSON(getMission(str(inputfile)))
-            recipeOBJ.AddJsonFile(recip_json, 'upc')
+            recipe_json = recipeOBJ.getRecipeJSON(archive)
+            #recipe_json = recipeOBJ.getRecipeJSON(getMission(str(inputfile)))
+            recipeOBJ.AddJsonFile(recipe_json, 'upc')
 
             infile = workarea + os.path.splitext(
                 str(os.path.basename(inputfile)))[0] + '.UPCinput.cub'
@@ -212,7 +200,7 @@ def main():
                         exband = 'none'
                         for item1 in PDSinfoDICT[getMission(inputfile)]['bandorder']:
                             bandcount = 1
-                            bands = label['IsisCube']['BandBin'][PDSinfoDICT[getMission(inputfile)]['bandbinQuery']]
+                            bands = label['IsisCube']['BandBin'][PDSinfoDICT[archive]['bandbinQuery']]
                             # Sometime 'bands' is iterable, sometimes it is a single int.  Need to handle both.
                             try:
                                 for item2 in bands:
@@ -256,16 +244,15 @@ def main():
                                 RQ_thumbnail.QueueAdd(inputfile)
                                 RQ_browse.QueueAdd(inputfile)
                                 label = pvl.load(infile)
-                                infile_bandlist = label['IsisCube']['BandBin'][PDSinfoDICT[getMission(
-                                    inputfile)]['bandbinQuery']]
+                                infile_bandlist = label['IsisCube']['BandBin'][PDSinfoDICT[archive]['bandbinQuery']]
                                 infile_centerlist = label['IsisCube']['BandBin']['Center']
                             elif item == 'thmproc':
                                 RQ_thumbnail.QueueAdd(inputfile)
                                 RQ_browse.QueueAdd(inputfile)
                             elif item == 'handmos':
                                 label = pvl.load(infile)
-                                infile_bandlist = label['IsisCube']['BandBin'][PDSinfoDICT[getMission(
-                                    inputfile)]['bandbinQuery']]
+
+                                infile_bandlist = label['IsisCube']['BandBin'][PDSinfoDICT[archive]['bandbinQuery']]
                                 infile_centerlist = label['IsisCube']['BandBin']['Center']
 
                         except ProcessError as e:
@@ -320,7 +307,7 @@ def main():
 
                 #  Block to add common keywords
                 testjson = json.load(
-                    open('/usgs/cdev/PDS/recipe/Keyword_Definition.json', 'r'))
+                    open('/home/arsanders/PDS-Pipelines/recipe/Keyword_Definition.json', 'r'))
                 for element_1 in testjson['instrument']['COMMON']:
                     keyvalue = ""
                     keytype = testjson['instrument']['COMMON'][element_1]['type']
@@ -366,13 +353,10 @@ def main():
                 session.commit()
 
                 # block to deal with mission keywords
-                for element_2 in testjson['instrument'][getMission(inputfile)]:
-                    M_keytype = testjson['instrument'][getMission(
-                        inputfile)][element_2]['type']
-                    M_keygroup = testjson['instrument'][getMission(
-                        inputfile)][element_2]['group']
-                    M_keyword = testjson['instrument'][getMission(
-                        inputfile)][element_2]['keyword']
+                for element_2 in testjson['instrument'][archive]:
+                    M_keytype = testjson['instrument'][archive][element_2]['type']
+                    M_keygroup = testjson['instrument'][archive][element_2]['group']
+                    M_keyword = testjson['instrument'][archive][element_2]['keyword']
 
                     with session.no_autoflush:
                         M_keyword_Qobj = session.query(upc_models.Keywords).filter(
@@ -431,10 +415,8 @@ def main():
 
                 if '2isis' in processError or processError == 'thmproc':
                     # @TODO unused variables testspacecraft and testinst
-                    testspacecraft = PDSinfoDICT[getMission(
-                        inputfile)]['UPCerrorSpacecraft']
-                    testinst = PDSinfoDICT[getMission(
-                        inputfile)]['UPCerrorInstrument']
+                    testspacecraft = PDSinfoDICT[archive]['UPCerrorSpacecraft']
+                    testinst = PDSinfoDICT[archive]['UPCerrorInstrument']
                     if session.query(upc_models.DataFiles).filter(
                             upc_models.DataFiles.edr_source == EDRsource.decode(
                                 "utf-8")).first() == None:
@@ -572,7 +554,8 @@ def main():
                     session.commit()
 
                 AddProcessDB(pds_session, fid, 'f')
-                os.remove(infile)
+                # @TODO ???
+                #os.remove(infile)
 
 
 if __name__ == "__main__":

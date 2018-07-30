@@ -1,8 +1,8 @@
 {
-    "inst": "voyager_jupiter",
+    "inst": "clementine_edr",
     "upc": {
         "recipe": {
-            "voy2isis": {
+            "clem2isis": {
                 "from_": "value",
                 "to": "value"
             },
@@ -40,7 +40,7 @@
     },
     "pow": {
         "recipe": {
-            "voy2isis": {
+            "clem2isis": {
                 "from_": "value",
                 "to": "value"
             },
@@ -53,7 +53,7 @@
     },
     "reduced": {
         "recipe": {
-            "voy2isis": {
+            "clem2isis": {
                 "from_": "value",
                 "to": "value"
             },
@@ -83,7 +83,7 @@
     },
     "projected": {
         "recipe": {
-            "voy2isis": {
+            "clem2isis": {
                 "from_": "value",
                 "to": "value"
             },
