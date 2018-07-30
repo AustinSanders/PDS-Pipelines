@@ -4,10 +4,11 @@ import json
 from pds_pipelines.RedisQueue import RedisQueue
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files, Archives
+from pds_pipelines.config import pds_info_loc
 
 
 def main():
-    PDS_info = json.load(open('/usgs/cdev/PDS/bin/PDSinfo.json', 'r'))
+    PDS_info = json.load(open(pds_info_loc, 'r'))
     reddis_queue = RedisQueue('UPC_ReadyQueue')
 
     try:
@@ -46,7 +47,7 @@ def main():
         for element in result:
             fname = fpath + element.filename
             fid = element.fileid
-            reddis_queue.QueueAdd((fname, fid))
+            reddis_queue.QueueAdd((fname, fid, archive_name[0]))
     return 0
 
 
