@@ -198,7 +198,7 @@ def main():
                         processOBJ.updateParameter('from_', infile)
                     elif item == 'cubeatt':
                         exband = 'none'
-                        for item1 in PDSinfoDICT[getMission(inputfile)]['bandorder']:
+                        for item1 in PDSinfoDICT[archive]['bandorder']:
                             bandcount = 1
                             bands = label['IsisCube']['BandBin'][PDSinfoDICT[archive]['bandbinQuery']]
                             # Sometime 'bands' is iterable, sometimes it is a single int.  Need to handle both.
