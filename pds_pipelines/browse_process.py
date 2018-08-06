@@ -63,7 +63,8 @@ def makedir(inputfile):
 #    pdb.set_trace()
 
     temppath = os.path.dirname(inputfile).lower()
-    finalpath = temppath.replace('/pds_san/pds_archive/', '/pds_san/PDS_Derived/UPC/images/')
+    #finalpath = temppath.replace('/pds_san/pds_archive/', '/pds_san/PDS_Derived/UPC/images/')
+    finalpath = temppath.replace('/pds_san/pds_archive/', '/home/arsanders/PDS-Pipelines/products/browse/')
 
     if not os.path.exists(finalpath):
         try:
@@ -79,13 +80,13 @@ def DB_addURL(session, isisSerial, inputfile):
     # pdb.set_trace()
     newisisSerial = isisSerial.split(':')[0]
     likestr = '%' + newisisSerial + '%'
-    Qobj = session.query(datafiles).filter(datafiles.isisid.like(likestr)).first()
+    Qobj = session.query(DataFiles).filter(DataFiles.isisid.like(likestr)).first()
 
     if str(Qobj.isisid) == str(isisSerial):
 
         outputfile = inputfile.replace('/pds_san/PDS_Derived/UPC/images/', '$browse_server/')
 
-        DBinput = meta_string(upcid=Qobj.upcid,
+        DBinput = MetaString(upcid=Qobj.upcid,
                             typeid='348',
                             value=outputfile)
 
@@ -101,10 +102,10 @@ def AddProcessDB(session, fid, outvalue):
     # pdb.set_trace()
     date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
 
-    processDB = pds_models.ProcessRuns(fileid=fid,
-                             process_date=date,
-                             process_typeid='5',
-                             process_out=outvalue)
+    processDB = ProcessRuns(fileid=fid,
+                            process_date=date,
+                            process_typeid='5',
+                            process_out=outvalue)
 
     try:
         session.merge(processDB)
@@ -134,8 +135,8 @@ def main():
 
     PDSinfoDICT = json.load(open(pds_info_loc, 'r'))
 
-    pds_session = db_connect('pdsdi_dev')
-    upc_session = db_connect('upcdev')
+    pds_session, _ = db_connect('pdsdi_dev')
+    upc_session, _ = db_connect('upcdev')
 
     while int(RQ_main.QueueSize()) > 0:
         item = literal_eval(RQ_main.QueueGet().decode("utf-8"))
