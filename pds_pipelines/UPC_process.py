@@ -246,14 +246,14 @@ def main():
                                     os.rename(outfile, infile)
                             status = 'success'
                             if '2isis' in item:
-                                RQ_thumbnail.QueueAdd(inputfile)
-                                RQ_browse.QueueAdd(inputfile)
+                                RQ_thumbnail.QueueAdd((inputfile, fid, archive))
+                                RQ_browse.QueueAdd((inputfile, fid, archive))
                                 label = pvl.load(infile)
                                 infile_bandlist = label['IsisCube']['BandBin'][PDSinfoDICT[archive]['bandbinQuery']]
                                 infile_centerlist = label['IsisCube']['BandBin']['Center']
                             elif item == 'thmproc':
-                                RQ_thumbnail.QueueAdd(inputfile)
-                                RQ_browse.QueueAdd(inputfile)
+                                RQ_thumbnail.QueueAdd((inputfile, fid, archive))
+                                RQ_browse.QueueAdd((inputfile, fid, archive))
                             elif item == 'handmos':
                                 label = pvl.load(infile)
 
@@ -558,7 +558,7 @@ def main():
 
                     session.commit()
 
-                AddProcessDB(pds_session, fid, 'f')
+                AddProcessDB(pds_session, fid, False)
                 os.remove(infile)
 
 
