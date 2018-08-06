@@ -70,7 +70,15 @@ def main():
     logger.addHandler(logFileHandle)
 
     PDSinfoDICT = json.load(open(pds_info_loc, 'r'))
-    archivepath = PDSinfoDICT[args.archive]['path'][:-1]
+    try:
+        archivepath = PDSinfoDICT[args.archive]['path'][:-1]
+    except KeyError:
+        print("\nArchive '{}' not found in {}\n".format(args.archive, pds_info_loc))
+        print("The following archives are available:")
+        for k in PDSinfoDICT.keys():
+            print("\t{}".format(k))
+        exit()
+
     if args.volume:
         archivepath = archivepath + '/' + args.volume
 

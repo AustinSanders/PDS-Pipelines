@@ -59,7 +59,14 @@ def main():
     logger.info('Starting Process')
 
     PDSinfoDICT = json.load(open(pds_info_loc, 'r'))
-    archiveID = PDSinfoDICT[args.archive]['archiveid']
+    try:
+        archiveID = PDSinfoDICT[args.archive]['archiveid']
+    except KeyError:
+        print("\nArchive '{}' not found in {}\n".format(args.archive, pds_info_loc))
+        print("The following archives are available:")
+        for k in PDSinfoDICT.keys():
+            print("\t{}".format(k))
+        exit()
 
     RQ = RedisQueue('UPC_ReadyQueue')
 

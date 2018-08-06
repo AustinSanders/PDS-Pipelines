@@ -197,8 +197,11 @@ def main():
                     elif item == 'spiceinit':
                         processOBJ.updateParameter('from_', infile)
                     elif item == 'cubeatt':
+                        """
+                        # @TODO revisit this block to make sure that it can be deleted without
+                        #  affecting integrity of downstream products.
                         exband = 'none'
-                        for item1 in PDSinfoDICT[getMission(inputfile)]['bandorder']:
+                        for item1 in PDSinfoDICT[archive]['bandorder']:
                             bandcount = 1
                             bands = label['IsisCube']['BandBin'][PDSinfoDICT[archive]['bandbinQuery']]
                             # Sometime 'bands' is iterable, sometimes it is a single int.  Need to handle both.
@@ -215,6 +218,8 @@ def main():
                                     exband = 1
                                     break
                         band_infile = infile + '+' + str(exband)
+                        """
+                        band_infile = infile + '+' + str(1)
                         processOBJ.updateParameter('from_', band_infile)
                         processOBJ.updateParameter('to', outfile)
                     elif item == 'footprintinit':
@@ -554,8 +559,7 @@ def main():
                     session.commit()
 
                 AddProcessDB(pds_session, fid, 'f')
-                # @TODO ???
-                #os.remove(infile)
+                os.remove(infile)
 
 
 if __name__ == "__main__":

@@ -95,13 +95,8 @@
         "path": "/pds_san/PDS_Archive/Mars_Global_Surveyor/MOC/"
     },
     "mro_ctx": {
-        "UPCrecipe": "/usgs/cdev/PDS/recipe/UPCrecipeCTX.json",
-        "BROWSErecipe": "/usgs/cdev/PDS/recipe/browserecipeCTX.json",
-        "THUMBrecipe": "/usgs/cdev/PDS/recipe/thumbnailrecipeCTX.json",
-        "UPC_IMAGEpath": "/pds_san/PDS_Derived/UPC/images/mars_reconnaissance_orbiter/ctx/",
         "archiveid": "16",
         "path": "/pds_san/PDS_Archive/Mars_Reconnaissance_Orbiter/CTX/",
-        "UPC_XMLpath": "/pds_san/PDS_Derived/UPC/xml/mars_reconnaissance_orbiter/ctx/",
         "mission": "CTX",
 	"bandbinQuery" : "FilterName"
     },
