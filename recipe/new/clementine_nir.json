@@ -70,7 +70,19 @@
                 "maxincidence": "120.0",
                 "spice": "no"
             }
-        }
+        },
+	"browse": {
+	    "minlines": "200",
+	    "minsamples": "200",
+	    "maxlines": "900",
+	    "maxsamples": "900"
+	},
+	"thumbnail": {
+	    "minlines": "50",
+	    "minsamples": "55",
+	    "maxlines": "300",
+	    "maxsamples": "300"
+	}
     },
     "projected": {
         "recipe": {

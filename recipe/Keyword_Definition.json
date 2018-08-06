@@ -586,7 +586,7 @@
         "keyword": "DATA_SET_ID"  
       }
     },
-    "themis_ir_edr": {
+    "mo_themis_ir_edr": {
       "gainnumber": {
         "type": "integer",
         "displayname": "Gain Number",

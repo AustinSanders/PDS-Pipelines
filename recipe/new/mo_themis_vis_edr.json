@@ -89,7 +89,19 @@
                 "quality": "60",
                 "stretch": "linear"
             }
-        }
+        },
+	"browse": {
+	    "minlines": "200",
+	    "minsamples": "200",
+	    "maxlines": "900",
+	    "maxsamples": "900"
+	},
+	"thumbnail": {
+	    "minlines": "50",
+	    "minsamples": "50",
+	    "maxlines": "300",
+	    "maxsamples": "300"
+	}
     },
     "projected": {
         "recipe": {
