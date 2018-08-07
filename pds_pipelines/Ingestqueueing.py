@@ -11,7 +11,7 @@ import argparse
 
 from pds_pipelines.RedisQueue import *
 from pds_pipelines.HPCjob import *
-from pds_pipelines.config import pds_info_loc
+from pds_pipelines.config import pds_info
 
 import pdb
 
@@ -69,11 +69,11 @@ def main():
     logFileHandle.setFormatter(formatter)
     logger.addHandler(logFileHandle)
 
-    PDSinfoDICT = json.load(open(pds_info_loc, 'r'))
+    PDSinfoDICT = json.load(open(pds_info, 'r'))
     try:
         archivepath = PDSinfoDICT[args.archive]['path'][:-1]
     except KeyError:
-        print("\nArchive '{}' not found in {}\n".format(args.archive, pds_info_loc))
+        print("\nArchive '{}' not found in {}\n".format(args.archive, pds_info))
         print("The following archives are available:")
         for k in PDSinfoDICT.keys():
             print("\t{}".format(k))

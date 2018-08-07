@@ -17,7 +17,7 @@ from sqlalchemy.orm.util import *
 from pds_pipelines.RedisQueue import *
 from pds_pipelines.PDS_DBquery import *
 from pds_pipelines.db import db_connect
-from pds_pipelines.config import pds_info_loc
+from pds_pipelines.config import pds_info
 from pds_pipelines.models.pds_models import Files, Archives
 
 import pdb
@@ -101,7 +101,7 @@ def main():
     logger.addHandler(logFileHandle)
 
     logger.info("Starting Process")
-    PDSinfoDICT = json.load(open(pds_info_loc, 'r'))
+    PDSinfoDICT = json.load(open(pds_info, 'r'))
 
     RQ_main = RedisQueue('Ingest_ReadyQueue')
     RQ_work = RedisQueue('Ingest_WorkQueue')

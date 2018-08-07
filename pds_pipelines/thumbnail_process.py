@@ -17,7 +17,7 @@ from pds_pipelines.Recipe import *
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.upc_models import MetaString, DataFiles
 from pds_pipelines.models.pds_models import ProcessRuns, Files
-from pds_pipelines.config import pds_log_loc, pds_info_loc
+from pds_pipelines.config import pds_log, pds_info, workarea
 
 import pdb
 
@@ -118,21 +118,17 @@ def main():
 
 #    pdb.set_trace()
 
-    # @TODO move to config file
-    workarea = '/home/arsanders/PDS-Pipelines/products/'
-    #workarea = '/scratch/pds_services/workarea/'
-
     ##***************** Set up logging *****************
     logger = logging.getLogger('Thumbnail_Process')
     logger.setLevel(logging.INFO)
-    logFileHandle = logging.FileHandler(pds_log_loc + 'Process.log')
+    logFileHandle = logging.FileHandler(pds_log + 'Process.log')
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
     logger.addHandler(logFileHandle)    
 
     RQ_main = RedisQueue('Thumbnail_ReadyQueue')
 
-    PDSinfoDICT = json.load(open(pds_info_loc, 'r'))
+    PDSinfoDICT = json.load(open(pds_info, 'r'))
 
     # @TODO change to production servers
     pds_session, _ = db_connect('pdsdi_dev')

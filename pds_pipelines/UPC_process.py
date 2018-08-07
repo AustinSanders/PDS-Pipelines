@@ -19,7 +19,7 @@ from pds_pipelines.UPCkeywords import *
 from pds_pipelines.db import db_connect
 from pds_pipelines.models import upc_models, pds_models
 from pds_pipelines.models.upc_models import MetaTime, MetaGeometry, MetaString, MetaBoolean
-from pds_pipelines.config import pds_info_loc
+from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def
 
 from sqlalchemy import *
 from sqlalchemy.exc import IntegrityError
@@ -99,10 +99,6 @@ def get_tid(keyword, session):
 
 # @TODO set back to /usgs/ and /scratch/ directories.
 def main():
-
-    #workarea = '/scratch/pds_services/workarea/'
-    workarea = '/home/arsanders/PDS-Pipelines/products/'
-
     # Connect to database - ignore engine information
     pds_session, _ = db_connect('pdsdi_dev')
 
@@ -112,14 +108,13 @@ def main():
     # ***************** Set up logging *****************
     logger = logging.getLogger('UPC_Process')
     logger.setLevel(logging.INFO)
-    #logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Process.log')
-    logFileHandle = logging.FileHandler('/home/arsanders/PDS-Pipelines/Process.log')
+    logFileHandle = logging.FileHandler(pds_log + 'Process.log')
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
     logger.addHandler(logFileHandle)
 
-    PDSinfoDICT = json.load(open(pds_info_loc, 'r'))
+    PDSinfoDICT = json.load(open(pds_info, 'r'))
 
     # Redis Queue Objects
     RQ_main = RedisQueue('UPC_ReadyQueue')
@@ -312,7 +307,7 @@ def main():
 
                 #  Block to add common keywords
                 testjson = json.load(
-                    open('/home/arsanders/PDS-Pipelines/recipe/Keyword_Definition.json', 'r'))
+                    open(keyword_def, 'r'))
                 for element_1 in testjson['instrument']['COMMON']:
                     keyvalue = ""
                     keytype = testjson['instrument']['COMMON'][element_1]['type']

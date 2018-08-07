@@ -9,6 +9,7 @@ from pysis.exceptions import ProcessError
 
 from pds_pipelines.RedisQueue import *
 from pds_pipelines.Recipe import *
+from pds_pipelines.config import workarea
 
 import pdb
 
@@ -76,8 +77,6 @@ def makedir(inputfile):
 def main():
 
     #    pdb.set_trace()
-
-    workarea = '/scratch/pds_services/workarea/'
 
 # ***************** Set up logging *****************
     logger = logging.getLogger('ProjectionBrowse_Process')

@@ -13,7 +13,6 @@ from pds_pipelines.RedisQueue import *
 
 from pds_pipelines.config import recipe_base
 
-
 class Recipe(Process):
     """
     Parameters
