@@ -15,18 +15,22 @@ def find_keyword(obj, key):
             F_item = find_keyword(v, key)
             if F_item is not None:
                 return F_item
-
+            
+def lower_keys(x):
+    if isinstance(x, list):
+        return [lower_keys(v) for v in x]
+    elif isinstance(x, dict):
+        return dict((k.lower(), lower_keys(v)) for k, v in x.items())
+    else:
+        return x
 
 class UPCkeywords(object):
 
     def __init__(self, pvlfile):
+        self.label = lower_keys(pvl.load(pvlfile))
 
-        self.label = pvl.load(pvlfile)
-
-    def getKeyword(self, group, keyword):
-
-        Gget = find_keyword(self.label, group)
-        Gkey = find_keyword(Gget, keyword)
+    def getKeyword(self, keyword):
+        Gkey = find_keyword(self.label, keyword.lower())
         return Gkey
 
     def getPolygonKeyword(self, keyword):

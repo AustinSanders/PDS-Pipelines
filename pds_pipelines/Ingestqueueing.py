@@ -11,7 +11,7 @@ import argparse
 
 from pds_pipelines.RedisQueue import *
 from pds_pipelines.HPCjob import *
-from pds_pipelines.config import pds_info
+from pds_pipelines.config import pds_info, pds_log
 
 import pdb
 
@@ -62,8 +62,7 @@ def main():
 # ********* Set up logging *************
     logger = logging.getLogger(args.archive + '_INGEST')
     logger.setLevel(logging.INFO)
-    #logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Ingest.log')
-    logFileHandle = logging.FileHandler('/home/arsanders/PDS-Pipelines/logs/Ingest.log')
+    logFileHandle = logging.FileHandler(pds_log + 'Ingest.log')
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
@@ -95,7 +94,7 @@ def main():
                         if os.path.basename(fname) == "voldesc.cat":
                             voldescs.append(fname)
                         if args.ingest:
-                            RQ_ingest.QueueAdd(fname)
+                            RQ_ingest.QueueAdd((fname, args.archive))
                     except:
                         logger.error('File %s NOT added to Ingest Queue', fname)
                 else:
@@ -105,7 +104,7 @@ def main():
                     if os.path.basename(fname) == "voldesc.cat":
                         voldescs.append(fname)
                     if args.ingest:
-                        RQ_ingest.QueueAdd(fname)
+                        RQ_ingest.QueueAdd((fname, args.archive))
                 except:
                     logger.error('File %s NOT added to Ingest Queue', fname)
 

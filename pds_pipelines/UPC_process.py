@@ -265,21 +265,17 @@ def main():
             if status.lower() == 'success':
                 keywordsOBJ = UPCkeywords(caminfoOUT)
                 if session.query(upc_models.DataFiles).filter(
-                        upc_models.DataFiles.isisid == keywordsOBJ.getKeyword(
-                            'Parameters', 'IsisId')).first() == None:
+                        upc_models.DataFiles.isisid == keywordsOBJ.getKeyword('IsisId')).first() == None:
 
                     target_Qobj = session.query(upc_models.Targets).filter(
-                        upc_models.Targets.targetname == keywordsOBJ.getKeyword(
-                            'Instrument', 'TargetName').upper()).first()
+                        upc_models.Targets.targetname == keywordsOBJ.getKeyword('TargetName').upper()).first()
 
                     instrument_Qobj = session.query(upc_models.Instruments).filter(
-                        upc_models.Instruments.instrument == keywordsOBJ.getKeyword(
-                            'Instrument', 'InstrumentId')).first()
+                        upc_models.Instruments.instrument == keywordsOBJ.getKeyword('InstrumentId')).first()
 
                     test_input = upc_models.DataFiles(
-                        isisid=keywordsOBJ.getKeyword('Parameters', 'IsisId'),
-                        productid=keywordsOBJ.getKeyword(
-                            'Archive', 'ProductId'),
+                        isisid=keywordsOBJ.getKeyword('IsisId'),
+                        productid=keywordsOBJ.getKeyword('ProductId'),
                         edr_source=EDRsource,
                         edr_detached_label='',
                         instrumentid=instrument_Qobj.instrumentid,
@@ -289,8 +285,7 @@ def main():
                     session.commit()
 
                 Qobj = session.query(upc_models.DataFiles).filter(
-                    upc_models.DataFiles.isisid == keywordsOBJ.getKeyword(
-                        'Parameters', 'IsisId')).first()
+                    upc_models.DataFiles.isisid == keywordsOBJ.getKeyword('IsisId')).first()
 
                 UPCid = Qobj.upcid
                 # block to add band information to meta_bands
@@ -306,78 +301,41 @@ def main():
                 session.commit()
 
                 #  Block to add common keywords
-                testjson = json.load(
-                    open(keyword_def, 'r'))
-                for element_1 in testjson['instrument']['COMMON']:
-                    keyvalue = ""
-                    keytype = testjson['instrument']['COMMON'][element_1]['type']
-                    keygroup = testjson['instrument']['COMMON'][element_1]['group']
-                    keyword = testjson['instrument']['COMMON'][element_1]['keyword']
+                # @TODO refactor this to use keywords from database instead of
+                #  keyword definition file
+                keywords = session.query(upc_models.Keywords).filter(
+                    upc_models.Keywords.instrumentid.in_((3, instrument_Qobj.instrumentid))).all()
+
+                for row in keywords:
+                    keytype = row.datatype
+                    keyword = row.typename
+                    val = keywordsOBJ.getKeyword(keyword.lower())
                     keyword_Qobj = session.query(upc_models.Keywords).filter(
-                        upc_models.Keywords.typename == element_1).first()
-                    if keyword_Qobj is None:
+                        upc_models.Keywords.typename == keyword).first()
+                    val = db2py(keytype, val)
+                    if val is None:
                         continue
-                    if keygroup == 'Polygon':
-                        keyvalue = keywordsOBJ.getPolygonKeyword(keyword)
-                    else:
-                        keyvalue = keywordsOBJ.getKeyword(keygroup, keyword)
-                    if keyvalue is None:
-                        continue
-                    keyvalue = db2py(keytype, keyvalue)
                     DBinput = upc_models.create_table(keytype,
-                                                upcid=UPCid,
-                                                typeid=keyword_Qobj.typeid,
-                                                value=keyvalue)
+                                                        upcid=UPCid,
+                                                        typeid=keyword_Qobj.typeid,
+                                                        value=val)
                     session.merge(DBinput)
-                    try:
-                        session.flush()
-                    except Exception as e:
-                        print(e)
                 session.commit()
                 # geometry stuff
                 G_centroid = 'point ({} {})'.format(
-                    str(keywordsOBJ.getKeyword(
-                        'Polygon', 'CentroidLongitude')),
-                    str(keywordsOBJ.getKeyword(
-                        'Polygon', 'CentroidLatitude')))
+                    str(keywordsOBJ.getKeyword('CentroidLongitude')),
+                    str(keywordsOBJ.getKeyword('CentroidLatitude')))
 
                 G_keyword_Qobj = session.query(upc_models.Keywords.typeid).filter(
                     upc_models.Keywords.typename == 'isiscentroid').first()
                 G_footprint_Qobj = session.query(upc_models.Keywords.typeid).filter(
                     upc_models.Keywords.typename == 'isisfootprint').first()
-                G_footprint = keywordsOBJ.getKeyword('Polygon', 'GisFootprint')
+                G_footprint = keywordsOBJ.getKeyword('GisFootprint')
                 G_DBinput = upc_models.MetaGeometry(upcid=UPCid, typeid=G_keyword_Qobj, value=G_centroid)
                 session.merge(G_DBinput)
                 G_DBinput = upc_models.MetaGeometry(upcid=UPCid, typeid=G_footprint_Qobj, value=G_footprint)
                 session.merge(G_DBinput)
                 session.commit()
-
-                # block to deal with mission keywords
-                for element_2 in testjson['instrument'][archive]:
-                    M_keytype = testjson['instrument'][archive][element_2]['type']
-                    M_keygroup = testjson['instrument'][archive][element_2]['group']
-                    M_keyword = testjson['instrument'][archive][element_2]['keyword']
-
-                    with session.no_autoflush:
-                        M_keyword_Qobj = session.query(upc_models.Keywords).filter(
-                            upc_models.Keywords.typename == element_2).first()
-
-                    if M_keygroup == 'Polygon':
-                        M_keyvalue = keywordsOBJ.getPolygonKeyword(M_keyword)
-                    else:
-                        M_keyvalue = keywordsOBJ.getKeyword(
-                            M_keygroup, M_keyword)
-
-                    M_keyvalue = db2py(M_keytype, M_keyvalue)
-
-                    DBinput = upc_models.create_table(M_keytype,
-                                                upcid=UPCid,
-                                                typeid=M_keyword_Qobj.typeid,
-                                                value=M_keyvalue)
-
-                    session.merge(DBinput)
-                session.commit()
-
                 """
                 CScmd = 'md5sum ' + inputfile
                 process = subprocess.Popen(CScmd,
