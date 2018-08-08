@@ -4,11 +4,11 @@ import json
 from pds_pipelines.RedisQueue import RedisQueue
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files, Archives
-from pds_pipelines.config import pds_info_loc
+from pds_pipelines.config import pds_info
 
 
 def main():
-    PDS_info = json.load(open(pds_info_loc, 'r'))
+    PDS_info = json.load(open(pds_info, 'r'))
     reddis_queue = RedisQueue('UPC_ReadyQueue')
 
     try:

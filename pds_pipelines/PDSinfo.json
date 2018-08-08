@@ -56,11 +56,9 @@
         "path": "/pds_san/PDS_Archive/Lunar_Reconnaissance_Orbiter/LAMP/"
     },
     "lro_lroc_edr": {
-        "UPCrecipe": "/usgs/cdev/PDS/recipe/UPCrecipeLRO_EDR.json",
-        "BROWSErecipe": "/usgs/cdev/PDS/recipe/browserecipeLRO_EDR.json",
         "archiveid": "74",
         "path": "/pds_san/PDS_Archive/Lunar_Reconnaissance_Orbiter/LROC/EDR/",
-        "THUMBrecipe": "/usgs/cdev/PDS/recipe/thumbnailrecipeLRO_EDR.json"
+	"bandbinQuery" : "FilterName"
     },
     "lunar_orbiter": {
         "archiveid": "79",

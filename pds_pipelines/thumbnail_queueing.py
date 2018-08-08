@@ -13,7 +13,7 @@ from sqlalchemy.orm.util import *
 from pds_pipelines.RedisQueue import *
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files
-from pds_pipelines.config import pds_info_loc, pds_log_loc
+from pds_pipelines.config import pds_info, pds_log
 
 class Args:
     def __init__(self):
@@ -47,14 +47,14 @@ def main():
 
     logger = logging.getLogger('Thumbnail_Queueing.' + args.archive)
     logger.setLevel(logging.INFO)
-    logFileHandle = logging.FileHandler(pds_log_loc + 'Process.log')
+    logFileHandle = logging.FileHandler(pds_log + 'Process.log')
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
     logger.addHandler(logFileHandle)
 
     logger.info('Starting Process')
 
-    PDSinfoDICT = json.load(open(pds_info_loc, 'r'))
+    PDSinfoDICT = json.load(open(pds_info, 'r'))
     archiveID = PDSinfoDICT[args.archive]['archiveid']
 
     RQ = RedisQueue('Thumbnail_ReadyQueue')

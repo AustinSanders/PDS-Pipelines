@@ -134,5 +134,6 @@ class_map = {
     'boolean': MetaBoolean,
     'datafiles': DataFiles,
     'keywords': Keywords,
-    'instruments': Instruments
+    'instruments': Instruments,
+    'geometry': MetaGeometry
 }
