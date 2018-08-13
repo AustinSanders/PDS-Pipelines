@@ -131,13 +131,13 @@
         "type": "string",
         "displayname": "Spacecraft Clock Start Count",
         "group": "Archive",
-        "keyword": "SpacecraftClockStartCount"
+        "keyword": "Spacecraft_Clock_Start_Count"
       },
       "spacecraftclockstopcount": {
         "type": "string",
         "displayname": "Spacecraft Clock Stop Count",
         "group": "Archive",
-        "keyword": "pacecraftClockStopCount"
+        "keyword": "Spacecraft_Clock_Stop_Count"
       },
       "exposureduration": {
         "type": "double",
@@ -403,7 +403,7 @@
         "group": "Geometry",
         "keyword": "UpperRightLongitude"
       },
-      "LowerLeftLatitude": {
+      "lowerleftlatitude": {
         "type": "double",
         "displayname": "Lower Left Latitude",
         "group": "Geometry",
@@ -586,6 +586,7 @@
         "keyword": "DATA_SET_ID"  
       }
     },
+<<<<<<< Updated upstream
         "mro_hirise": {
             "statsbandfilter": {
                 "type": "string",
@@ -1194,6 +1195,119 @@
                 "displayname": "Partial Sum Lines",
                 "group": "OriginalLabel",
                 "keyword": "PARTIAL_SUM_LINES"
+=======
+    "lro_lroc_edr":{
+	"key": "val"
+    },
+    "mo_themis_ir_edr": {
+      "gainnumber": {
+        "type": "integer",
+        "displayname": "Gain Number",
+        "group": "Instrument",
+        "keyword": "GainNumber"
+      },
+      "offsetnumber": {
+        "type": "integer",
+        "displayname": "Offset Number",
+        "group": "Instrument",
+        "keyword": "OffsetNumber"
+      },
+      "missingscanlines": {
+        "type": "integer",
+        "displayname": "Missing Scan Lines",
+        "group": "Instrument",
+        "keyword": "MissingScanLines"
+      },
+      "timedelayintegration": {
+        "type": "string",
+        "displayname": "Time Delay Integration",
+        "group": "Instrument",
+        "keyword": "TimeDelayIntegration"
+      },
+      "spatialsumming": {
+        "type": "integer",
+        "displayname": "Spatial Summing",
+        "group": "Instrument",
+        "keyword": "SpatialSumming"
+      },
+      "spacecraftclockoffset": {
+        "type": "double",
+        "displayname": "Spacecraft Clock Offset",
+        "group": "Instrument",
+        "keyword": "SpacecraftClockOffset"
+      },
+      "producerid": {
+        "type": "string",
+        "displayname": "Producer ID",
+        "group": "Archive",
+        "keyword": "ProducerId"
+      },
+      "orbitnumber": {
+        "type": "integer",
+        "displayname": "Orbit Number",
+        "group": "Archive",
+        "keyword": "OrbitNumber"
+      },
+      "missionname": {
+        "type": "string",
+        "displayname": "Mission Name",
+        "group": "OriginalLabel",
+        "keyword": "MISSION_NAME"
+      },
+      "instrumenthostname": { 
+        "type": "string",
+        "displayname": "Instrument Host Name",
+        "group": "OriginalLabel",
+        "keyword": "INSTRUMENT_HOST_NAME"
+      },
+      "detectorid": {
+        "type": "string",
+        "displayname": "Detector ID",
+        "group": "OriginalLabel",
+        "keyword": "DETECTOR_ID"
+      },
+      "missionphasename": {
+        "type": "string",
+        "displayname": "Mission Phase Name",
+        "group": "OriginalLabel",
+        "keyword": "MISSION_PHASE_NAME"
+      },
+      "productcreationtime": {
+        "type": "time",
+        "displayname": "Product_Creation_Time",
+        "group": "OriginalLabel",
+        "keyword": "PRODUCT_CREATION_TIME"
+      },
+      "productversionid": {
+        "type": "string",
+        "displayname": "Product Version ID",
+        "group": "OriginalLabel",
+        "keyword": "PRODUCT_VERSION_ID"
+      },
+      "releaseid": {
+        "type": "string",
+        "displayname": "Release ID",
+        "group": "OriginalLabel",
+        "keyword": "RELEASE_ID"
+      },
+      "starttimeet": {
+        "type": "string",
+        "displayname": "Start Time ET",
+        "group": "OriginalLabel",
+        "keyword": "START_TIME_ET"
+      },
+      "stoptimeet": {
+        "type": "string",
+        "displayname": "Stop Time ET",
+        "group": "OriginalLabel",
+        "keyword": "STOP_TIME_ET"
+      },
+      "corename": {
+        "type": "string",
+        "displayname": "Core Name",
+        "group": "SPECTRAL_QUBE",
+        "keyword": "CORE_NAME"
+>>>>>>> Stashed changes
       }
     }
   }
