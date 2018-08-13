@@ -537,7 +537,7 @@
         "group": "BandBin",
         "keyword": "Center"
       },
-      "dataqualitydesc": {
+      "dataqualitydescription": {
         "type": "string",
         "displayname": "Data Quality Description",
         "group": "OriginalLabel",
@@ -586,114 +586,614 @@
         "keyword": "DATA_SET_ID"  
       }
     },
-    "mo_themis_ir_edr": {
-      "gainnumber": {
-        "type": "integer",
-        "displayname": "Gain Number",
-        "group": "Instrument",
-        "keyword": "GainNumber"
-      },
-      "offsetnumber": {
-        "type": "integer",
-        "displayname": "Offset Number",
-        "group": "Instrument",
-        "keyword": "OffsetNumber"
-      },
-      "missingscanlines": {
-        "type": "integer",
-        "displayname": "Missing Scan Lines",
-        "group": "Instrument",
-        "keyword": "MissingScanLines"
-      },
-      "timedelayintegration": {
-        "type": "string",
-        "displayname": "Time Delay Integration",
-        "group": "Instrument",
-        "keyword": "TimeDelayIntegration"
-      },
-      "spatialsumming": {
-        "type": "integer",
-        "displayname": "Spatial Summing",
-        "group": "Instrument",
-        "keyword": "SpatialSumming"
-      },
-      "spacecraftclockoffset": {
-        "type": "double",
-        "displayname": "Spacecraft Clock Offset",
-        "group": "Instrument",
-        "keyword": "SpacecraftClockOffset"
-      },
-      "producerid": {
-        "type": "string",
-        "displayname": "Producer ID",
-        "group": "Archive",
-        "keyword": "ProducerId"
-      },
-      "orbitnumber": {
-        "type": "integer",
-        "displayname": "Orbit Number",
-        "group": "Archive",
-        "keyword": "OrbitNumber"
-      },
-      "missionname": {
-        "type": "string",
-        "displayname": "Mission Name",
-        "group": "OriginalLabel",
-        "keyword": "MISSION_NAME"
-      },
-      "instrumenthostname": { 
-        "type": "string",
-        "displayname": "Instrument Host Name",
-        "group": "OriginalLabel",
-        "keyword": "INSTRUMENT_HOST_NAME"
-      },
-      "detectorid": {
-        "type": "string",
-        "displayname": "Detector ID",
-        "group": "OriginalLabel",
-        "keyword": "DETECTOR_ID"
-      },
-      "missionphasename": {
-        "type": "string",
-        "displayname": "Mission Phase Name",
-        "group": "OriginalLabel",
-        "keyword": "MISSION_PHASE_NAME"
-      },
-      "productcreationtime": {
-        "type": "time",
-        "displayname": "Product_Creation_Time",
-        "group": "OriginalLabel",
-        "keyword": "PRODUCT_CREATION_TIME"
-      },
-      "productversionid": {
-        "type": "string",
-        "displayname": "Product Version ID",
-        "group": "OriginalLabel",
-        "keyword": "PRODUCT_VERSION_ID"
-      },
-      "releaseid": {
-        "type": "string",
-        "displayname": "Release ID",
-        "group": "OriginalLabel",
-        "keyword": "RELEASE_ID"
-      },
-      "starttimeet": {
-        "type": "string",
-        "displayname": "Start Time ET",
-        "group": "OriginalLabel",
-        "keyword": "START_TIME_ET"
-      },
-      "stoptimeet": {
-        "type": "string",
-        "displayname": "Stop Time ET",
-        "group": "OriginalLabel",
-        "keyword": "STOP_TIME_ET"
-      },
-      "corename": {
-        "type": "string",
-        "displayname": "Core Name",
-        "group": "SPECTRAL_QUBE",
-        "keyword": "CORE_NAME"
+        "mro_hirise": {
+            "statsbandfilter": {
+                "type": "string",
+                "displayname": "Band Filter Used For Statistics",
+		"group": "BandBin",
+                "keyword": "Name"
+            },
+            "statsbandcenterwave": {
+                "type": "double",
+                "displayname": "Center Wavelength of Band Used For Statistics",
+		"group": "BandBin",
+                "keyword": "Center"
+            },
+            "readoutstarttime": {
+                "type": "time",
+                "displayname": "Readout Start Time",
+		"group": "Archive",
+                "keyword": "ReadoutStartTime"
+            },
+            "deltalinetimercount": {
+                "type": "integer",
+                "displayname": "Delta Line Timer Count",
+		"group": "Instrument",
+                "keyword": "DeltaLineTimerCount"
+            },
+            "hi_source": {
+                "type": "string",
+                "displayname": "Hi Source",
+		"group": "OriginalLabel",
+                "keyword": "SOURCE_FILE_NAME"
+            },
+            "lookuptablemin": {
+                "type": "integer",
+                "displayname": "Lookup Table Minimum",
+		"group": "Instrument",
+                "keyword": "LookupTableMinimum"
+            },
+            "lookuptablekvalue": {
+                "type": "integer",
+                "displayname": "Lookup Table K Value",
+		"group": "Instrument",
+                "keyword": "LookupTableKValue"
+            },
+            "channel": {
+                "type": "integer",
+                "displayname": "Channel",
+		"group": "Instrument",
+                "keyword": "ChannelNumber"
+            },
+            "calibrationstartcount": {
+                "type": "string",
+                "displayname": "Calibration Start Count",
+		"group": "Instrument",
+                "keyword": "CalibrationStartCount"
+            },
+            "lookuptablemedian": {
+                "type": "integer",
+                "displayname": "Lookup Table Median",
+		"group": "Instrument",
+                "keyword": "LookupTableMedian"
+            },
+            "lookuptablemax": {
+                "type": "integer",
+                "displayname": "Lookup Table Maximum",
+		"group": "Instrument",
+                "keyword": "LookupTableMaximum"
+            },
+            "trimlines": {
+                "type": "integer",
+                "displayname": "Trim Lines",
+		"group": "Archive",
+                "keyword": "TrimLines"
+            },
+            "readoutstartcount": {
+                "type": "string",
+                "displayname": "Readout Start Count",
+		"group": "Instrument",
+                "keyword": "ReadoutStartCount"
+            },
+            "lookuptabletype": {
+                "type": "string",
+                "displayname": "Lookup Table Type",
+		"group": "Instrument",
+                "keyword": "LookupTableType"
+            },
+            "calibrationstarttime": {
+                "type": "time",
+                "displayname": "Calibration Start Time",
+		"group": "Instrument",
+                "keyword": "CalibrationStartTime"
+            }
+        },
+    "lro_lroc_edr": {
+            "statsbandfilter": {
+                "type": "string",
+                "displayname": "Band Filter Used For Statistics",
+		"group": "BandBin",
+                "keyword": "FilterName"
+            },
+            "statsbandcenterwave": {
+                "type": "double",
+                "displayname": "Center Wavelength of Band Used For Statistics",
+		"group": "BandBin",
+                "keyword": "Center"
+            },
+            "instrumentpointingquality": {
+                "type": "string",
+                "displayname": "Instrument Pointing Quality",
+		"group": "Kernels", 
+                "keyword": "InstrumentPointingQuality"
+            },
+            "temperaturefpga": {
+                "type": "double",
+                "displayname": "Temperature FPGA",
+		"group": "Instrument",
+                "keyword": "TemperatureFPGA"
+            },
+            "lineexposureduration": {
+                "type": "double",
+                "displayname": "Line Exposure Duration",
+		"group": "Instrument",
+                "keyword": "LineExposureDuration"
+            },
+            "temperaturetelescope": {
+                "type": "double",
+                "displayname": "Temperature Telescope",
+		"group": "Instrument",
+                "keyword": "TemperatureTelescope"
+            },
+            "frameid": {
+                "type": "string",
+                "displayname": "Frame ID",
+		"group": "Instrument",
+                "keyword": "FrameId"
+            },
+            "originalproductid": {
+                "type": "string",
+                "displayname": "Original Product Identifier",
+		"group": "Archive",
+                "keyword": "OriginalProductId"
+            },
+            "spatialsumming": {
+                "type": "integer",
+                "displayname": "Spatial Summing",
+		"group": "Instrument",
+                "keyword": "SpatialSumming"
+            },
+            "instrumentpositionquality": {
+                "type": "string",
+                "displayname": "Instrument Position Quality",
+		"group": "Kernels",
+                "keyword": "InstrumentPositionQuality"
+            },
+            "producerid": {
+                "type": "string",
+                "displayname": "Producer Identifier",
+		"group": "Archive",
+                "keyword": "ProducerId"
+            },
+            "productversionid": {
+                "type": "string",
+                "displayname": "Product Version Identifier",
+		"group": "Archive",
+                "keyword": "ProductVersionId"
+            },
+            "producerinstitutionname": {
+                "type": "string",
+                "displayname": "Producer Institution Name",
+		"group": "Archive",
+                "keyword": "ProducerInstitutionName"
+            },
+            "missionphasename": {
+                "type": "string",
+                "displayname": "Mission Phase Name",
+		"group": "Instrument",
+                "keyword": "MissionPhaseName"
+            },
+            "dataqualityid": {
+                "type": "integer",
+                "displayname": "Data Quality ID",
+		"group": "Archive",
+                "keyword": "DataQualityId"
+            },
+            "temperaturefpa": {
+                "type": "double",
+                "displayname": "Temperature FPA",
+		"group": "Instrument",
+                "keyword": "TemperatureFPA"
+            },
+            "compressionflag": {
+                "type": "integer",
+                "displayname": "Compress Flag",
+		"group": "Archive",
+                "keyword": "CompressionFlag"
+            },
+            "orbitnumber": {
+                "type": "integer",
+                "displayname": "Orbit Number",
+		"group": "Archive",
+                "keyword": "OrbitNumber"
+            }
+    },
+        "cassini_iss": {
+	    "statsbandfilter": {
+		"type": "string",
+		"displayname": "Band Filter Used For Statistics",
+		"group": "BandBin",
+		"keyword": "FilterName"
+	    },	    
+	    "statsbandcenterwave": {
+		"type": "double",
+		"displayname": "Center Wavelength Of Band Used For Statistics",
+		"group": "BandBin",
+		"keyword": "Center"
+	    },
+            "imagenumber": {
+                "type": "integer",
+                "displayname": "Image Number",
+                "group": "Archive",
+                "keyword": "ImageNumber"
+            },
+            "readoutcycleindex": {
+                "type": "integer",
+                "displayname": "Readout Cycle Index",
+                "group": "Instrument",
+                "keyword": "ReadoutCycleIndex"
+            },
+            "instrumentdatarate": {
+                "type": "double",
+                "displayname": "Instrument Data Rate",
+                "group": "Instrument",
+                "keyword": "InstrumentDataRate"
+            },
+            "sequencenumber": {
+                "type": "integer",
+                "displayname": "Sequence Number",
+                "group": "OriginalLabel",
+                "keyword": "SEQUENCE_NUMBER"
+            },
+            "opticstemperature": {
+                "type": "string",
+                "displayname": "Optics Temperature",
+                "group": "Instrument",
+                "keyword": "OpticsTemperature"
+            },
+            "detectortemperature": {
+                "type": "double",
+                "displayname": "Detector Temperature",
+                "group": "OriginalLabel",
+                "keyword": "DETECTOR_TEMPERATURE"
+            },
+            "sequenceid": {
+                "type": "string",
+                "displayname": "Sequence ID",
+                "group": "OriginalLabel",
+                "keyword": "SEQUENCE_ID"
+            },
+            "description": {
+                "type": "string",
+                "displayname": "Description",
+                "group": "OriginalLabel",
+                "keyword": "DESCRIPTION"
+            },
+            "antibloomingstateflag": {
+                "type": "string",
+                "displayname": "Antiblooming State Flag",
+                "group": "Instrument",
+                "keyword": "AntibloomingStateFlag"
+            },
+            "imagetime": {
+                "type": "time",
+                "displayname": "Image Time",
+                "group": "Instrument",
+                "keyword": "ImageTime"
+            },
+            "observationid": {
+                "type": "string",
+                "displayname": "Observation ID",
+                "group": "Archive",
+                "keyword": "ObservationId"
+            },
+            "delayedreadoutflag": {
+                "type": "string",
+                "displayname": "Delayed Readout Flag",
+                "group": "Instrument",
+                "keyword": "DelayedReadoutFlag"
+            },
+            "instrumentmodeid": {
+                "type": "string",
+                "displayname": "Instrument Mode ID",
+                "group": "Instrument",
+                "keyword": "InstrumentModeId"
+            },
+            "filtername": {
+                "type": "string",
+                "displayname": "Filter Name",
+                "group": "BandBin",
+                "keyword": "FilterName"
+            },
+            "summingmode": {
+                "type": "integer",
+                "displayname": "Summing Mode",
+                "group": "Instrument",
+                "keyword": "SummingMode"
+            },
+            "imageobservationtype": {
+                "type": "string",
+                "displayname": "Image Observation Type",
+                "group": "OriginalLabel",
+                "keyword": "IMAGE_OBSERVATION_TYPE"
+            },
+            "instrumentpointingquality": {
+                "type": "string",
+                "displayname": "Instrument Pointing Quality",
+                "group": "Kernels",
+                "keyword": "InstrumentPointingQuality"
+            },
+            "compressionratio": {
+                "type": "double",
+                "displayname": "Compression Ratio",
+                "group": "Instrument",
+                "keyword": "CompressionRatio"
+            },
+            "compressiontype": {
+                "type": "string",
+                "displayname": "Compression Type",
+                "group": "Instrument",
+                "keyword": "CompressionType"
+            },
+            "readoutorder": {
+                "type": "integer",
+                "displayname": "Readout Order",
+                "group": "Instrument",
+                "keyword": "ReadoutOrder"
+            },
+            "gainstate": {
+                "type": "integer",
+                "displayname": "Gain State",
+                "group": "Instrument",
+                "keyword": "GainState"
+            },
+            "shuttermodeid": {
+                "type": "string",
+                "displayname": "Shutter Mode ID",
+                "group": "Instrument",
+                "keyword": "ShutterModeId"
+            },
+            "instrumentpositionquality": {
+                "type": "string",
+                "displayname": "Instrument Position Quality",
+                "group": "Kernels",
+                "keyword": "InstrumentPointingQuality"
+            },
+            "missionphasename": {
+                "type": "string",
+                "displayname": "Mission Phase Name",
+                "group": "OriginalLabel",
+                "keyword": "MISSION_PHASE_NAME"
+            },
+            "gainmodeid": {
+                "type": "integer",
+                "displayname": "Gain Mode ID",
+                "group": "Instrument",
+                "keyword": "GainModeId"
+            },
+            "biasstripmean": {
+                "type": "double",
+                "displayname": "Bias Strip Mean",
+                "group": "Instrument",
+                "keyword": "BiasStripMean"
+            },
+            "dataconversiontype": {
+                "type": "string",
+                "displayname": "Data Conversion Type",
+                "group": "Instrument",
+                "keyword": "DataConversionType"
+            }
+        },
+        "mo_themis_vis_edr": {
+	    "statsbandfilter": {
+		"type": "string",
+		"displayname": "Band Filter Used For Statistics",
+		"group": "BandBin",
+		"keyword": "FilterName"
+	    },	    
+	    "statsbandcenterwave": {
+		"type": "double",
+		"displayname": "Center Wavelength Of Band Used For Statistics",
+		"group": "BandBin",
+		"keyword": "Center"
+	    },
+            "productversionid": {
+                "type": "double",
+                "displayname": "Product Version ID",
+                "group": "Archive",
+                "keyword": "ProductVersionId"
+            },
+            "missionphasename": {
+                "type": "string",
+                "displayname": "Mission Phase Name",
+                "group": "Instrument",
+                "keyword": "MissionPhaseName"
+            },
+            "numframelets": {
+                "type": "integer",
+                "displayname": "Num Framelets",
+                "group": "Instrument",
+                "keyword": "NumFramelets"
+            },
+            "spatialsumming": {
+                "type": "integer",
+                "displayname": "Spatial Summing",
+                "group": "Instrument",
+                "keyword": "SpatialSumming"
+            },
+            "focalplanetemperature": {
+                "type": "double",
+                "displayname": "Focal Plane Temperature",
+                "group": "OriginalLabel",
+                "keyword": "FOCAL_PLANE_TEMPERATURE"
+            },
+            "orbitnumber": {
+                "type": "integer",
+                "displayname": "Orbit Number",
+                "group": "Archive",
+                "keyword": "OrbitNumber"
+            },
+            "exposureduration": {
+                "type": "double",
+                "displayname": "Exposure Duration",
+                "group": "Instrument",
+                "keyword": "ExposureDuration"
+            }
+        },
+      "mo_themis_ir_edr": {
+	  "imageduration": {
+              "type": "double",
+              "displayname": "Image Duration",
+              "group" : "OriginalLabel",
+              "keyword": "IMAGE_DURATION"
+	  },
+	  "gainnumber": {
+              "type": "integer",
+              "displayname": "Gain Number",
+              "group": "Instrument",
+              "keyword": "GainNumber"
+	  },
+	  "offsetnumber": {
+              "type": "integer",
+              "displayname": "Offset Number",
+              "group": "Instrument",
+              "keyword": "OffsetNumber"
+	  },
+	  "missingscanlines": {
+              "type": "integer",
+              "displayname": "Missing Scan Lines",
+              "group": "Instrument",
+              "keyword": "MissingScanLines"
+	  },
+	  "timedelayintegration": {
+              "type": "string",
+              "displayname": "Time Delay Integration",
+              "group": "Instrument",
+              "keyword": "TimeDelayIntegration"
+	  },
+	  "spatialsumming": {
+              "type": "integer",
+              "displayname": "Spatial Summing",
+              "group": "Instrument",
+              "keyword": "SpatialSumming"
+	  },
+	  "spacecraftclockoffset": {
+              "type": "double",
+              "displayname": "Spacecraft Clock Offset",
+              "group": "Instrument",
+              "keyword": "SpacecraftClockOffset"
+	  },
+	  "producerid": {
+              "type": "string",
+              "displayname": "Producer ID",
+              "group": "Archive",
+              "keyword": "ProducerId"
+	  },
+	  "orbitnumber": {
+              "type": "integer",
+              "displayname": "Orbit Number",
+              "group": "Archive",
+              "keyword": "OrbitNumber"
+	  },
+	  "missionname": {
+              "type": "string",
+              "displayname": "Mission Name",
+              "group": "OriginalLabel",
+              "keyword": "MISSION_NAME"
+	  },
+	  "instrumenthostname": {
+              "type": "string",
+              "displayname": "Instrument Host Name",
+              "group": "OriginalLabel",
+              "keyword": "INSTRUMENT_HOST_NAME"
+	  },
+	  "detectorid": {
+              "type": "string",
+              "displayname": "Detector ID",
+              "group": "OriginalLabel",
+              "keyword": "DETECTOR_ID"
+	  },
+	  "missionphasename": {
+              "type": "string",
+              "displayname": "Mission Phase Name",
+              "group": "OriginalLabel",
+              "keyword": "MISSION_PHASE_NAME"
+	  },
+	  "productcreationtime": {
+              "type": "time",
+              "displayname": "Product_Creation_Time",
+              "group": "OriginalLabel",
+              "keyword": "PRODUCT_CREATION_TIME"
+	  },
+	  "productversionid": {
+              "type": "string",
+              "displayname": "Product Version ID",
+              "group": "OriginalLabel",
+              "keyword": "PRODUCT_VERSION_ID"
+	  },
+	  "releaseid": {
+              "type": "string",
+              "displayname": "Release ID",
+              "group": "OriginalLabel",
+              "keyword": "RELEASE_ID"
+	  },
+	  "starttimeet": {
+              "type": "string",
+              "displayname": "Start Time ET",
+              "group": "OriginalLabel",
+              "keyword": "START_TIME_ET"
+	  },
+	  "stoptimeet": {
+              "type": "string",
+              "displayname": "Stop Time ET",
+              "group": "OriginalLabel",
+              "keyword": "STOP_TIME_ET"
+	  },
+	  "corename": {
+              "type": "string",
+              "displayname": "Core Name",
+              "group": "SPECTRAL_QUBE",
+              "keyword": "CORE_NAME"
+	  },
+            "instrcmprsratio": {
+                "type": "double",
+                "displayname": "Instrument Compression Ratio",
+                "group": "OriginalLabel",
+                "keyword": "INST_CMPRS_RATIO"
+            },
+            "flightsoftwareversionid": {
+                "type": "string",
+                "displayname": "Flight Software Version ID",
+                "group": "Archive",
+                "keyword": "FlightSoftwareVersionId"
+            },
+            "coreunit": {
+                "type": "string",
+                "displayname": "Core Unit",
+                "group": "OriginalLabel",
+                "keyword": "CORE_UNIT"
+            },
+            "commandsequencenumber": {
+                "type": "integer",
+                "displayname": "Command Sequence Number",
+                "group": "Archive",
+                "keyword": "CommandSequenceNumber"
+            },
+            "uncorrectedsclkstartcount": {
+                "type": "string",
+                "displayname": "Uncorrected SCLK Start Count",
+                "group": "OriginalLabel",
+                "keyword": "UNCORRECTED_SCLK_START_COUNT"
+            },
+            "timedelayintegrationflag": {
+                "type": "string",
+                "displayname": "Time Delay Integration Flag",
+                "group": "OriginalLabel",
+                "keyword": "TIME_DELAY_INTEGRATION_FLAG"
+            },
+            "riceflag": {
+                "type": "string",
+                "displayname": "Rice Flag",
+                "group": "OriginalLabel",
+                "keyword": "RICE_FLAG"
+            },
+            "imageid": {
+                "type": "integer",
+                "displayname": "Image ID",
+                "group": "OriginalLabel",
+                "keyword": "IMAGE_ID"
+            },
+            "md5checksumdata": {
+                "type": "string",
+                "displayname": "MD5 Checksum Data",
+                "group": "OriginalLabel",
+                "keyword": "MD5_CHECKSUM"
+            },
+            "partialsumlines": {
+                "type": "integer",
+                "displayname": "Partial Sum Lines",
+                "group": "OriginalLabel",
+                "keyword": "PARTIAL_SUM_LINES"
       }
     }
   }
