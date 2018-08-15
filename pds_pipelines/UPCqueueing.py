@@ -71,7 +71,7 @@ def main():
     RQ = RedisQueue('UPC_ReadyQueue')
 
     try:
-        session, _ = db_connect('pdsdi_dev')
+        session, _ = db_connect(pds_db)
         print('Database Connection Success')
     except:
         print('Database Connection Error')

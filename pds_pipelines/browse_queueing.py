@@ -7,7 +7,7 @@ import json
 from pds_pipelines.RedisQueue import *
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files
-from pds_pipelines.config import pds_info, pds_log
+from pds_pipelines.config import pds_info, pds_log, pds_db
 
 import pdb
 
@@ -56,7 +56,7 @@ def main():
     RQ = RedisQueue('Browse_ReadyQueue')
 
     try:
-        session, _ = db_connect('pdsdi_dev')
+        session, _ = db_connect(pds_db)
         logger.info('Database Connection Success')
     except:
         logger.error('Database Connection Error')

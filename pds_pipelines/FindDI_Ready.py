@@ -19,7 +19,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files, Archives 
-from pds_pipelines.config import pds_info
+from pds_pipelines.config import pds_info, pds_db
 
 import pdb
 
@@ -123,7 +123,7 @@ def main():
 
     try:
         # Throws away 'engine' information
-        session, _ = db_connect('pdsdi_dev')
+        session, _ = db_connect(pds_db)
         print(args.archive)
         print('Database Connection Success')
     except Exception as e:

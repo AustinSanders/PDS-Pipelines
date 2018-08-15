@@ -20,7 +20,7 @@ from pds_pipelines.UPCkeywords import *
 from pds_pipelines.db import db_connect
 from pds_pipelines.models import upc_models, pds_models
 from pds_pipelines.models.upc_models import MetaTime, MetaGeometry, MetaString, MetaBoolean
-from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def
+from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db
 
 from sqlalchemy import *
 from sqlalchemy.exc import IntegrityError
@@ -93,18 +93,21 @@ def AddProcessDB(session, fid, outvalue):
 
 
 def get_tid(keyword, session):
-    tid = session.query(upc_models.Keywords.typeid).filter(upc_models.Keywords.typename == keyword).first()[0]
-    return tid
+    try:
+        tid = session.query(upc_models.Keywords.typeid).filter(upc_models.Keywords.typename == keyword).first()[0]
+        return tid
+    except:
+        return None
     
 
 
 # @TODO set back to /usgs/ and /scratch/ directories.
 def main():
     # Connect to database - ignore engine information
-    pds_session, _ = db_connect('pdsdi_dev')
+    pds_session, _ = db_connect(pds_db)
 
     # Connect to database - ignore engine information
-    session, _ = db_connect('upcdev')
+    session, _ = db_connect(upc_db)
 
     # ***************** Set up logging *****************
     logger = logging.getLogger('UPC_Process')
@@ -130,6 +133,7 @@ def main():
     isis_centroid_tid = get_tid('isiscentroid', session)
     start_time_tid = get_tid('starttime', session)
     stop_time_tid = get_tid('stoptime', session)
+    checksum_tid = get_tid('checksum', session)
 
     # while there are items in the redis queue
     while int(RQ_main.QueueSize()) > 0:
@@ -189,28 +193,6 @@ def main():
                     elif item == 'spiceinit':
                         processOBJ.updateParameter('from_', infile)
                     elif item == 'cubeatt':
-                        """
-                        # @TODO revisit this block to make sure that it can be deleted without
-                        #  affecting integrity of downstream products.
-                        exband = 'none'
-                        for item1 in PDSinfoDICT[archive]['bandorder']:
-                            bandcount = 1
-                            bands = label['IsisCube']['BandBin'][PDSinfoDICT[archive]['bandbinQuery']]
-                            # Sometime 'bands' is iterable, sometimes it is a single int.  Need to handle both.
-                            try:
-                                for item2 in bands:
-                                    if str(item1) == str(item2):
-                                        exband = bandcount
-                                        break
-                                    bandcount = bandcount + 1
-                                if exband != 'none':
-                                    break
-                            except TypeError:
-                                if str(item1) == str(bands):
-                                    exband = 1
-                                    break
-                        band_infile = infile + '+' + str(exband)
-                        """
                         band_infile = infile + '+' + str(1)
                         processOBJ.updateParameter('from_', band_infile)
                         processOBJ.updateParameter('to', outfile)
@@ -251,7 +233,6 @@ def main():
                                 RQ_browse.QueueAdd((inputfile, fid, archive))
                             elif item == 'handmos':
                                 label = pvl.load(infile)
-
                                 infile_bandlist = label['IsisCube']['BandBin'][PDSinfoDICT[archive]['bandbinQuery']]
                                 infile_centerlist = label['IsisCube']['BandBin']['Center']
 
@@ -435,14 +416,8 @@ def main():
                 checksum = f_hash.hexdigest()
 
 
-                # set typeid to 5 on the prod DB - 101 for dev
-                # production typeid 5 = checksum
-                # dev typeid 101 = checksum
-                # @TODO get typeid
-                DBinput = upc_models.MetaString(upcid=UPCid, typeid=101, value=checksum)
+                DBinput = upc_models.MetaString(upcid=UPCid, typeid=checksum_tid, value=checksum)
                 session.merge(DBinput)
-                # add error keyword to UPC
-                # typeid 595 = error flag
                 DBinput = upc_models.MetaBoolean(upcid=UPCid, typeid=err_flag_tid, value=False)
                 session.merge(DBinput)
                 session.commit()
@@ -456,9 +431,6 @@ def main():
                     "%Y-%m-%d %H:%M:%S")
 
                 if '2isis' in processError or processError == 'thmproc':
-                    # @TODO unused variables testspacecraft and testinst
-                    testspacecraft = PDSinfoDICT[archive]['UPCerrorSpacecraft']
-                    testinst = PDSinfoDICT[archive]['UPCerrorInstrument']
                     if session.query(upc_models.DataFiles).filter(
                             upc_models.DataFiles.edr_source == EDRsource.decode(
                                 "utf-8")).first() == None:

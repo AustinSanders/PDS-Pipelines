@@ -12,6 +12,7 @@ from sqlalchemy.orm.util import *
 
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files, Archives
+from pds_pipelines.config import pds_db
 
 
 class PDS_DBsessions(object):
@@ -30,7 +31,7 @@ class PDS_DBsessions(object):
             self.processingTAB = Base.classes.processing
         elif database == "DI":
             base = automap_base()
-            self.session, _ =  db_connect('pdsdi')
+            self.session, _ =  db_connect(pds_db)
             self.files = Files
             self.archives = Archives
             DBsession = self.session

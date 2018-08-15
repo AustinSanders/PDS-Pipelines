@@ -29,7 +29,7 @@ def lower_keys(x):
 class UPCkeywords(object):
 
     def __init__(self, pvlfile):
-        self.label = lower_keys(pvl.load(pvlfile))
+        self.label = lower_keys(pvl.load(pvlfile, strict=False))
 
 
     def __str__(self):

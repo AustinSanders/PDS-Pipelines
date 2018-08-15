@@ -4,7 +4,7 @@ import json
 from pds_pipelines.RedisQueue import RedisQueue
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files, Archives
-from pds_pipelines.config import pds_info
+from pds_pipelines.config import pds_info, pds_db
 
 
 def main():
@@ -13,7 +13,7 @@ def main():
 
     try:
         # Safe to use prd database here because there are no writes/edits.
-        session, _ = db_connect('pdsdi_dev')
+        session, _ = db_connect(pds_db)
 
     # @TODO Catch exceptions by type.  Bad practice to 'except Exception,' but
     #   I don't know what exception could happen here.
