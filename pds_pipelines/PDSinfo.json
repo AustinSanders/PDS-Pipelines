@@ -106,7 +106,7 @@
     },
     "mro_hirise_edr": {
         "archiveid": "124",
-        "path": "/pds_san/PDS_Archive/Mars_Reconnaissance_Orbiter/HiRISE/EDR/",
+        "path": "/pds_san/PDS_Archive/Mars_Reconnaissance_Orbiter/HiRISE/",
 	"bandbinQuery": "Name"
     },
     "mro_hirise_extras": {
