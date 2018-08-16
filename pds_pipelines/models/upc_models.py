@@ -93,7 +93,7 @@ class MetaPrecision(Meta, Base):
     __tablename__ = 'meta_precision'
     value = Column(Float)
     def __init__(self, **kwargs):
-        if not isinstance(kwargs['value'], float):
+        if not isinstance(kwargs['value'], (float, int)):
             raise ValueError("MetaPrecision requires a value of type float")
         Base.__init__(self, **kwargs)
 
