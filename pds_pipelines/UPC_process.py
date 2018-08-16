@@ -250,7 +250,7 @@ def main():
                     with open(caminfoOUT,'r') as f:
                         filedata = f.read()
 
-                    filedata = filedata.replace(';', '-')
+                    filedata = filedata.replace(';', '-').replace('&','-')
                     filedata = re.sub(r'\-\s+',r'',filedata, flags=re.M)
 
                     with open(caminfoOUT,'w') as f:
@@ -426,7 +426,10 @@ def main():
                 os.remove(caminfoOUT)
 
             elif status.lower() == 'error':
-                label = pvl.load(infile)
+                try:
+                    label = pvl.load(infile)
+                except:
+                    continue
                 date = datetime.datetime.now(pytz.utc).strftime(
                     "%Y-%m-%d %H:%M:%S")
 
