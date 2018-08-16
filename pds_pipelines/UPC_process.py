@@ -308,7 +308,7 @@ def main():
                     keyword = testjson['instrument']['COMMON'][element_1]['keyword']
                     keyword_Qobj = session.query(upc_models.Keywords).filter(
                         and_(upc_models.Keywords.typename == element_1,
-                             upc_models.Keywords.instrumentid == 3)).first()
+                             upc_models.Keywords.instrumentid == 1)).first()
 
                     if keyword_Qobj is None:
                         continue
@@ -338,7 +338,7 @@ def main():
                     keyword = testjson['instrument'][archive][element_1]['keyword']
                     keyword_Qobj = session.query(upc_models.Keywords).filter(
                         and_(upc_models.Keywords.typename == element_1,
-                             upc_models.Keywords.instrumentid.in_((3, instrument_Qobj.instrumentid)))).first()
+                             upc_models.Keywords.instrumentid.in_((1, instrument_Qobj.instrumentid)))).first()
 
                     if keyword_Qobj is None:
                         continue

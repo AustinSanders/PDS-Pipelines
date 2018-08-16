@@ -2,9 +2,6 @@
 
 import os
 import sys
-import subprocess
-import datetime
-import pytz
 import json
 import logging
 import argparse

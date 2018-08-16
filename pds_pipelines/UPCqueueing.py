@@ -73,7 +73,8 @@ def main():
     try:
         session, _ = db_connect(pds_db)
         print('Database Connection Success')
-    except:
+    except Exception as e:
+        print(e)
         print('Database Connection Error')
 
     if args.volume:

@@ -64,6 +64,7 @@ def makedir(inputfile):
 #    pdb.set_trace()
 
     temppath = os.path.dirname(inputfile).lower()
+    # @TODO change finalpath back to production path
     finalpath = temppath.replace('/pds_san/pds_archive/', '/home/arsanders/PDS-Pipelines/products/thumb/')
     # finalpath = temppath.replace('/pds_san/pds_archive/', '/pds_san/PDS_Derived/UPC/images/')
 

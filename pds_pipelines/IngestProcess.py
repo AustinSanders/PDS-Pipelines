@@ -8,10 +8,8 @@ import json
 
 
 import hashlib
-import shutil
 from ast import literal_eval
 
-import sqlalchemy
 from sqlalchemy import *
 from sqlalchemy.orm.util import *
 
@@ -19,16 +17,10 @@ from pds_pipelines.RedisQueue import *
 from pds_pipelines.PDS_DBquery import *
 from pds_pipelines.db import db_connect
 from pds_pipelines.config import pds_info, pds_log, pds_db
-from pds_pipelines.models.pds_models import Files, Archives
-
-import pdb
-
+from pds_pipelines.models.pds_models import Files
 
 
 def main():
-    #    pdb.set_trace()
-    arch = sys.argv[-1]
-
     # ********* Set up logging *************
     logger = logging.getLogger('Ingest_Process')
     logger.setLevel(logging.INFO)
@@ -163,7 +155,7 @@ def main():
         if index >= 250:
             try:
                 session.commit()
-#                logger.info("Commit 250 files to Database: Success")
+                logger.info("Commit 250 files to Database: Success")
                 index = 1
             except:
                 session.rollback()
