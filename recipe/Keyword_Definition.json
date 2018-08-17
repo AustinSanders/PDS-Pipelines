@@ -984,7 +984,7 @@
 		"type": "string",
 		"displayname": "Band Filter Used For Statistics",
 		"group": "BandBin",
-		"keyword": "FilterName"
+		"keyword": "FilterNumber"
 	    },	    
 	    "statsbandcenterwave": {
 		"type": "double",
@@ -992,7 +992,7 @@
 		"group": "BandBin",
 		"keyword": "Center"
 	    },
-	        "percentlrs": {
+	    "percentlrs": {
                 "type": "double",
                 "displayname": "Percent LRS Pixels",
         	"group": "Statistics",
@@ -1127,8 +1127,8 @@
             "corename": {
                 "type": "string",
                 "displayname": "CORE_NAME",
-        	"group": "CORE_NAME",
-                "keyword": "OriginalLabel"
+        	"group": "OriginalLabel",
+                "keyword": "CORE_NAME"
             },
             "imageid": {
                 "type": "integer",
@@ -1140,13 +1140,13 @@
                 "type": "double",
                 "displayname": "INST_COMPRS_RATIO",
         	"group": "OriginalLabel",
-                "keyword": "INST_COMPRS_RATIO"
+                "keyword": "INST_CMPRS_RATIO"
             },
             "instrcmprsname": {
                 "type": "string",
                 "displayname": "INST_COMPRS_NAME",
         	"group": "OriginalLabel",
-                "keyword": "INST_COMPRS_NAME"
+                "keyword": "INST_CMPRS_NAME"
             },
             "md5checksum": {
                 "type": "string",
@@ -1234,6 +1234,18 @@
             }
         },
 	"mo_themis_ir_edr": {
+	    "statsbandfilter": {
+		"type": "string",
+		"displayname": "Band Filter Used For Statistics",
+		"group": "BandBin",
+		"keyword": "filternumber"
+	    },	    
+            "statsbandcenterwave": {
+                "type": "double",
+                "displayname": "Center Wavelength of Band Used For Statistics",
+		"group": "BandBin",
+                "keyword": "Center"
+            },
 	    "imageduration": {
 		"type": "double",
 		"displayname": "Image Duration",
