@@ -5,12 +5,7 @@ import logging
 import argparse
 import json
 
-
-from sqlalchemy import *
-from sqlalchemy.orm.util import *
-
-
-from pds_pipelines.RedisQueue import *
+from pds_pipelines.RedisQueue import RedisQueue
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files
 from pds_pipelines.config import pds_info, pds_log, pds_db

@@ -14,19 +14,16 @@ from pysis import isis
 from pysis.exceptions import ProcessError
 from pysis.isis import getsn
 
-from pds_pipelines.RedisQueue import *
-from pds_pipelines.Recipe import *
-from pds_pipelines.UPCkeywords import *
+from pds_pipelines.RedisQueue import RedisQueue
+from pds_pipelines.Recipe import Recipe
+from pds_pipelines.Process import Process
+from pds_pipelines.UPCkeywords import UPCkeywords
 from pds_pipelines.db import db_connect
 from pds_pipelines.models import upc_models, pds_models
 from pds_pipelines.models.upc_models import MetaTime, MetaGeometry, MetaString, MetaBoolean
 from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db
 
-from sqlalchemy import *
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm.util import *
-
-import pdb
+from sqlalchemy import and_
 
 def getISISid(infile):
     serial_num = getsn(from_=infile)
@@ -177,7 +174,6 @@ def main():
                     processOBJ = Process()
                     processR = processOBJ.ProcessFromRecipe(
                         item, recipeOBJ.getRecipe())
-
                     # Handle processing based on string description.
                     if '2isis' in item:
                         processOBJ.updateParameter('from_', inputfile)
@@ -257,6 +253,7 @@ def main():
                         f.write(filedata)
 
                     keywordsOBJ = UPCkeywords(caminfoOUT)
+                print(keywordsOBJ)
                 target_Qobj = session.query(upc_models.Targets).filter(
                     upc_models.Targets.targetname == keywordsOBJ.getKeyword('TargetName').upper()).first()
 

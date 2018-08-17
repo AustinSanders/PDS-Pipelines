@@ -57,23 +57,7 @@ def main():
         archive = item[1]
         RQ_work.QueueAdd(inputfile)
         
-        """
-        inputfile = 
-        inputfile = (RQ_main.Qfile2Qwork(
-            RQ_main.getQueueName(), RQ_work.getQueueName())).decode('utf-8')
-
-        archive = getArchiveID(inputfile)
-        """
         subfile = inputfile.replace(PDSinfoDICT[archive]['path'], '')
-
-        # Gen a checksum from input file
-        """
-        CScmd = 'md5sum ' + inputfile
-        process = subprocess.Popen(CScmd, stdout=subprocess.PIPE, shell=True)
-        (stdout, stderr) = process.communicate()
-        filechecksum = stdout.split()[0]
-        """
-
         # Calculate checksum in chunks of 4096
         f_hash = hashlib.md5()
         with open(inputfile, "rb") as f:

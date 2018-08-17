@@ -1,15 +1,14 @@
 #!/usgs/apps/anaconda/bin/python
 
-import os, sys, subprocess, logging
+import sys
+import logging
 import argparse
 import json
 
-from pds_pipelines.RedisQueue import *
+from pds_pipelines.RedisQueue import RedisQueue
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files
 from pds_pipelines.config import pds_info, pds_log, pds_db
-
-import pdb
 
 class Args:
     def __init__(self):

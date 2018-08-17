@@ -12,15 +12,14 @@ from pysis.exceptions import ProcessError
 from pysis.isis import getsn
 from ast import literal_eval
 
-from pds_pipelines.RedisQueue import *
-from pds_pipelines.Recipe import *
+from pds_pipelines.RedisQueue import RedisQueue
+from pds_pipelines.Recipe import Recipe
+from pds_pipelines.Process import Process
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.upc_models import MetaString, DataFiles
-from pds_pipelines.models.pds_models import ProcessRuns, Files
+from pds_pipelines.models.pds_models import ProcessRuns
 from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db
 from pds_pipelines.UPC_process import get_tid
-
-import pdb
 
 def getISISid(infile):
     serial_num = getsn(from_=infile)
@@ -65,8 +64,8 @@ def makedir(inputfile):
 
     temppath = os.path.dirname(inputfile).lower()
     # @TODO change finalpath back to production path
-    finalpath = temppath.replace('/pds_san/pds_archive/', '/home/arsanders/PDS-Pipelines/products/thumb/')
-    # finalpath = temppath.replace('/pds_san/pds_archive/', '/pds_san/PDS_Derived/UPC/images/')
+    #finalpath = temppath.replace('/pds_san/pds_archive/', '/home/arsanders/PDS-Pipelines/products/thumb/')
+    finalpath = temppath.replace('/pds_san/pds_archive/', '/pds_san/PDS_Derived/UPC/images/')
 
     if not os.path.exists(finalpath):
         try:
@@ -227,10 +226,11 @@ def main():
                             if '2isis' in item:
                                 isisSerial = getISISid(infile)
                         except ProcessError as e:
+                            print(e)
                             logger.error('Process %s :: Error', k)
                             status = 'error'
             if status == 'success':
-                testout = DB_addURL(upc_session, isisSerial, final_outfile, tid)
+                DB_addURL(upc_session, isisSerial, final_outfile, tid)
                 os.remove(infile)
                 logger.info('Thumbnail Process Success: %s', inputfile)
 
