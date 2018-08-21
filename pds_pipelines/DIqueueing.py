@@ -14,7 +14,7 @@ from pds_pipelines.RedisQueue import *
 from pds_pipelines.HPCjob import *
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files
-from pds_pipelines.config import pds_info
+from pds_pipelines.config import pds_info, pds_db, pds_log
 
 from sqlalchemy import Date, cast
 
@@ -107,7 +107,8 @@ def main():
 # ********* Set up logging *************
     logger = logging.getLogger('DI_Queueing.' + args.archive)
     logger.setLevel(logging.INFO)
-    logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/DI.log')
+    logFileHandle = logging.FileHandler(pds_log + 'DI.log')
+    #logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/DI.log')
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
@@ -119,7 +120,7 @@ def main():
 
     try:
         # @TODO switch back to prd
-        session, _ = db_connect('pdsdi_dev')
+        session, _ = db_connect(pds_db)
 
         logger.info('DataBase Connecton: Success')
     except:

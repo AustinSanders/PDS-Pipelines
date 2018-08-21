@@ -14,6 +14,7 @@ from pds_pipelines.PDS_DBquery import *
 import sqlalchemy
 from sqlalchemy import *
 from sqlalchemy.orm.util import *
+from pds_pipelines.config import pds_db, pds_log
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files
 
@@ -66,7 +67,8 @@ def main():
     logger = logging.getLogger('DI_Process')
     logger.setLevel(logging.INFO)
     #logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/DI.log')
-    logFileHandle = logging.FileHandler('/home/arsanders/PDS-Pipelines/logs/DI.log')
+    logFileHandle = logging.FileHandler(pds_log + 'DI.log')
+    #logFileHandle = logging.FileHandler('/home/arsanders/PDS-Pipelines/logs/DI.log')
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
@@ -76,7 +78,7 @@ def main():
 
     try:
         # ignores engine information
-        session, _ = db_connect('pdsdi_dev')
+        session, _ = db_connect(pds_db)
         logger.info('DataBase Connecton: Success')
     except:
         logger.error('DataBase Connection: Error')
@@ -94,15 +96,6 @@ def main():
 
         cpfile = archiveID[Qelement.archiveid] + Qelement.filename
         if os.path.isfile(cpfile):
-            """
-            CScmd = 'md5sum ' + cpfile
-            process = subprocess.Popen(CScmd,
-                                       stdout=subprocess.PIPE,
-                                       shell=True)
-            (stdout, stderr) = process.communicate()
-            temp_checksum = stdout.split()[0]
-            """
-
             f_hash = hashlib.md5()
             with open(cpfile, "rb") as f:
                 for chunk in iter(lambda: f.read(4096), b""):

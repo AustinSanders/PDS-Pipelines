@@ -8,27 +8,19 @@ import json
 
 
 import hashlib
-import shutil
 from ast import literal_eval
 
-import sqlalchemy
 from sqlalchemy import *
 from sqlalchemy.orm.util import *
 
 from pds_pipelines.RedisQueue import *
 from pds_pipelines.PDS_DBquery import *
 from pds_pipelines.db import db_connect
-from pds_pipelines.config import pds_info, pds_log
-from pds_pipelines.models.pds_models import Files, Archives
-
-import pdb
-
+from pds_pipelines.config import pds_info, pds_log, pds_db
+from pds_pipelines.models.pds_models import Files
 
 
 def main():
-    #    pdb.set_trace()
-    arch = sys.argv[-1]
-
     # ********* Set up logging *************
     logger = logging.getLogger('Ingest_Process')
     logger.setLevel(logging.INFO)
@@ -51,7 +43,7 @@ def main():
     RQ_pilotB = RedisQueue('PilotB_ReadyQueue')
 
     try:
-        session, _ = db_connect('pdsdi_dev')
+        session, _ = db_connect(pds_db)
         logger.info('DataBase Connecton: Success')
     except:
         logger.error('DataBase Connection: Error')
@@ -65,23 +57,7 @@ def main():
         archive = item[1]
         RQ_work.QueueAdd(inputfile)
         
-        """
-        inputfile = 
-        inputfile = (RQ_main.Qfile2Qwork(
-            RQ_main.getQueueName(), RQ_work.getQueueName())).decode('utf-8')
-
-        archive = getArchiveID(inputfile)
-        """
         subfile = inputfile.replace(PDSinfoDICT[archive]['path'], '')
-
-        # Gen a checksum from input file
-        """
-        CScmd = 'md5sum ' + inputfile
-        process = subprocess.Popen(CScmd, stdout=subprocess.PIPE, shell=True)
-        (stdout, stderr) = process.communicate()
-        filechecksum = stdout.split()[0]
-        """
-
         # Calculate checksum in chunks of 4096
         f_hash = hashlib.md5()
         with open(inputfile, "rb") as f:
@@ -103,7 +79,7 @@ def main():
             fileURL = inputfile.replace(
                 '/pds_san/PDS_Archive/', 'pdsimage.wr.usgs.gov/Missions/')
             upcflag = False
-            if int(PDSinfoDICT[archive]['archiveid']) == 124:
+            if int(PDSinfoDICT[archive]['archiveid']) == 124 or int(PDSinfoDICT[archive]['archiveid']) == 71:
                 if '.IMG' in inputfile:
                     upcflag = True
             elif int(PDSinfoDICT[archive]['archiveid']) == 74:
@@ -153,7 +129,8 @@ def main():
 
                 index = index + 1
 
-            except:
+            except Exception as e:
+                print(e)
                 logger.error("Error During File Insert %s", subfile)
 
         elif runflag == False:
@@ -162,7 +139,7 @@ def main():
         if index >= 250:
             try:
                 session.commit()
-#                logger.info("Commit 250 files to Database: Success")
+                logger.info("Commit 250 files to Database: Success")
                 index = 1
             except:
                 session.rollback()

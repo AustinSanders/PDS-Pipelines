@@ -1,20 +1,11 @@
-import os
 import sys
-import subprocess
 import logging
 import argparse
 import json
-import pdb
-
-
-import sqlalchemy
-from sqlalchemy import *
-from sqlalchemy.orm.util import *
-
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files
-from pds_pipelines.RedisQueue import *
-from pds_pipelines.config import *
+from pds_pipelines.RedisQueue import RedisQueue
+from pds_pipelines.config import pds_log, pds_info, pds_db
 
 
 class Args:
@@ -50,7 +41,7 @@ def main():
     logger = logging.getLogger('UPC_Queueing.' + args.archive)
     logger.setLevel(logging.INFO)
     # logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Process.log')
-    logFileHandle = logging.FileHandler('/home/arsanders/PDS-Pipelines/logs/Process.log')
+    logFileHandle = logging.FileHandler(pds_log + 'Process.log')
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
@@ -71,9 +62,10 @@ def main():
     RQ = RedisQueue('UPC_ReadyQueue')
 
     try:
-        session, _ = db_connect('pdsdi_dev')
+        session, _ = db_connect(pds_db)
         print('Database Connection Success')
-    except:
+    except Exception as e:
+        print(e)
         print('Database Connection Error')
 
     if args.volume:

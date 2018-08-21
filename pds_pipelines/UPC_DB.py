@@ -12,7 +12,7 @@ from pds_pipelines.models import upc_models
 class UPC_DB(object):
 
     def __init__(self):
-        self.session, _ = db_connect('upcdev')
+        self.session, _ = db_connect(upc_db)
         self.datafiles = upc_models.DataFiles
         self.targets = upc_models.Targets
 

@@ -12,14 +12,14 @@ from pysis.exceptions import ProcessError
 from pysis.isis import getsn
 from ast import literal_eval
 
-from pds_pipelines.RedisQueue import *
-from pds_pipelines.Recipe import *
+from pds_pipelines.RedisQueue import RedisQueue
+from pds_pipelines.Recipe import Recipe
+from pds_pipelines.Process import Process
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.upc_models import MetaString, DataFiles
-from pds_pipelines.models.pds_models import ProcessRuns, Files
-from pds_pipelines.config import pds_log, pds_info, workarea
-
-import pdb
+from pds_pipelines.models.pds_models import ProcessRuns
+from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db
+from pds_pipelines.UPC_process import get_tid
 
 def getISISid(infile):
     serial_num = getsn(from_=infile)
@@ -63,8 +63,9 @@ def makedir(inputfile):
 #    pdb.set_trace()
 
     temppath = os.path.dirname(inputfile).lower()
-    finalpath = temppath.replace('/pds_san/pds_archive/', '/home/arsanders/PDS-Pipelines/products/thumb/')
-    # finalpath = temppath.replace('/pds_san/pds_archive/', '/pds_san/PDS_Derived/UPC/images/')
+    # @TODO change finalpath back to production path
+    #finalpath = temppath.replace('/pds_san/pds_archive/', '/home/arsanders/PDS-Pipelines/products/thumb/')
+    finalpath = temppath.replace('/pds_san/pds_archive/', '/pds_san/PDS_Derived/UPC/images/')
 
     if not os.path.exists(finalpath):
         try:
@@ -75,7 +76,7 @@ def makedir(inputfile):
 
     return finalpath
 
-def DB_addURL(session, isisSerial, inputfile):
+def DB_addURL(session, isisSerial, inputfile, tid):
     # pdb.set_trace()
     newisisSerial = isisSerial.split(':')[0]
     likestr = '%' + newisisSerial + '%'
@@ -85,8 +86,9 @@ def DB_addURL(session, isisSerial, inputfile):
 
         outputfile = inputfile.replace('/pds_san/PDS_Derived/UPC/images/', '$thumbnail_server/')
 
+        print(Qobj.upcid)
         DBinput = MetaString(upcid=Qobj.upcid,
-                             typeid='348',
+                             typeid=tid,
                              value=outputfile)
 
         try:
@@ -131,8 +133,10 @@ def main():
     PDSinfoDICT = json.load(open(pds_info, 'r'))
 
     # @TODO change to production servers
-    pds_session, _ = db_connect('pdsdi_dev')
-    upc_session, _ = db_connect('upcdev')
+    pds_session, _ = db_connect(pds_db)
+    upc_session, _ = db_connect(upc_db)
+
+    tid = get_tid('thumbnailurl', upc_session)
 
     while int(RQ_main.QueueSize()) > 0:
         item = literal_eval(RQ_main.QueueGet().decode("utf-8"))
@@ -210,8 +214,6 @@ def main():
                         processOBJ.updateParameter('from_', infile)
                         processOBJ.updateParameter('to', outfile)
 
-                    print(processOBJ.getProcess())
-
                     for k, v in processOBJ.getProcess().items():
                         func = getattr(isis, k)
                         try:
@@ -224,10 +226,11 @@ def main():
                             if '2isis' in item:
                                 isisSerial = getISISid(infile)
                         except ProcessError as e:
+                            print(e)
                             logger.error('Process %s :: Error', k)
                             status = 'error'
             if status == 'success':
-                testout = DB_addURL(upc_session, isisSerial, final_outfile)
+                DB_addURL(upc_session, isisSerial, final_outfile, tid)
                 os.remove(infile)
                 logger.info('Thumbnail Process Success: %s', inputfile)
 

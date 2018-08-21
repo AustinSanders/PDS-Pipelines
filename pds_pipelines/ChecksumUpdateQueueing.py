@@ -17,6 +17,7 @@ from sqlalchemy import *
 from sqlalchemy.orm.util import *
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files
+from pds_pipelines.config import pds_db
 
 import pdb
 
@@ -84,7 +85,7 @@ def main():
 
     try:
         # Throws away engine information
-        session, _ = db_connect('pdsdi_dev')
+        session, _ = db_connect(pds_db)
         logger.info('DataBase Connecton: Success')
     except:
         logger.error('DataBase Connection: Error')
