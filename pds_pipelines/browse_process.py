@@ -92,7 +92,7 @@ def DB_addURL(session, isisSerial, inputfile, tid):
                             value=outputfile)
 
         try:
-            session.add(DBinput)
+            session.merge(DBinput)
             session.commit()
             return 'SUCCESS'
         except:
