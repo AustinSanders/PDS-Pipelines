@@ -1,4 +1,4 @@
-#!/usgs/apps/anaconda/bin/python
+#!/usr/bin/env python
 
 import redis
 from pds_pipelines.config import redis_info as ri

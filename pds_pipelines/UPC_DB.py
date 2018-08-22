@@ -1,4 +1,4 @@
-#!/usgs/apps/anaconda/bin/python
+#!/usr/bin/env python
 
 from sqlalchemy import *
 from sqlalchemy.orm.util import *

@@ -1,4 +1,4 @@
-#!/usgs/apps/anaconda/bin/python
+#!/usr/bin/env python
 
 import json
 from pds_pipelines.RedisQueue import RedisQueue

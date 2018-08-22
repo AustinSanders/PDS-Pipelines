@@ -1,4 +1,4 @@
-#!/usgs/apps/anaconda/bin/python
+#!/usr/bin/env python
 
 import redis
 from pds_pipelines.config import redis_info as ri
@@ -21,10 +21,10 @@ class RedisQueue(object):
         """
 
         # self.__db=redis.Redis(host=ri['host'], port=ri['port'], db=ri['db'])
-        #self.__db=redis.StrictRedis(host=ri['host'], port=ri['port'], db=ri['db'])
+        self.__db=redis.StrictRedis(host=ri['host'], port=ri['port'], db=ri['db'])
         # @TODO change back to non-local queue
         #self.__db = redis.StrictRedis(host='redis')
-        self.__db = redis.StrictRedis(host='localhost')
+        #self.__db = redis.StrictRedis(host='localhost')
         self.id_name = '%s:%s' % (namespace, name)
 
     def RemoveAll(self):
