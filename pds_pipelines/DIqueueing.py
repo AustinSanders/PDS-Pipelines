@@ -155,7 +155,7 @@ def main():
     addcount = 0
     for element in testQ:
         try:
-            RQ.QueueAdd(element.filename)
+            RQ.QueueAdd((element.filename, args.archive))
             addcount = addcount + 1
         except:
             logger.error('File %s Not Added to DI_ReadyQueue',
