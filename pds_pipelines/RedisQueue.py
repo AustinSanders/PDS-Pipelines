@@ -2,6 +2,7 @@
 
 import redis
 from pds_pipelines.config import redis_info as ri
+from pds_pipelines.config import default_namespace
 
 
 class RedisQueue(object):
@@ -12,7 +13,7 @@ class RedisQueue(object):
     id_name : str
     """
 
-    def __init__(self, name, namespace='queue'):
+    def __init__(self, name, namespace=default_namespace):
         """
         Parameters
         ----------
