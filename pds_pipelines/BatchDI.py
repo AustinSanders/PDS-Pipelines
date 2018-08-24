@@ -30,7 +30,7 @@ def main():
         if expired.count():
             # @TODO get rid of print statements or enable with --verbose?
             for f in expired:
-                reddis_queue.QueueAdd(f.filename)
+                reddis_queue.QueueAdd((f.filename, target))
             print('Archive {} DI Ready: {} Files'.format(
                 target, str(expired.count())))
         else:
