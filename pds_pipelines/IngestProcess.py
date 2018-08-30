@@ -5,6 +5,7 @@ import datetime
 import pytz
 import logging
 import json
+import argparse
 
 
 import hashlib
@@ -16,7 +17,7 @@ from sqlalchemy.orm.util import *
 from pds_pipelines.RedisQueue import *
 from pds_pipelines.PDS_DBquery import *
 from pds_pipelines.db import db_connect
-from pds_pipelines.config import pds_info, pds_log, pds_db
+from pds_pipelines.config import pds_info, pds_log, pds_db, archive_base, web_base
 from pds_pipelines.models.pds_models import Files
 
 
@@ -95,32 +96,19 @@ def main():
         if runflag == True or override == True:
             date = datetime.datetime.now(
                 pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
-            fileURL = inputfile.replace(
-                '/pds_san/PDS_Archive/', 'pdsimage.wr.usgs.gov/Missions/')
-            upcflag = False
-            if int(PDSinfoDICT[archive]['archiveid']) == 124 or int(PDSinfoDICT[archive]['archiveid']) == 71:
-                if '.IMG' in inputfile:
-                    upcflag = True
-            elif int(PDSinfoDICT[archive]['archiveid']) == 74:
-                if '/DATA/' in inputfile and '/NAC/' in inputfile and '.IMG' in inputfile:
-                    upcflag = True
-            elif int(PDSinfoDICT[archive]['archiveid']) == 16:
-                if '/data/' in inputfile and '.IMG' in inputfile:
-                    upcflag = True
-            elif int(PDSinfoDICT[archive]['archiveid']) == 53:
-                if '/data/' in inputfile and '.LBL' in inputfile:
-                    upcflag = True
-            elif int(PDSinfoDICT[archive]['archiveid']) == 116:
-                if '/data/odtie1' in inputfile and '.QUB' in inputfile:
-                    upcflag = True
-            elif int(PDSinfoDICT[archive]['archiveid']) == 117:
-                if '/data/odtve1' in inputfile and '.QUB' in inputfile:
-                    upcflag = True
+            fileURL = inputfile.replace(archive_base, web_base)
 
+            # If all upc requirements are in 'inputfile,' flag for upc
+            upcflag =  all(x in inputfile for x in PDSinfoDICT[archive]['upc_reqs'])
             filesize = os.path.getsize(inputfile)
 
             try:
-                testIN = Files()
+                # If we found an existing file and want to overwrite the data
+                if QOBJ is not None and override == True:
+                    testIN = QOBJ
+                # If the file was not found, create a new entry
+                else:
+                    testIN = Files()
                 testIN.archiveid = PDSinfoDICT[archive]['archiveid']
                 testIN.filename = subfile
                 testIN.entry_date = date
@@ -134,7 +122,7 @@ def main():
                 testIN.di_pass = True
                 testIN.di_date = date
 
-                session.add(testIN)
+                session.merge(testIN)
                 session.flush()
 
                 if upcflag == True:
