@@ -20,7 +20,26 @@ from pds_pipelines.config import pds_info, pds_log, pds_db
 from pds_pipelines.models.pds_models import Files
 
 
+class Args:
+    def __init__(self):
+        pass
+
+    def parse_args(self):
+
+        parser = argparse.ArgumentParser(description='PDS DI Database Ingest')
+
+        parser.add_argument('--override', dest='override', action='store_true')
+        parser.set_defaults(override=False)
+        args = parser.parse_args()
+
+        self.override = args.override
+
+
+
 def main():
+    args = Args()
+    args.parse_args()
+    override = args.override
     # ********* Set up logging *************
     logger = logging.getLogger('Ingest_Process')
     logger.setLevel(logging.INFO)
@@ -73,7 +92,7 @@ def main():
         elif filechecksum != QOBJ.checksum:
             runflag = True
 
-        if runflag == True:
+        if runflag == True or override == True:
             date = datetime.datetime.now(
                 pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
             fileURL = inputfile.replace(
@@ -145,7 +164,7 @@ def main():
                 session.rollback()
                 logger.error("Something Went Wrong During DB Insert")
     else:
-        logger.info("No Files Found in Inget Queue")
+        logger.info("No Files Found in Ingest Queue")
         try:
             session.commit()
             logger.info("Commit to Database: Success")
