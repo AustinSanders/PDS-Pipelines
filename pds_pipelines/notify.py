@@ -4,8 +4,7 @@ from datetime import datetime, timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pds_pipelines.models import clusterjobs_models
-from pds_pipelines.db import db_connect
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 
 def setup_smtp():
     server = smtplib.SMTP()
@@ -142,16 +141,24 @@ def notify_upcoming_purge(server, session):
     None
     """
 
-    cutoff_12 = datetime.now() - timedelta(12)
-    cutoff_13 = datetime.now() - timedelta(13)
+    # Timestamps from 12, 13 days ago, respectively
+    cutoff_low = datetime.now() - timedelta(12)
+    cutoff_high = cutoff_low - timedelta(1)
+
+    # Grab items with 'notified' timestamps between 12, 13 days ago or with a 'save' timestamp between 1, 2 days in the future
     expiring = session.query(clusterjobs_models.Processing,
                              clusterjobs_models.Customers,
                              clusterjobs_models.ProcessTypes).join(
                                  clusterjobs_models.Customers).join(
                                      clusterjobs_models.ProcessTypes).filter(
-                                         and_(clusterjobs_models.Processing.notified <= cutoff_12,
-                                              clusterjobs_models.Processing.notified > cutoff_13
-                                              )).all()
+                                         or_(and_(clusterjobs_models.Processing.notified <= cutoff_low,
+                                                  clusterjobs_models.Processing.notified > cutoff_high,
+                                                  clusterjobs_models.Processing.save == None),
+                                             and_(clusterjobs_models.Processing.save > datetime.now() + timedelta(1),
+                                                  clusterjobs_models.Processing.save < datetime.now() + timedelta(2)
+                                             )
+                                         )
+                                     ).all()
 
     for job, cust, proctype in expiring:
         job_type = proctype.name
