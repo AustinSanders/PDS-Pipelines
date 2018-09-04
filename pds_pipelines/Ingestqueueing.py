@@ -78,6 +78,7 @@ def main():
         print("The following archives are available:")
         for k in PDSinfoDICT.keys():
             print("\t{}".format(k))
+        logging.error("Unable to locate {}".format(archivepath))
         exit()
 
     if args.volume:
