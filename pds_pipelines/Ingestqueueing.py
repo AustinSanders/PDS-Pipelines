@@ -6,12 +6,8 @@ import json
 import logging
 import argparse
 
-from pds_pipelines.RedisQueue import *
-from pds_pipelines.HPCjob import *
+from pds_pipelines.RedisQueue import RedisQueue
 from pds_pipelines.config import pds_info, pds_log
-
-import pdb
-
 
 class Args:
     """
@@ -32,7 +28,11 @@ class Args:
                             help="Enter archive - archive to ingest")
 
         parser.add_argument('--volume', '-v', dest="volume",
-                            help="Enter voluem to Ingest")
+                            help="Enter volume to Ingest")
+
+        parser.add_argument('--verbose', help="Enable verbose logging",
+                            action="store_const", dest="loglevel",
+                            const=logging.INFO, default=logging.WARNING)
 
         parser.add_argument('--search', '-s', dest="search",
                             help="Enter string to search for")
@@ -43,6 +43,7 @@ class Args:
 
         self.archive = args.archive
         self.volume = args.volume
+        self.loglevel= args.loglevel
         self.search = args.search
         self.ingest = args.ingest
 
@@ -52,11 +53,12 @@ def main():
 
     args = Args()
     args.parse_args()
-
+    logging.basicConfig(level=args.loglevel)
     RQ_ingest = RedisQueue('Ingest_ReadyQueue')
     RQ_linking = RedisQueue('LinkQueue')
 
-# ********* Set up logging *************
+    # Set up logging
+    
     logger = logging.getLogger(args.archive + '_INGEST')
     logger.setLevel(logging.INFO)
     logFileHandle = logging.FileHandler(pds_log + 'Ingest.log')
@@ -64,6 +66,9 @@ def main():
         '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
     logger.addHandler(logFileHandle)
+
+    if args.loglevel == logging.INFO:
+        print("Log File: {}Ingest.log".format(pds_log))
 
     PDSinfoDICT = json.load(open(pds_info, 'r'))
     try:
@@ -79,8 +84,11 @@ def main():
         archivepath = archivepath + '/' + args.volume
 
     logger.info('Starting Ingest for: %s', archivepath)
+    logger.info('Ingest Queue: {}'.format(str(RQ_ingest.id_name)))
+    logger.info('Linking Queue: {}'.format(str(RQ_linking.id_name)))
 
     # Possible bug in RQ?  Can't add to queue in "if fname == voldesc"
+    queue_size = RQ_ingest.QueueSize()
     voldescs = []
     for dirpath, dirs, files in os.walk(archivepath):
         for filename in files:
@@ -105,12 +113,10 @@ def main():
                 except:
                     logger.error('File %s NOT added to Ingest Queue', fname)
 
-    Qsize = RQ_ingest.QueueSize()
+    n_added = RQ_ingest.QueueSize() - queue_size
     for fpath in voldescs:
         RQ_linking.QueueAdd((fpath, args.archive))
-    logger.info('Files added to Ingest Queue: %s', Qsize)
-
-    logger.info('IngestJobber Complete')
+    logger.info('Files added to Ingest Queue: %s', n_added)
 
 
 if __name__ == "__main__":
