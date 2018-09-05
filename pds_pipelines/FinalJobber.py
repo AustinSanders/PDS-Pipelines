@@ -47,7 +47,7 @@ def main():
         jobOBJ.setJobName(FKey + '_Final')
         jobOBJ.setStdOut('/usgs/cdev/PDS/output/' + FKey + '_%A_%a.out')
         jobOBJ.setStdError('/usgs/cdev/PDS/output/' + FKey + '_%A_%a.err')
-        jobOBJ.setWallClock('05:00:00')
+        jobOBJ.setWallClock('24:00:00')
         jobOBJ.setMemory('8192')
         jobOBJ.setPartition('pds')
 
