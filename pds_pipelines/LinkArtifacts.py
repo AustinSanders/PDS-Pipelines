@@ -20,7 +20,7 @@ def main():
             json_dict = json.load(json_file_path)
         except(ValueError):
             continue
-        link_src_path = json['src']
+        link_src_path = json_dict['src']
 
         voldesc = load_pvl(inputfile)
         dataset_id = voldesc['VOLUME']['DATA_SET_ID']
