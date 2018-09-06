@@ -1,5 +1,6 @@
 {
     "inst": "mariner_10",
+    "src": "/pds_san/PDS_Archive/Mariner_10/",
     "upc": {
         "recipe": {
             "mar102isis": {

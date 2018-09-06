@@ -1,5 +1,6 @@
 {
     "inst": "viking_lander_sddpt",
+    "src": "/pds_san/PDS_Archive/Viking_Lander/",
     "upc": {
         "recipe": {}
     },

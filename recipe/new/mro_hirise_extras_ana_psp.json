@@ -1,5 +1,6 @@
 {
     "inst": "mro_hirise_extras_ana_psp",
+    "src": "/pds_san/PDS_Archive/Mars_Reconnaissance_Orbiter/HiRISE/",
     "upc": {
         "recipe": {}
     },

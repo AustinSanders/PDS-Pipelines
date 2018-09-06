@@ -1,5 +1,6 @@
 {
     "inst": "chandrayaan_m3",
+    "src": "/pds_san/PDS_Archive/Chandrayaan_1/M3/",
     "upc": {
         "recipe": {
             "chan1m32isis": {

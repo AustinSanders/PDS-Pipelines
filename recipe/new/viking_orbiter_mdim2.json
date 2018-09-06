@@ -1,5 +1,6 @@
 {
     "inst": "viking_orbiter_mdim2",
+    "src": "/pds_san/PDS_Archive/Viking_Orbiter/",
     "upc": {
         "recipe": {}
     },

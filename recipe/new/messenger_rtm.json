@@ -1,5 +1,6 @@
 {
     "inst": "messenger_rtm",
+    "src": "/pds_san/PDS_Archive/MESSENGER/",
     "upc": {
         "recipe": {}
     },

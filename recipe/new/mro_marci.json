@@ -1,5 +1,6 @@
 {
     "inst": "mro_marci",
+    "src": "/pds_san/PDS_Archive/Mars_Reconnaissance_Orbiter/MARCI/",
     "upc": {
         "recipe": {
             "marci2isis": {

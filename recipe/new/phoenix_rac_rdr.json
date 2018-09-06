@@ -1,5 +1,6 @@
 {
     "inst": "phoenix_rac_rdr",
+    "src": "/pds_san/PDS_Archive/Phoenix/",
     "upc": {
         "recipe": {}
     },
