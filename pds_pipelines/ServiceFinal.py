@@ -14,6 +14,7 @@ from collections import OrderedDict
 from pds_pipelines.RedisQueue import *
 from pds_pipelines.RedisHash import *
 from pds_pipelines.PDS_DBquery import *
+from pds_pipelines.config import pds_log, pow_map2_base, scratch
 
 #from xml.etree.ElementTree import Element, SubElement, Comment, tostring
 
@@ -43,7 +44,9 @@ def main():
 #***************** Setup Logging **************
     logger = logging.getLogger('ServiceFinal.' + FKey)
     logger.setLevel(logging.INFO)
-    logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Service.log')
+    #logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Service.log')
+    logFileHandle = logging.FileHandler(pds_log+'Service.log')
+
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
@@ -89,9 +92,11 @@ def main():
             logger.error('Addin Error XML to JOBS DB: Error')
         print(fh.getvalue())
 
-    Fdir = '/pds_san/PDS_Services/' + infoHash.Service() + '/' + FKey
+    #Fdir = '/pds_san/PDS_Services/' + infoHash.Service() + '/' + FKey
+    Fdir = pow_map2_base + infoHash.Service() + '/' + FKey
 #    Fdir = '/scratch/bsucharski/PDS_service/' + FKey
-    Wpath = '/scratch/pds_services/' + FKey
+    #Wpath = '/scratch/pds_services/' + FKey
+    Wpath = scratch + FKey
 #********* Make final directory ************
     if not os.path.exists(Fdir):
         try:
