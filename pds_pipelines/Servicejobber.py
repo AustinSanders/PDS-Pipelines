@@ -1,4 +1,4 @@
-#!/usgs/apps/anaconda/bin/python
+#!/usr/bin/env python
 
 import os
 import sys
@@ -912,7 +912,7 @@ def main():
     jobOBJ.setJobName(Key + '_Service')
     jobOBJ.setStdOut('/usgs/cdev/PDS/output/' + Key + '_%A_%a.out')
     jobOBJ.setStdError('/usgs/cdev/PDS/output/' + Key + '_%A_%a.err')
-    jobOBJ.setWallClock('10:00:00')
+    jobOBJ.setWallClock('24:00:00')
 #    jobOBJ.setMemory('8192')
 #    jobOBJ.setMemory('16384')
     jobOBJ.setMemory('24576')
