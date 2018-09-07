@@ -1,5 +1,6 @@
 {
     "inst": "apollo_metric",
+    "src": "/pds_san/PDS_Archive/Apollo/Metric_Camera/",
     "upc": {
         "recipe": {}
     },

@@ -1,5 +1,6 @@
 {
     "inst": "cassini_vims",
+    "src": "/pds_san/PDS_Archive/Cassini/VIMS/",
     "upc": {
         "recipe": {
             "vims2isis": {

@@ -1,5 +1,6 @@
 {
     "inst": "dawn_vesta",
+    "src": "/pds_san/PDS_Archive/Dawn/",
     "upc": {
         "recipe": {
             "dawnfc2isis": {

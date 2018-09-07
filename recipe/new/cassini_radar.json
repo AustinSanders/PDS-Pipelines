@@ -1,5 +1,6 @@
 {
     "inst": "cassini_coradr",
+    "src": "/pds_san/PDS_Archive/Cassini/RADAR/",
     "upc": {
         "recipe": {
             "mroctx2isis": {

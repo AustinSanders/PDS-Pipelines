@@ -1,5 +1,6 @@
 {
     "inst": "dawn_ceres",
+    "src": "/pds_san/PDS_Archive/Dawn/Ceres/",
     "upc": {
         "recipe": {
             "dawnfc2isis": {
