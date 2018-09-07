@@ -1,5 +1,6 @@
 {
     "inst": "mo_themis_ODTGEO_V2",
+    "src": "/pds_san/PDS_Archive/Mars_Odyssey/THEMIS/USA_NASA_PDS_ODTGEO_200XX/",
     "upc": {
         "recipe": {}
     },

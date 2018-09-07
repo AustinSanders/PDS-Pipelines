@@ -1,5 +1,6 @@
 {
     "inst": "mo_themis_vis_edr",
+    "src": "/pds_san/PDS_Archive/Mars_Odyssey/",
     "upc": {
         "recipe": {
             "thmproc": {

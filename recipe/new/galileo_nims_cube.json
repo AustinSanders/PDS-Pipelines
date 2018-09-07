@@ -1,5 +1,6 @@
 {
     "inst": "galileo_nims_cube",
+    "src": "/pds_san/PDS_Archive/Galileo/NIMS/",
     "upc": {
         "recipe": {}
     },

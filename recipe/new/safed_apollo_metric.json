@@ -1,5 +1,6 @@
 {
     "inst": "safed_apollo_metric",
+    "src": "/pds_san/PDS_Safed/apollo_data/apollo_metric/",
     "upc": {
         "recipe": {}
     },

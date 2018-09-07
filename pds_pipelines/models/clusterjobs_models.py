@@ -7,13 +7,13 @@ Base = declarative_base()
 class Processing(Base):
     __tablename__ = 'processing'
     processingid = Column(Integer, primary_key=True, autoincrement=True)
-    customerid = Column(Integer)
+    customerid = Column(Integer, ForeignKey("customers.customerid"))
     submitted = Column(Time)
     queued = Column(Time)
     started = Column(Time)
     finished = Column(Time)
     accessed = Column(Time)
-    typeid = Column(Integer)
+    typeid = Column(Integer, ForeignKey("processtypes.typeid"))
     save = Column(Time)
     xml = Column(String)
     error = Column(String)
@@ -29,3 +29,13 @@ class ProcessTypes(Base):
     __tablename__ = 'processtypes'
     typeid = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(64))
+
+
+class Customers(Base):
+    __tablename__ = 'customers'
+    customerid = Column(Integer, primary_key=True, autoincrement=True)
+    email = Column(String(64))
+    name = Column(String(128))
+    affiliation = Column(String(64))
+    username = Column(String(16))
+    status = Column(String(1))

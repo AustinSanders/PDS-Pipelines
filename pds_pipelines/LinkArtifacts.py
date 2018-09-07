@@ -1,8 +1,8 @@
 import os
 import pvl
+import json
 from xmljson import badgerfish as bf
-from xml.etree.ElementTree import fromstring, ParseError
-from pds_pipelines.config import xml_root
+from pds_pipelines.config import recipe_base, link_dest
 from pds_pipelines.RedisQueue import RedisQueue
 from ast import literal_eval
 
@@ -15,28 +15,22 @@ def main():
         inputfile = item[0]
         archive = item[1]
 
-        xml_file_path = xml_root + archive + '/config/config.xml'
+        json_file_path = recipe_base + archive + '.json'
         try:
-            xml = parse_xml(xml_file_path)
-        except(ParseError):
+            json_dict = json.load(json_file_path)
+        except(ValueError):
             continue
-        link_src_path = xml['instrument']['path']['file']['$']
-
-        # If datalink doesn't exist or is inaccessible, use dafault location
-        try:
-            link_dest_path = xml['instrument']['path']['datalink']['$']
-        except:
-            link_dest_path = '/pds_san/PDS_Archive_Links/'
+        link_src_path = json_dict['src']
 
         voldesc = load_pvl(inputfile)
         dataset_id = voldesc['VOLUME']['DATA_SET_ID']
         volume_id = voldesc['VOLUME']['VOLUME_ID']
         # if more than one dataset id exists, link each of them
         if isinstance(dataset_id, (list, tuple, set)):
-            [link(link_src_path, link_dest_path, volume_id, x) for x in dataset_id]
+            [link(link_src_path, link_dest, volume_id, x) for x in dataset_id]
         else:
             # Not container type
-            link(link_src_path, link_dest_path, volume_id, dataset_id)
+            link(link_src_path, link_dest, volume_id, dataset_id)
     
 
 def format_id(f_id):
@@ -54,13 +48,6 @@ def link(src_path, dest_path, volume_id, dataset_id):
     link_path = os.path.split(dest)
     os.makedirs(link_path[0], exist_ok=True)
     os.symlink(src, dest)
-
-
-def parse_xml(xml_file_path):
-    with open(xml_file_path) as f:
-        data = f.read()
-        xml = bf.data(fromstring(data))
-    return xml
 
 
 def load_pvl(pvl_file_path):

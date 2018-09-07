@@ -1,5 +1,6 @@
 {
     "inst": "mo_themis_ODTSDP_V1_vis",
+    "src": "/pds_san/PDS_Archive/Mars_Odyssey/THEMIS/USA_NASA_PDS_ODTSDP_100XX/",
     "upc": {
         "recipe": {
             "thmproc": {

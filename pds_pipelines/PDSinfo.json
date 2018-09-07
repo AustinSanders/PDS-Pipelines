@@ -10,7 +10,8 @@
     "cassini_iss": {
         "archiveid": "53",
         "path": "/pds_san/PDS_Archive/Cassini/ISS/",
-	"bandbinQuery": "FilterName"
+	"bandbinQuery": "FilterName",
+	"upc_reqs": ["/data/",".LBL"]
     },
     "cassini_radar": {
         "archiveid": "51",
@@ -59,7 +60,8 @@
     "lro_lroc_edr": {
         "archiveid": "74",
         "path": "/pds_san/PDS_Archive/Lunar_Reconnaissance_Orbiter/LROC/EDR/",
-	"bandbinQuery" : "FilterName"
+	"bandbinQuery" : "FilterName",
+	"upc_reqs" : ["/DATA/","/NAC/",".IMG"]
     },
     "lunar_orbiter": {
         "archiveid": "79",
@@ -97,7 +99,8 @@
         "archiveid": "16",
         "path": "/pds_san/PDS_Archive/Mars_Reconnaissance_Orbiter/CTX/",
         "mission": "CTX",
-	"bandbinQuery" : "FilterName"
+	"bandbinQuery" : "FilterName",
+	"upc_reqs": ["/data/", ".IMG"]
     },
     "mro_hirise": {
         "archiveid": "71",
@@ -107,7 +110,8 @@
     "mro_hirise_edr": {
         "archiveid": "124",
         "path": "/pds_san/PDS_Archive/Mars_Reconnaissance_Orbiter/HiRISE/",
-	"bandbinQuery": "Name"
+	"bandbinQuery": "Name",
+	"upc_reqs": [".IMG"]
     },
     "mro_hirise_extras": {
         "archiveid": "126",
@@ -137,16 +141,17 @@
 	"UPCerrorSpacecraft": "MARS_ODYSSEY",
         "UPCerrorInstrument": "THEMIS_IR",
         "path": "/pds_san/PDS_Archive/Mars_Odyssey/THEMIS/USA_NASA_PDS_ODTSDP_100XX/",
-        "bandbinQuery": "FilterNumber"
+        "bandbinQuery": "FilterNumber",
+	"upc_reqs": ["/data/odtie1", ".QUB"]
     },
     "mo_themis_vis_edr": {
 	"archiveid" : "117",
-         "path" : "/pds_san/PDS_Archive/Mars_Odyssey/THEMIS/USA_NASA_PDS_ODTSDP_100XX/",
-         "UPCerrorSpacecraft": "MARS_ODYSSEY",
-         "UPCerrorInstrument": "THEMIS_VIS",
-         "bandbinQuery" : "FilterNumber",
-         "bandorder" : ["3", "2", "5", "4", "1"]
-
+        "path" : "/pds_san/PDS_Archive/Mars_Odyssey/THEMIS/USA_NASA_PDS_ODTSDP_100XX/",
+        "UPCerrorSpacecraft": "MARS_ODYSSEY",
+        "UPCerrorInstrument": "THEMIS_VIS",
+        "bandbinQuery" : "FilterNumber",
+        "bandorder" : ["3", "2", "5", "4", "1"],
+	"upc_reqs": ["/data/odtve1", ".QUB"]
     },
     "viking_lander": {
         "archiveid": "7",

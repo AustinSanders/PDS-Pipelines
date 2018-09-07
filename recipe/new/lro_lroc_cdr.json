@@ -1,5 +1,6 @@
 {
     "inst": "lro_lroc_cdr",
+    "src": "/pds_san/PDS_Archive/Lunar_Reconnaissance_Orbiter/LROC/CDR/",
     "upc": {
         "recipe": {}
     },

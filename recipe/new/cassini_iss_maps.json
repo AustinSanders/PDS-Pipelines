@@ -1,5 +1,6 @@
 {
     "inst": "cassini_iss_map",
+    "src": "/pds_san/PDS_Archive/Cassini/ISS/",
     "upc": {
         "recipe": {
             "ciss2isis": {

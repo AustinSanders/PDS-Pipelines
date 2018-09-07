@@ -5,7 +5,7 @@ import shutil
 
 from pds_pipelines.models import clusterjobs_models
 from pds_pipelines.db import db_connect
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 
 import pds_pipelines.config as cfg
 
@@ -53,11 +53,14 @@ def set_purged(session, key):
 def get_old_keys(session, n_days=14):
     cutoff = datetime.now() - timedelta(days=n_days)
     old = session.query(clusterjobs_models.Processing.typeid, clusterjobs_models.Processing.key).filter(
-        and_(clusterjobs_models.Processing.notified < cutoff, clusterjobs_models.Processing.purged == None))
+        and_(clusterjobs_models.Processing.notified < cutoff,
+             clusterjobs_models.Processing.purged == None,
+             or_(clusterjobs_models.Processing.save == None, clusterjobs_models.Processing.save < datetime.now())))
     return old
 
 
 def map_type_ids(session):
+    # Map type ids to process names
     ids = session.query(clusterjobs_models.ProcessTypes.typeid, clusterjobs_models.ProcessTypes.name)
     out = dict(ids)
     return out
