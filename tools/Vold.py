@@ -1,4 +1,4 @@
-import os
+import os, sys
 import pvl
 import glob
 import json
@@ -17,9 +17,12 @@ class Args:
 
     def parse_args(self):
         parser = argparse.ArgumentParser()
+        #how to make other optional
+        parser.add_argument('other')
         parser.add_argument('--textfile','-f',help='Input text file path .txt')
         parser.add_argument('--output','-o',help='Output file path .json')
         args = parser.parse_args()
+        self.other = args.other
         self.textfile = args.textfile
         self.output = args.output
 
@@ -27,7 +30,7 @@ def main():
     args = Args()
     args.parse_args()
     
-    if args.texfile == str:
+    if type(args.textfile) == str:
         filePath = open(args.textfile,'r')
         lines = filePath.readlines()
         length = len(lines)
@@ -41,18 +44,15 @@ def main():
             else:
                 vol_val[volume_name]= 1
     else:
-        filePath = open(args.singlefile,'r')
-        lines = filePath.readlines()
-        length = len(lines)
+        filePath = open(str(args.other),'r')
         vol_val = {}
-        for n in range(length):
-            voldesc = load_pvl(lines[n].rstrip())
-            dataset_id = voldesc['VOLUME']['DATA_SET_ID']
-            volume_name = voldesc['VOLUME']['VOLUME_NAME']
-            if isinstance(dataset_id, (list, tuple, set)):
-                vol_val[volume_name] = len(dataset_id)
-            else:
-                vol_val[volume_name]= 1
+        voldesc = load_pvl(str(args.other))
+        dataset_id = voldesc['VOLUME']['DATA_SET_ID']
+        volume_name = voldesc['VOLUME']['VOLUME_NAME']
+        if isinstance(dataset_id, (list, tuple, set)):
+            vol_val[volume_name] = len(dataset_id)
+        else:
+            vol_val[volume_name]= 1
 
     
     if type(args.output) == str:
