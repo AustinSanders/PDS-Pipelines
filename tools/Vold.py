@@ -3,6 +3,7 @@ import pvl
 import glob
 import json
 import argparse
+import urllib.request
 
 def load_pvl(pvl_file_path):
     with open(pvl_file_path, 'r') as f:
@@ -44,7 +45,8 @@ def main():
             else:
                 vol_val[volume_name]= 1
     else:
-        filePath = open(str(args.other),'r')
+        #make urls possible
+        filePath = urllib.request.urlopen(args.other)
         vol_val = {}
         voldesc = load_pvl(str(args.other))
         dataset_id = voldesc['VOLUME']['DATA_SET_ID']
