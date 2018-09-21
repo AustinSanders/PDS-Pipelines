@@ -4,6 +4,7 @@ import glob
 import json
 import argparse
 import urllib.request
+import http.client
 
 def load_pvl(pvl_file_path):
     with open(pvl_file_path, 'r') as f:
@@ -17,9 +18,8 @@ class Args:
         pass
 
     def parse_args(self):
-        parser = argparse.ArgumentParser()
+        parser = argparse.ArgumentParser(prog='sys.argv')
         #how to make other optional
-        parser.add_argument('-sys.argv')
         parser.add_argument('--textfile','-f',help='Input text file path .txt')
         parser.add_argument('--output','-o',help='Output file path .json')
         args = parser.parse_args()
@@ -29,16 +29,19 @@ class Args:
 def main():
     args = Args()
     args.parse_args()
-    
     if type(args.textfile) == str:
         filePath = open(args.textfile,'r')
         lines = filePath.readlines()
         length = len(lines)
         vol_val = {}
         for n in range(length):
-            voldesc = load_pvl(lines[n].rstrip())
-            dataset_id = voldesc['VOLUME']['DATA_SET_ID']
-            volume_name = voldesc['VOLUME']['VOLUME_NAME']
+            #voldesc = load_pvl(lines[n].rstrip())
+
+            #trying to make URLs work
+            voldesc = urllib.request.urlreadf(lines[n])
+            voldescPvl = pvl.dumps(http.client.HTTPResponse.read(voldesc))
+            dataset_id = voldescPvl['VOLUME']['DATA_SET_ID']
+            volume_name = voldescPvl['VOLUME']['VOLUME_NAME']
             if isinstance(dataset_id, (list, tuple, set)):
                 vol_val[volume_name] = len(dataset_id)
             else:
