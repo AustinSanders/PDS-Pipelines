@@ -11,6 +11,7 @@ from pysis import isis
 from pysis.exceptions import ProcessError
 
 from pds_pipelines.RedisQueue import RedisQueue
+from pds_pipelines.RedisLock import RedisLock
 from pds_pipelines.RedisHash import RedisHash
 from pds_pipelines.Process import Process
 from pds_pipelines.Loggy import Loggy
@@ -34,11 +35,9 @@ def main():
     RHerror = RedisHash(Key + '_error')
 
     if int(RQ_file.QueueSize()) == 0:
-
-        print "No Files Found in Redis Queue"
-
+        print("No Files Found in Redis Queue")
     else:
-        print RQ_file.getQueueName()
+        print(RQ_file.getQueueName())
         jobFile = RQ_file.Qfile2Qwork(
             RQ_file.getQueueName(), RQ_work.getQueueName())
 
@@ -82,7 +81,7 @@ def main():
                 process = processOBJ.JSON2Process(element)
 
                 if 'gdal_translate' not in processOBJ.getProcessName():
-                    print processOBJ.getProcessName()
+                    print(processOBJ.getProcessName())
                     if '2isis' in processOBJ.getProcessName():
                         processOBJ.updateParameter('from_', inputFile)
                         processOBJ.updateParameter('to', outfile)
@@ -109,7 +108,7 @@ def main():
                     elif 'ctxevenodd' in processOBJ.getProcessName():
                         label = pvl.load(infile)
                         SS = label['IsisCube']['Instrument']['SpatialSumming']
-                        print SS
+                        print(SS)
                         if SS != 1:
                             continue
                         else:
@@ -119,7 +118,7 @@ def main():
                     elif 'mocevenodd' in processOBJ.getProcessName():
                         label = pvl.load(infile)
                         CTS = label['IsisCube']['Instrument']['CrosstrackSumming']
-                        print CTS
+                        print(CTS)
                         if CTS != 1:
                             continue
                         else:
@@ -201,7 +200,7 @@ def main():
                         processOBJ.updateParameter('from_', infile)
                         processOBJ.updateParameter('to', outfile)
 
-                    print processOBJ.getProcess()
+                    print(processOBJ.getProcess())
 
                     for k, v in processOBJ.getProcess().items():
                         func = getattr(isis, k)
@@ -256,7 +255,7 @@ def main():
                     finalfile = infile.replace(
                         '.input.cub', '_final.' + fileext)
                     GDALcmd += ' ' + infile + ' ' + finalfile
-                    print GDALcmd
+                    print(GDALcmd)
 
                     result = subprocess.call(GDALcmd, shell=True)
                     if result == 0:

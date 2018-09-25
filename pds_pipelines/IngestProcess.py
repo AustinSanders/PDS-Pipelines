@@ -14,7 +14,8 @@ from ast import literal_eval
 from sqlalchemy import *
 from sqlalchemy.orm.util import *
 
-from pds_pipelines.RedisQueue import *
+from pds_pipelines.RedisQueue import RedisQueue
+from pds_pipelines.RedisLock import RedisLock
 from pds_pipelines.PDS_DBquery import *
 from pds_pipelines.db import db_connect
 from pds_pipelines.config import pds_info, pds_log, pds_db, archive_base, web_base
@@ -55,6 +56,8 @@ def main():
     PDSinfoDICT = json.load(open(pds_info, 'r'))
 
     RQ_main = RedisQueue('Ingest_ReadyQueue')
+    RQ_lock = RedisLock('processes')
+    RQ_lock.add({RQ_main.id_name: '1'})
     RQ_work = RedisQueue('Ingest_WorkQueue')
 
     RQ_upc = RedisQueue('UPC_ReadyQueue')
@@ -63,14 +66,14 @@ def main():
     #RQ_pilotB = RedisQueue('PilotB_ReadyQueue')
 
     try:
-        session, _ = db_connect(pds_db)
+        session, engine = db_connect(pds_db)
         logger.info('DataBase Connecton: Success')
     except:
         logger.error('DataBase Connection: Error')
 
     index = 1
 
-    while int(RQ_main.QueueSize()) > 0:
+    while int(RQ_main.QueueSize()) > 0 and RQ_lock.available(RQ_main.id_name):
 
         item = literal_eval(RQ_main.QueueGet().decode("utf-8"))
         inputfile = item[0]
@@ -158,6 +161,11 @@ def main():
             logger.info("Commit to Database: Success")
         except:
             session.rollback()
+
+
+    # Close connection to database
+    session.close()
+    engine.dispose()
 
     if RQ_main.QueueSize() == 0 and RQ_work.QueueSize() == 0:
         logger.info("Process Complete All Queues Empty")

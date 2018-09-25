@@ -10,6 +10,7 @@ import json
 from ast import literal_eval
 
 from pds_pipelines.RedisQueue import RedisQueue
+from pds_pipelines.RedisLock import RedisLock
 from pds_pipelines.PDS_DBquery import *
 
 from sqlalchemy import *
@@ -38,16 +39,17 @@ def main():
     logger.info('Starting DI Process')
 
     try:
-        # ignores engine information
-        session, _ = db_connect(pds_db)
+        session, engine = db_connect(pds_db)
         logger.info('DataBase Connecton: Success')
     except:
         logger.error('DataBase Connection: Error')
 
     RQ = RedisQueue('DI_ReadyQueue')
+    RQ_lock = RedisLock('processes')
+    RQ_lock.add({RQ.id_name: '1'})
     index = 0
 
-    while int(RQ.QueueSize()) > 0:
+    while int(RQ.QueueSize()) > 0 and RQ_lock.available(RQ.id_name):
         item = literal_eval(RQ.QueueGet().decode("utf-8"))
         inputfile = item[0]
         archive = item[1]
@@ -87,6 +89,10 @@ def main():
         index = 1
     except:
         session.rollback()
+
+    # Close connection to database
+    session.close()
+    engine.dispose()
 
 
 if __name__ == "__main__":

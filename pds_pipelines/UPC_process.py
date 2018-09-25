@@ -14,6 +14,7 @@ from pysis import isis
 from pysis.exceptions import ProcessError
 from pysis.isis import getsn
 
+from pds_pipelines.RedisLock import RedisLock
 from pds_pipelines.RedisQueue import RedisQueue
 from pds_pipelines.Recipe import Recipe
 from pds_pipelines.Process import Process
@@ -97,14 +98,12 @@ def get_tid(keyword, session):
         return None
     
 
-
-# @TODO set back to /usgs/ and /scratch/ directories.
 def main():
     # Connect to database - ignore engine information
-    pds_session, _ = db_connect(pds_db)
+    pds_session, pds_engine = db_connect(pds_db)
 
     # Connect to database - ignore engine information
-    session, _ = db_connect(upc_db)
+    session, upc_engine = db_connect(upc_db)
 
     # ***************** Set up logging *****************
     logger = logging.getLogger('UPC_Process')
@@ -119,6 +118,9 @@ def main():
 
     # Redis Queue Objects
     RQ_main = RedisQueue('UPC_ReadyQueue')
+    RQ_lock = RedisLock('processes')
+    # If the queue isn't registered, add it and set it to "running"
+    RQ_lock.add({RQ_main.id_name: '1'})
 
     proc_date_tid = get_tid('processdate', session)
     err_type_tid = get_tid('errortype', session)
@@ -131,7 +133,7 @@ def main():
     checksum_tid = get_tid('checksum', session)
 
     # while there are items in the redis queue
-    while int(RQ_main.QueueSize()) > 0:
+    while int(RQ_main.QueueSize()) > 0 and RQ_lock.available(RQ_main.id_name):
         # get a file from the queue
         item = literal_eval(RQ_main.QueueGet().decode("utf-8"))
         inputfile = item[0]
@@ -353,29 +355,6 @@ def main():
                         print(e)
                 session.commit()
                               
-                # Block to add instrument specific keywords
-                """
-                keywords = session.query(upc_models.Keywords).filter(
-                    upc_models.Keywords.instrumentid == instrument_Qobj.instrumentid).all()
-
-                for row in keywords:
-                    keytype = row.datatype
-                    keyword = row.typename
-                    val = keywordsOBJ.getKeyword(keyword.lower())
-                    keyword_Qobj = session.query(upc_models.Keywords).filter(
-                        and_(upc_models.Keywords.typename == keyword,
-                             upc_models.Keywords.instrumentid.in_((3, instrument_Qobj.instrumentid)))).first()
-                    val = db2py(keytype, val)
-                    if val is None:
-                        continue
-                    DBinput = upc_models.create_table(keytype,
-                                                        upcid=UPCid,
-                                                        typeid=keyword_Qobj.typeid,
-                                                        value=val)
-                    session.merge(DBinput)
-                    session.flush()
-                session.commit()
-                """
                 # geometry stuff
                 G_centroid = 'point ({} {})'.format(
                     str(keywordsOBJ.getKeyword('CentroidLongitude')),
@@ -392,13 +371,6 @@ def main():
                 session.merge(G_DBinput)
                 session.flush()
                 session.commit()
-                """
-                CScmd = 'md5sum ' + inputfile
-                process = subprocess.Popen(CScmd,
-                                           stdout=subprocess.PIPE, shell=True)
-                (stdout, stderr) = process.communicate()
-                checksum = stdout.split()[0]
-                """
 
                 f_hash = hashlib.md5()
                 with open(inputfile, "rb") as f:
@@ -581,6 +553,12 @@ def main():
                 AddProcessDB(pds_session, fid, False)
                 os.remove(infile)
 
+    # Disconnect from db sessions
+    pds_session.close()
+    session.close()
+    # Disconnect from the engines
+    pds_engine.dispose()
+    upc_engine.dispose()
 
 if __name__ == "__main__":
     sys.exit(main())
