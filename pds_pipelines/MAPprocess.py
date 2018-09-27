@@ -10,7 +10,9 @@ from pysis import isis
 from pysis.exceptions import ProcessError
 from pysis.isis import map2map
 
-from pds_pipelines.RedisQueue import *
+from pds_pipelines.config import lock_obj
+from pds_pipelines.RedisQueue import RedisQueue
+from pds_pipelines.RedisLock import RedisLock
 from pds_pipelines.RedisHash import *
 from pds_pipelines.Recipe import *
 from pds_pipelines.Loggy import *
@@ -35,8 +37,10 @@ def main():
     RQ_final = RedisQueue('FinalQueue')
     RHash = RedisHash(Key + '_info')
     RHerror = RedisHash(Key + '_error')
+    RQ_lock = RedisLock(lock_obj)
+    RQ_lock.add({'MAP':'1'})
 
-    if int(RQ_file.QueueSize()) == 0:
+    if int(RQ_file.QueueSize()) == 0 and RQ_lock.available('MAP'):
         print "No Files Found in Redis Queue"
     else:
         jobFile = RQ_file.Qfile2Qwork(

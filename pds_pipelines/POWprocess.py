@@ -10,6 +10,8 @@ import shutil
 from pysis import isis
 from pysis.exceptions import ProcessError
 
+from pds_pipelines.config import lock_obj
+from pds_pipelines.RedisLock import RedisLock
 from pds_pipelines.RedisQueue import RedisQueue
 from pds_pipelines.RedisLock import RedisLock
 from pds_pipelines.RedisHash import RedisHash
@@ -33,8 +35,10 @@ def main():
     RQ_final = RedisQueue('FinalQueue')
     RHash = RedisHash(Key + '_info')
     RHerror = RedisHash(Key + '_error')
+    RQ_lock = Redislock(lock_obj)
+    RQ_lock.add({'POW':'1'})
 
-    if int(RQ_file.QueueSize()) == 0:
+    if int(RQ_file.QueueSize()) == 0 and RQ_lock.available('POW'):
         print("No Files Found in Redis Queue")
     else:
         print(RQ_file.getQueueName())
