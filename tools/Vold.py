@@ -1,6 +1,5 @@
 import os, sys
 import pvl
-import glob
 import json
 import argparse
 import urllib.request
@@ -12,6 +11,16 @@ def load_pvl(pvl_file_path):
         data = f.read()
     voldesc = pvl.loads(data)
     return voldesc
+
+def ds_count(voldescPvl,vol_val):
+    vol_val = {}
+    dataset_id = voldescPvl['VOLUME']['DATA_SET_ID']
+    volume_name = voldescPvl['VOLUME']['VOLUME_NAME']
+    if isinstance(dataset_id, (list, tuple, set)):
+        vol_val[volume_name] = len(dataset_id)
+    else:
+        vol_val[volume_name]= 1
+    return vol_val
 
 class Args:
     def __init__(self):
@@ -31,53 +40,33 @@ class Args:
 def main():
     args = Args()
     args.parse_args()
-    
     if args.textfile is not None:
         filePath = open(args.textfile,'r')
         lines = filePath.readlines()
         length = len(lines)
-        vol_val = {}
         
         for n in range(length):
             if 'https' in lines[n] or 'http' in lines[n] or 'ftp' in lines[n]:
                 voldesc = urllib.request.urlopen(lines[n])
                 voldescPvl = pvl.load(voldesc)
-                dataset_id = voldescPvl['VOLUME']['DATA_SET_ID']
-                volume_name = voldescPvl['VOLUME']['VOLUME_NAME']
-                if isinstance(dataset_id, (list, tuple, set)):
-                    vol_val[volume_name] = len(dataset_id)
-                else:
-                    vol_val[volume_name]= 1 
+                ds_count(voldescPvl,vol_val)
+                 
             else:
-                voldesc = load_pvl(lines[n].rstrip())
-                dataset_id = voldesc['VOLUME']['DATA_SET_ID']
-                volume_name = voldesc['VOLUME']['VOLUME_NAME']
-                if isinstance(dataset_id, (list, tuple, set)):
-                    vol_val[volume_name] = len(dataset_id)
-                else:
-                    vol_val[volume_name]= 1    
+                voldescPvl = load_pvl(lines[n].rstrip())
+                ds_count(voldescPvl,vol_val)
+                  
     
     else:
         if 'https' in args.local or 'http' in args.local or 'ftp' in args.local:
-            vol_val = {}
             voldesc = urllib.request.urlopen(args.local)
             voldescPvl = pvl.load(voldesc)
-            dataset_id = voldescPvl['VOLUME']['DATA_SET_ID']
-            volume_name = voldescPvl['VOLUME']['VOLUME_NAME']
-            if isinstance(dataset_id, (list, tuple, set)):
-                vol_val[volume_name] = len(dataset_id)
-            else:
-                vol_val[volume_name]= 1 
+            ds_count(voldescPvl,vol_val)
+
         else:
             filePath = open(str(args.local), 'r')
-            vol_val = {}
-            voldesc = load_pvl(str(args.local))
-            dataset_id = voldesc['VOLUME']['DATA_SET_ID']
-            volume_name = voldesc['VOLUME']['VOLUME_NAME']
-            if isinstance(dataset_id, (list, tuple, set)):
-                vol_val[volume_name] = len(dataset_id)
-            else:
-                vol_val[volume_name]= 1
+            voldescPvl = load_pvl(str(args.local))
+            ds_count(voldescPvl,vol_val)
+
 
     if args.output is not None:
         f = open(args.output,'w')
