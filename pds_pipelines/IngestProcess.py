@@ -18,7 +18,7 @@ from pds_pipelines.RedisQueue import RedisQueue
 from pds_pipelines.RedisLock import RedisLock
 from pds_pipelines.PDS_DBquery import *
 from pds_pipelines.db import db_connect
-from pds_pipelines.config import pds_info, pds_log, pds_db, archive_base, web_base
+from pds_pipelines.config import pds_info, pds_log, pds_db, archive_base, web_base, lock_obj
 from pds_pipelines.models.pds_models import Files
 
 
@@ -56,7 +56,7 @@ def main():
     PDSinfoDICT = json.load(open(pds_info, 'r'))
 
     RQ_main = RedisQueue('Ingest_ReadyQueue')
-    RQ_lock = RedisLock('processes')
+    RQ_lock = RedisLock(lock_obj)
     RQ_lock.add({RQ_main.id_name: '1'})
     RQ_work = RedisQueue('Ingest_WorkQueue')
 

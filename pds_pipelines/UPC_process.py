@@ -22,7 +22,7 @@ from pds_pipelines.UPCkeywords import UPCkeywords
 from pds_pipelines.db import db_connect
 from pds_pipelines.models import upc_models, pds_models
 from pds_pipelines.models.upc_models import MetaTime, MetaGeometry, MetaString, MetaBoolean
-from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db
+from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj
 
 from sqlalchemy import and_
 
@@ -118,7 +118,7 @@ def main():
 
     # Redis Queue Objects
     RQ_main = RedisQueue('UPC_ReadyQueue')
-    RQ_lock = RedisLock('processes')
+    RQ_lock = RedisLock(lock_obj)
     # If the queue isn't registered, add it and set it to "running"
     RQ_lock.add({RQ_main.id_name: '1'})
 

@@ -15,7 +15,7 @@ from pds_pipelines.PDS_DBquery import *
 
 from sqlalchemy import *
 from sqlalchemy.orm.util import *
-from pds_pipelines.config import pds_db, pds_log, pds_info
+from pds_pipelines.config import pds_db, pds_log, pds_info, lock_obj
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files
 
@@ -45,7 +45,7 @@ def main():
         logger.error('DataBase Connection: Error')
 
     RQ = RedisQueue('DI_ReadyQueue')
-    RQ_lock = RedisLock('processes')
+    RQ_lock = RedisLock(lock_obj)
     RQ_lock.add({RQ.id_name: '1'})
     index = 0
 

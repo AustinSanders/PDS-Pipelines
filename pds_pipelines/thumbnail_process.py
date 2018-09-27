@@ -19,7 +19,7 @@ from pds_pipelines.Process import Process
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.upc_models import MetaString, DataFiles
 from pds_pipelines.models.pds_models import ProcessRuns
-from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db
+from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db, lock_obj
 from pds_pipelines.UPC_process import get_tid
 
 def getISISid(infile):
@@ -130,7 +130,7 @@ def main():
     logger.addHandler(logFileHandle)    
 
     RQ_main = RedisQueue('Thumbnail_ReadyQueue')
-    RQ_lock = RedisLock('processes')
+    RQ_lock = RedisLock(lock_obj)
     RQ_lock.add({RQ_main.id_name: '1'})
 
     PDSinfoDICT = json.load(open(pds_info, 'r'))

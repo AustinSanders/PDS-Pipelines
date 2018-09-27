@@ -17,7 +17,8 @@ class RedisLock(object):
         name : str
           The name of the RedisLock object
         """
-        self._db = redis.StrictRedis(host=ri['host'], port=ri['port'], db=ri['db'])
+        #self._db = redis.StrictRedis(host=ri['host'], port=ri['port'], db=ri['db'])
+        self._db = redis.StrictRedis()
         self.name = 'lock:%s' % (name)
 
 
@@ -96,7 +97,8 @@ class RedisLock(object):
         -------
         None
         """
-        self._db.hset(self.name, key, value)
+        if self.contains(key):
+            self._db.hset(self.name, key, value)
 
 
     def get(self, key):
