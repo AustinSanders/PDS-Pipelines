@@ -12,7 +12,7 @@ def load_pvl(pvl_file_path):
     voldesc = pvl.loads(data)
     return voldesc
 
-def ds_count(voldescPvl,vol_val):
+def ds_count(voldescPvl):
     vol_val = {}
     dataset_id = voldescPvl['VOLUME']['DATA_SET_ID']
     volume_name = voldescPvl['VOLUME']['VOLUME_NAME']
@@ -49,30 +49,30 @@ def main():
             if 'https' in lines[n] or 'http' in lines[n] or 'ftp' in lines[n]:
                 voldesc = urllib.request.urlopen(lines[n])
                 voldescPvl = pvl.load(voldesc)
-                ds_count(voldescPvl,vol_val)
+                ds_count(voldescPvl)
                  
             else:
                 voldescPvl = load_pvl(lines[n].rstrip())
-                ds_count(voldescPvl,vol_val)
+                ds_count(voldescPvl)
                   
     
     else:
         if 'https' in args.local or 'http' in args.local or 'ftp' in args.local:
             voldesc = urllib.request.urlopen(args.local)
             voldescPvl = pvl.load(voldesc)
-            ds_count(voldescPvl,vol_val)
+            ds_count(voldescPvl)
 
         else:
             filePath = open(str(args.local), 'r')
             voldescPvl = load_pvl(str(args.local))
-            ds_count(voldescPvl,vol_val)
+            ds_count(voldescPvl)
 
 
     if args.output is not None:
         f = open(args.output,'w')
-        f.write(str(json.dumps(vol_val)))
+        f.write(str(json.dumps(ds_count(voldescPvl))))
     else:
-        print(json.dumps(vol_val))
+        print(json.dumps(ds_count(voldescPvl)))
 
 if __name__ == '__main__':
     main()
