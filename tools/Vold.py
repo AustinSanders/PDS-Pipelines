@@ -37,16 +37,13 @@ def ds_count(voldescPvl):
         vol_val[volume_name] = len(dataset_id)
     else:
         vol_val[volume_name]= 1
-
-    if args.output is not None:
-        f = open(args.output,'w')
-        f.write(str(json.dumps(vol_val)))
-    else:
-        print(json.dumps(vol_val))
-
+    return vol_val
+    
 def main():
     args = Args()
     args.parse_args()
+    a = {}
+
     if args.textfile is not None:
         filePath = open(args.textfile,'r')
         lines = filePath.readlines()
@@ -55,27 +52,26 @@ def main():
         for n in range(length):
             if 'https' in lines[n] or 'http' in lines[n] or 'ftp' in lines[n]:
                 voldesc = urllib.request.urlopen(lines[n])
-                voldescPvl = pvl.load(voldesc)
-                ds_count(voldescPvl)
-                 
+                voldescPvl = pvl.load(voldesc)     
             else:
                 voldescPvl = load_pvl(lines[n].rstrip())
-                ds_count(voldescPvl)
-                  
-    
+            a.update(ds_count(voldescPvl))    
     else:
         if 'https' in args.local or 'http' in args.local or 'ftp' in args.local:
             voldesc = urllib.request.urlopen(args.local)
             voldescPvl = pvl.load(voldesc)
-            ds_count(voldescPvl)
-
         else:
             filePath = open(str(args.local), 'r')
             voldescPvl = load_pvl(str(args.local))
-            ds_count(voldescPvl)
+        a.update(ds_count(voldescPvl))
+    
 
 
-
+    if args.output is not None:
+        f = open(args.output,'w')
+        f.write(str(json.dumps(a)))
+    else:
+        print(json.dumps(a))
 
 if __name__ == '__main__':
     main()
