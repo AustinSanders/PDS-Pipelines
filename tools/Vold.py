@@ -12,16 +12,6 @@ def load_pvl(pvl_file_path):
     voldesc = pvl.loads(data)
     return voldesc
 
-def ds_count(voldescPvl):
-    vol_val = {}
-    dataset_id = voldescPvl['VOLUME']['DATA_SET_ID']
-    volume_name = voldescPvl['VOLUME']['VOLUME_NAME']
-    if isinstance(dataset_id, (list, tuple, set)):
-        vol_val[volume_name] = len(dataset_id)
-    else:
-        vol_val[volume_name]= 1
-    return vol_val
-
 class Args:
     def __init__(self):
         pass
@@ -36,6 +26,23 @@ class Args:
         self.local = args.local
         self.textfile = args.textfile
         self.output = args.output
+
+def ds_count(voldescPvl):
+    args = Args()
+    args.parse_args()
+    vol_val = {}
+    dataset_id = voldescPvl['VOLUME']['DATA_SET_ID']
+    volume_name = voldescPvl['VOLUME']['VOLUME_NAME']
+    if isinstance(dataset_id, (list, tuple, set)):
+        vol_val[volume_name] = len(dataset_id)
+    else:
+        vol_val[volume_name]= 1
+
+    if args.output is not None:
+        f = open(args.output,'w')
+        f.write(str(json.dumps(vol_val)))
+    else:
+        print(json.dumps(vol_val))
 
 def main():
     args = Args()
@@ -68,11 +75,7 @@ def main():
             ds_count(voldescPvl)
 
 
-    if args.output is not None:
-        f = open(args.output,'w')
-        f.write(str(json.dumps(ds_count(voldescPvl))))
-    else:
-        print(json.dumps(ds_count(voldescPvl)))
+
 
 if __name__ == '__main__':
     main()
