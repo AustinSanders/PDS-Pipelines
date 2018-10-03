@@ -10,8 +10,6 @@ def setup_smtp():
     server = smtplib.SMTP()
     server.connect()
     server.ehlo()
-    server.starttls()
-    server.ehlo
     return server
 
 
