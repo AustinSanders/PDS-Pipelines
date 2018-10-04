@@ -14,12 +14,13 @@ from pysis.exceptions import ProcessError
 from pysis.isis import getsn
 
 from pds_pipelines.RedisQueue import RedisQueue
+from pds_pipelines.RedisLock import RedisLock
 from pds_pipelines.Recipe import Recipe
 from pds_pipelines.Process import Process
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.upc_models import MetaString, DataFiles
 from pds_pipelines.models.pds_models import ProcessRuns
-from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db
+from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db, lock_obj
 from pds_pipelines.UPC_process import get_tid
 
 def getISISid(infile):
@@ -128,15 +129,17 @@ def main():
     logger.addHandler(logFileHandle)    
 
     RQ_main = RedisQueue('Browse_ReadyQueue')
+    RQ_lock = RedisLock(lock_obj)
+    RQ_lock.add({RQ_main.id_name: '1'})
 
     PDSinfoDICT = json.load(open(pds_info, 'r'))
 
-    pds_session, _ = db_connect(pds_db)
-    upc_session, _ = db_connect(upc_db)
+    pds_session, pds_engine = db_connect(pds_db)
+    upc_session, upc_engine = db_connect(upc_db)
 
     tid = get_tid('fullimageurl', upc_session)
 
-    while int(RQ_main.QueueSize()) > 0:
+    while int(RQ_main.QueueSize()) > 0 and RQ_lock.available(RQ_main.id_name):
         item = literal_eval(RQ_main.QueueGet().decode("utf-8"))
         inputfile = item[0]
         fid = item[1]
@@ -234,6 +237,11 @@ def main():
                 AddProcessDB(pds_session, fid, 't')
         else:
             logger.error('File %s Not Found', inputfile)
+
+    upc_session.close()
+    pds_session.close()
+    upc_engine.dispose()
+    pds_engine.dispose()
 
 if __name__ == "__main__":
     sys.exit(main())
