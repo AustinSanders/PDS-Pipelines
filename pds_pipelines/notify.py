@@ -64,7 +64,7 @@ def notify_finished(server, session):
         text = msg.as_string()
         server.sendmail('astroweb@usgs.gov', recipient_address, text)
         # Update the database to reflect that the user was notified
-        job.notified = datetime.now()
+        job.notified = datetime.utcnow()
         session.commit()
 
 
@@ -118,7 +118,7 @@ def notify_error(server, session):
         text = msg.as_string()
         print(text)
         server.sendmail('astroweb.usgs.gov', recipient_address, text)
-        job.notified = datetime.now()
+        job.notified = datetime.utcnow()
         session.commit()
 
 
@@ -140,7 +140,7 @@ def notify_upcoming_purge(server, session):
     """
 
     # Timestamps from 12, 13 days ago, respectively
-    cutoff_low = datetime.now() - timedelta(12)
+    cutoff_low = datetime.utcnow() - timedelta(12)
     cutoff_high = cutoff_low - timedelta(1)
 
     # Grab items with 'notified' timestamps between 12, 13 days ago or with a 'save' timestamp between 1, 2 days in the future
@@ -152,8 +152,8 @@ def notify_upcoming_purge(server, session):
                                          or_(and_(clusterjobs_models.Processing.notified <= cutoff_low,
                                                   clusterjobs_models.Processing.notified > cutoff_high,
                                                   clusterjobs_models.Processing.save == None),
-                                             and_(clusterjobs_models.Processing.save > datetime.now() + timedelta(1),
-                                                  clusterjobs_models.Processing.save < datetime.now() + timedelta(2)
+                                             and_(clusterjobs_models.Processing.save > datetime.utcnow() + timedelta(1),
+                                                  clusterjobs_models.Processing.save < datetime.utcnow() + timedelta(2)
                                              )
                                          )
                                      ).all()
