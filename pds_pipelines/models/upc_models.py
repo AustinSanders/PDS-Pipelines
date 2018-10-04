@@ -32,7 +32,7 @@ def create_table(keytype, *args, **kwargs):
 
 
 class DataFiles(Base):
-    __tablename__ = 'datafiles'
+    _tablename_ = 'datafiles'
     upcid = Column(Integer, primary_key=True, autoincrement = True)
     isisid = Column(String(256))
     productid = Column(String(256))
@@ -43,7 +43,7 @@ class DataFiles(Base):
 
 
 class Instruments(Base):
-    __tablename__ = 'instruments_meta'
+    _tablename_ = 'instruments_meta'
     instrumentid = Column(Integer, primary_key=True, autoincrement = True)
     instrument = Column(String(256), nullable=False)
     displayname = Column(String(256))
@@ -54,7 +54,7 @@ class Instruments(Base):
 
 
 class Targets(Base):
-    __tablename__ = 'targets_meta'
+    _tablename_ = 'targets_meta'
     targetid = Column(Integer, primary_key = True, autoincrement = True)
     naifid = Column(Integer)
     targetname = Column(String(20), nullable = False)
@@ -68,7 +68,7 @@ class Targets(Base):
 
 
 class Keywords(Base):
-    __tablename__ = 'keywords'
+    _tablename_ = 'keywords'
     typeid = Column(Integer, primary_key=True, autoincrement = True)
     instrumentid = Column(Integer, ForeignKey("instruments_meta.instrumentid"))
     datatype = Column(String(20), nullable=False)
@@ -81,7 +81,7 @@ class Keywords(Base):
 
 class Meta(object):
     # Enforce compound primary key constraint
-    __table_args__ = (PrimaryKeyConstraint('upcid', 'typeid'),)
+    _table_args_ = (PrimaryKeyConstraint('upcid', 'typeid'),)
     upcid = Column(Integer)
 
     @declared_attr
@@ -90,7 +90,7 @@ class Meta(object):
 
 
 class MetaPrecision(Meta, Base):
-    __tablename__ = 'meta_precision'
+    _tablename_ = 'meta_precision'
     value = Column(Float)
     def __init__(self, **kwargs):
         if not isinstance(kwargs['value'], (float, int)):
@@ -99,7 +99,7 @@ class MetaPrecision(Meta, Base):
 
 
 class MetaTime(Meta, Base):
-    __tablename__ = 'meta_time'
+    _tablename_ = 'meta_time'
     value = Column(Time)
 
     def __init__(self, **kwargs):
@@ -109,7 +109,7 @@ class MetaTime(Meta, Base):
 
 
 class MetaString(Meta, Base):
-    __tablename__ = 'meta_string'
+    _tablename_ = 'meta_string'
     value = Column(String)
     hibernate_ver = Column(Integer, default=0)
 
@@ -120,7 +120,7 @@ class MetaString(Meta, Base):
 
 
 class MetaInteger(Meta, Base):
-    __tablename__ = 'meta_integer'
+    _tablename_ = 'meta_integer'
     value = Column(Integer)
 
     def __init__(self, **kwargs):
@@ -130,7 +130,7 @@ class MetaInteger(Meta, Base):
 
 
 class MetaBoolean(Meta, Base):
-    __tablename__ = 'meta_boolean'
+    _tablename_ = 'meta_boolean'
     value = Column(Boolean)
 
     def __init__(self, **kwargs):
@@ -139,8 +139,8 @@ class MetaBoolean(Meta, Base):
         Base.__init__(self, **kwargs)
 
 class MetaBands(Base):
-    __tablename__ = 'meta_bands'
-    __table_args__ = (PrimaryKeyConstraint('upcid', 'filter', 'centerwave'),)
+    _tablename_ = 'meta_bands'
+    _table_args_ = (PrimaryKeyConstraint('upcid', 'filter', 'centerwave'),)
     upcid = Column(Integer)
     # @TODO filter is a keyword, we should refactor this here and in db
     filter = Column(String(255))
@@ -150,7 +150,7 @@ class MetaBands(Base):
         Base.__init__(self, **kwargs)
 
 class MetaGeometry(Meta, Base):
-    __tablename__ = 'meta_geometry'
+    _tablename_ = 'meta_geometry'
     value = Column(Geometry('geometry'))
 
     def __init__(self, **kwargs):

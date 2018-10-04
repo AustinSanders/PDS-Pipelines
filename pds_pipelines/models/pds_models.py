@@ -6,7 +6,7 @@ from sqlalchemy import (Column, Integer, Float, String, Boolean,
 Base = declarative_base()
 
 class ProcessRuns(Base):
-    __tablename__ = 'process_runs'
+    _tablename_ = 'process_runs'
     processid = Column(Integer, primary_key=True)
     fileid = Column(Integer)
     process_date = Column(TIMESTAMP)
@@ -15,7 +15,7 @@ class ProcessRuns(Base):
 
 
 class Files(Base):
-    __tablename__ = 'files'
+    _tablename_ = 'files'
     fileid = Column(Integer, primary_key=True)
     # @TODO set as foreign key for archive
     archiveid = Column(Integer)
@@ -34,7 +34,7 @@ class Files(Base):
 
 
 class Archives(Base):
-    __tablename__ = 'archives'
+    _tablename_ = 'archives'
     # @TODO auto increment
     archiveid = Column(Integer, primary_key=True)
     archive_name = Column(String(1024))
