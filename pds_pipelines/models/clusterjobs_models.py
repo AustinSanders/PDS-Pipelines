@@ -5,7 +5,7 @@ from sqlalchemy import (Column, Integer, Float,
 Base = declarative_base()
 
 class Processing(Base):
-    _tablename_ = 'processing'
+    __tablename__ = 'processing'
     processingid = Column(Integer, primary_key=True, autoincrement=True)
     customerid = Column(Integer, ForeignKey("customers.customerid"))
     submitted = Column(Time)
@@ -26,13 +26,13 @@ class Processing(Base):
 
 
 class ProcessTypes(Base):
-    _tablename_ = 'processtypes'
+    __tablename__ = 'processtypes'
     typeid = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(64))
 
 
 class Customers(Base):
-    _tablename_ = 'customers'
+    __tablename__ = 'customers'
     customerid = Column(Integer, primary_key=True, autoincrement=True)
     email = Column(String(64))
     name = Column(String(128))
