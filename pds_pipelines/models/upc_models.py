@@ -81,7 +81,7 @@ class Keywords(Base):
 
 class Meta(object):
     # Enforce compound primary key constraint
-    _table_args_ = (PrimaryKeyConstraint('upcid', 'typeid'),)
+    __table_args__ = (PrimaryKeyConstraint('upcid', 'typeid'),)
     upcid = Column(Integer)
 
     @declared_attr
@@ -140,7 +140,7 @@ class MetaBoolean(Meta, Base):
 
 class MetaBands(Base):
     __tablename__ = 'meta_bands'
-    _table_args_ = (PrimaryKeyConstraint('upcid', 'filter', 'centerwave'),)
+    __table_args__ = (PrimaryKeyConstraint('upcid', 'filter', 'centerwave'),)
     upcid = Column(Integer)
     # @TODO filter is a keyword, we should refactor this here and in db
     filter = Column(String(255))
