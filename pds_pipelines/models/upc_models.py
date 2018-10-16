@@ -32,7 +32,7 @@ def create_table(keytype, *args, **kwargs):
 
 
 class DataFiles(Base):
-    ___tablename___ = 'datafiles'
+    __tablename__ = 'datafiles'
     upcid = Column(Integer, primary_key=True, autoincrement = True)
     isisid = Column(String(256))
     productid = Column(String(256))
@@ -43,7 +43,7 @@ class DataFiles(Base):
 
 
 class Instruments(Base):
-    ___tablename___ = 'instruments_meta'
+    __tablename__ = 'instruments_meta'
     instrumentid = Column(Integer, primary_key=True, autoincrement = True)
     instrument = Column(String(256), nullable=False)
     displayname = Column(String(256))
@@ -54,7 +54,7 @@ class Instruments(Base):
 
 
 class Targets(Base):
-    ___tablename___ = 'targets_meta'
+    __tablename__ = 'targets_meta'
     targetid = Column(Integer, primary_key = True, autoincrement = True)
     naifid = Column(Integer)
     targetname = Column(String(20), nullable = False)
