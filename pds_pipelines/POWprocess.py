@@ -8,6 +8,8 @@ import logging
 import shutil
 import argparse
 
+import pds_pipelines.config
+
 from pysis import isis
 from pysis.exceptions import ProcessError
 
@@ -37,7 +39,8 @@ def main():
 
     #Key = sys.argv[-1]
 
-    workarea = '/scratch/pds_services/' + args.Key + '/'
+    #workarea = '/scratch/pds_services/' + args.Key + '/'
+    workarea = scratch + args.Key + '/'
 
     RQ_file = RedisQueue(Key + '_FileQueue')
     RQ_work = RedisQueue(Key + '_WorkQueue')
@@ -60,8 +63,10 @@ def main():
         basename = os.path.splitext(os.path.basename(jobFile))[0]
         logger = logging.getLogger(Key + '.' + basename)
         logger.setLevel(logging.INFO)
-
-        logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Service.log')
+        
+        # logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Service.log')
+        logFileHandle = logging.FileHandler(pds_log + '/Service.log')
+        
         formatter = logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
         logFileHandle.setFormatter(formatter)
