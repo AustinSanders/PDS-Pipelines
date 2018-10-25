@@ -6,6 +6,7 @@ import pvl
 import subprocess
 import logging
 import shutil
+import argparse
 
 from pysis import isis
 from pysis.exceptions import ProcessError
@@ -19,14 +20,24 @@ from pds_pipelines.Process import Process
 from pds_pipelines.Loggy import Loggy
 from pds_pipelines.SubLoggy import SubLoggy
 
+class Args:
+    def __init__(self):
+        pass
+
+    def parse_args(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('Key')
+        args = parser.parse_args()
+        self.Key = args.Key
 
 def main():
-
+    args = Args()
+    args.parse_args()
     #    pdb.set_trace()
 
-    Key = sys.argv[-1]
+    #Key = sys.argv[-1]
 
-    workarea = '/scratch/pds_services/' + Key + '/'
+    workarea = '/scratch/pds_services/' + args.Key + '/'
 
     RQ_file = RedisQueue(Key + '_FileQueue')
     RQ_work = RedisQueue(Key + '_WorkQueue')
