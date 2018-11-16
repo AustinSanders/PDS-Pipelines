@@ -5,6 +5,8 @@ import sys
 import subprocess
 import logging
 import shutil
+import argparse
+import pds_pipelines.config
 
 from pysis import isis
 from pysis.exceptions import ProcessError
@@ -21,14 +23,26 @@ from pds_pipelines.SubLoggy import *
 
 import pdb
 
+class Args:
+    def __init__(self):
+        pass
+
+    def parse_args(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('Key')
+        args = parser.parse_args()
+        self.Key = args.Key
 
 def main():
-
+    args = Args()
+    args.parse_args()
     #    pdb.set_trace()
 
-    Key = sys.argv[-1]
+    #Key = sys.argv[-1]
 
-    workarea = '/scratch/pds_services/' + Key + '/'
+
+    #workarea = '/scratch/pds_services/' + args.Key + '/'
+    workarea = scratch + args.Key + '/'
 
     RQ_file = RedisQueue(Key + '_FileQueue')
     RQ_work = RedisQueue(Key + '_WorkQueue')
@@ -51,7 +65,9 @@ def main():
         logger = logging.getLogger(Key + '.' + basename)
         logger.setLevel(logging.INFO)
 
-        logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Service.log')
+        #logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Service.log')
+        logFileHandle = logging.FileHandler(pds_log + '/Service.log')
+        
         formatter = logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
         logFileHandle.setFormatter(formatter)
