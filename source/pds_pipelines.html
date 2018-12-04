@@ -1,0 +1,1083 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pds_pipelines package &#8212; PDS-Pipelines  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="pds-pipelines-package">
+<h1>pds_pipelines package<a class="headerlink" href="#pds-pipelines-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pds_pipelines.models.html">pds_pipelines.models package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pds_pipelines.models.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pds_pipelines.models.html#module-pds_pipelines.models.clusterjobs_models">pds_pipelines.models.clusterjobs_models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pds_pipelines.models.html#module-pds_pipelines.models.pds_models">pds_pipelines.models.pds_models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pds_pipelines.models.html#pds-pipelines-models-upc-models-module">pds_pipelines.models.upc_models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pds_pipelines.models.html#module-pds_pipelines.models">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-batchdi-module">
+<h2>pds_pipelines.BatchDI module<a class="headerlink" href="#pds-pipelines-batchdi-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-checksumupdateprocess-module">
+<h2>pds_pipelines.ChecksumUpdateProcess module<a class="headerlink" href="#pds-pipelines-checksumupdateprocess-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-checksumupdatequeueing-module">
+<h2>pds_pipelines.ChecksumUpdateQueueing module<a class="headerlink" href="#pds-pipelines-checksumupdatequeueing-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-diprocess-module">
+<h2>pds_pipelines.DIprocess module<a class="headerlink" href="#pds-pipelines-diprocess-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-diqueueing-module">
+<h2>pds_pipelines.DIqueueing module<a class="headerlink" href="#pds-pipelines-diqueueing-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-finaljobber-module">
+<h2>pds_pipelines.FinalJobber module<a class="headerlink" href="#pds-pipelines-finaljobber-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-finddi-ready-module">
+<h2>pds_pipelines.FindDI_Ready module<a class="headerlink" href="#pds-pipelines-finddi-ready-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-pds_pipelines.HPCjob">
+<span id="pds-pipelines-hpcjob-module"></span><h2>pds_pipelines.HPCjob module<a class="headerlink" href="#module-pds_pipelines.HPCjob" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pds_pipelines.HPCjob.HPCjob">
+<em class="property">class </em><code class="descclassname">pds_pipelines.HPCjob.</code><code class="descname">HPCjob</code><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Object with attributes outlined below</p>
+<dl class="attribute">
+<dt id="pds_pipelines.HPCjob.HPCjob.jobstring">
+<code class="descname">jobstring</code><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.jobstring" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pds_pipelines.HPCjob.HPCjob.name">
+<code class="descname">name</code><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.name" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pds_pipelines.HPCjob.HPCjob.array">
+<code class="descname">array</code><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.array" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pds_pipelines.HPCjob.HPCjob.cmd">
+<code class="descname">cmd</code><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.cmd" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pds_pipelines.HPCjob.HPCjob.Sout">
+<code class="descname">Sout</code><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.Sout" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pds_pipelines.HPCjob.HPCjob.Serror">
+<code class="descname">Serror</code><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.Serror" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pds_pipelines.HPCjob.HPCjob.Wall">
+<code class="descname">Wall</code><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.Wall" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pds_pipelines.HPCjob.HPCjob.module">
+<code class="descname">module</code><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.module" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pds_pipelines.HPCjob.HPCjob.path">
+<code class="descname">path</code><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.path" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pds_pipelines.HPCjob.HPCjob.partition">
+<code class="descname">partition</code><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.partition" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pds_pipelines.HPCjob.HPCjob.memory">
+<code class="descname">memory</code><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.memory" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.HPCjob.HPCjob.MakeJobFile">
+<code class="descname">MakeJobFile</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.MakeJobFile" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.HPCjob.HPCjob.Run">
+<code class="descname">Run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.Run" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">result</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)">int</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.HPCjob.HPCjob.addPath">
+<code class="descname">addPath</code><span class="sig-paren">(</span><em>addpath</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.addPath" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>addpath</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.HPCjob.HPCjob.setCommand">
+<code class="descname">setCommand</code><span class="sig-paren">(</span><em>cmd</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.setCommand" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cmd</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.HPCjob.HPCjob.setJobArray">
+<code class="descname">setJobArray</code><span class="sig-paren">(</span><em>number</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.setJobArray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Concatenates strings</p>
+<p>Converts ‘number’ to a string an concatenates it with
+“#SBATCH –array=1-“</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>number</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.HPCjob.HPCjob.setJobName">
+<code class="descname">setJobName</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.setJobName" title="Permalink to this definition">¶</a></dt>
+<dd><p>Concatenates strings</p>
+<p>Adds ‘name’ to the string “#SBATCH -J “</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.HPCjob.HPCjob.setMemory">
+<code class="descname">setMemory</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.setMemory" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.HPCjob.HPCjob.setModule">
+<code class="descname">setModule</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.setModule" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.HPCjob.HPCjob.setPartition">
+<code class="descname">setPartition</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.setPartition" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.HPCjob.HPCjob.setStdError">
+<code class="descname">setStdError</code><span class="sig-paren">(</span><em>Efile</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.setStdError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Concatenates strings</p>
+<p>Concatenates “#SBATCH –error=” and ‘Efile’</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Efile</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.HPCjob.HPCjob.setStdOut">
+<code class="descname">setStdOut</code><span class="sig-paren">(</span><em>Ofile</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.setStdOut" title="Permalink to this definition">¶</a></dt>
+<dd><p>Concatenates strings</p>
+<p>Concatenates ‘Ofile’ and “#SBATCH –output=”</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Ofile</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.HPCjob.HPCjob.setWallClock">
+<code class="descname">setWallClock</code><span class="sig-paren">(</span><em>time</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.HPCjob.HPCjob.setWallClock" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="pds-pipelines-hpcjobber-module">
+<h2>pds_pipelines.HPCjobber module<a class="headerlink" href="#pds-pipelines-hpcjobber-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-ingestprocess-module">
+<h2>pds_pipelines.IngestProcess module<a class="headerlink" href="#pds-pipelines-ingestprocess-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-ingestqueueing-module">
+<h2>pds_pipelines.Ingestqueueing module<a class="headerlink" href="#pds-pipelines-ingestqueueing-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-linkartifacts-module">
+<h2>pds_pipelines.LinkArtifacts module<a class="headerlink" href="#pds-pipelines-linkartifacts-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-loggy-module">
+<h2>pds_pipelines.Loggy module<a class="headerlink" href="#pds-pipelines-loggy-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-loggytest-module">
+<h2>pds_pipelines.LoggyTEST module<a class="headerlink" href="#pds-pipelines-loggytest-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-mapprocess-module">
+<h2>pds_pipelines.MAPprocess module<a class="headerlink" href="#pds-pipelines-mapprocess-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-pds_pipelines.MakeMap">
+<span id="pds-pipelines-makemap-module"></span><h2>pds_pipelines.MakeMap module<a class="headerlink" href="#module-pds_pipelines.MakeMap" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pds_pipelines.MakeMap.MakeMap">
+<em class="property">class </em><code class="descclassname">pds_pipelines.MakeMap.</code><code class="descname">MakeMap</code><a class="headerlink" href="#pds_pipelines.MakeMap.MakeMap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="attribute">
+<dt id="pds_pipelines.MakeMap.MakeMap.mapDICT">
+<code class="descname">mapDICT</code><a class="headerlink" href="#pds_pipelines.MakeMap.MakeMap.mapDICT" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)">dict</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.MakeMap.MakeMap.CLat">
+<code class="descname">CLat</code><span class="sig-paren">(</span><em>clat</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.MakeMap.MakeMap.CLat" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>clat</strong> – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.MakeMap.MakeMap.CLon">
+<code class="descname">CLon</code><span class="sig-paren">(</span><em>clon</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.MakeMap.MakeMap.CLon" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>clon</strong> – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.MakeMap.MakeMap.ERadius">
+<code class="descname">ERadius</code><span class="sig-paren">(</span><em>ER</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.MakeMap.MakeMap.ERadius" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ER</strong> – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.MakeMap.MakeMap.FirstParallel">
+<code class="descname">FirstParallel</code><span class="sig-paren">(</span><em>firstParallel</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.MakeMap.MakeMap.FirstParallel" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>firstParallel</strong> – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.MakeMap.MakeMap.LatType">
+<code class="descname">LatType</code><span class="sig-paren">(</span><em>lattype</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.MakeMap.MakeMap.LatType" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>lattype</strong> – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.MakeMap.MakeMap.LonDirection">
+<code class="descname">LonDirection</code><span class="sig-paren">(</span><em>londir</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.MakeMap.MakeMap.LonDirection" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>londir</strong> – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.MakeMap.MakeMap.LonDomain">
+<code class="descname">LonDomain</code><span class="sig-paren">(</span><em>londom</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.MakeMap.MakeMap.LonDomain" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>londom</strong> – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.MakeMap.MakeMap.Map2File">
+<code class="descname">Map2File</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.MakeMap.MakeMap.Map2File" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.MakeMap.MakeMap.Map2JSON">
+<code class="descname">Map2JSON</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.MakeMap.MakeMap.Map2JSON" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">JSONout</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.MakeMap.MakeMap.Map2pvl">
+<code class="descname">Map2pvl</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.MakeMap.MakeMap.Map2pvl" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">mappvl</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.MakeMap.MakeMap.MaxLat">
+<code class="descname">MaxLat</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.MakeMap.MakeMap.MaxLat" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.MakeMap.MakeMap.MaxLon">
+<code class="descname">MaxLon</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.MakeMap.MakeMap.MaxLon" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.MakeMap.MakeMap.MinLat">
+<code class="descname">MinLat</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.MakeMap.MakeMap.MinLat" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.MakeMap.MakeMap.MinLon">
+<code class="descname">MinLon</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.MakeMap.MakeMap.MinLon" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.MakeMap.MakeMap.PRadius">
+<code class="descname">PRadius</code><span class="sig-paren">(</span><em>PR</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.MakeMap.MakeMap.PRadius" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>PR</strong> – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.MakeMap.MakeMap.PixelRes">
+<code class="descname">PixelRes</code><span class="sig-paren">(</span><em>res</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.MakeMap.MakeMap.PixelRes" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>res</strong> – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.MakeMap.MakeMap.Projection">
+<code class="descname">Projection</code><span class="sig-paren">(</span><em>proj</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.MakeMap.MakeMap.Projection" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>proj</strong> – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.MakeMap.MakeMap.SecondParallel">
+<code class="descname">SecondParallel</code><span class="sig-paren">(</span><em>secondParallel</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.MakeMap.MakeMap.SecondParallel" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>secondParallel</strong> – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.MakeMap.MakeMap.Target">
+<code class="descname">Target</code><span class="sig-paren">(</span><em>target</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.MakeMap.MakeMap.Target" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>target</strong> – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="pds-pipelines-pds-dbquery-module">
+<h2>pds_pipelines.PDS_DBquery module<a class="headerlink" href="#pds-pipelines-pds-dbquery-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-pds-dbsessions-module">
+<h2>pds_pipelines.PDS_DBsessions module<a class="headerlink" href="#pds-pipelines-pds-dbsessions-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-powprocess-module">
+<h2>pds_pipelines.POWprocess module<a class="headerlink" href="#pds-pipelines-powprocess-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-process-module">
+<h2>pds_pipelines.Process module<a class="headerlink" href="#pds-pipelines-process-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-recipe-module">
+<h2>pds_pipelines.Recipe module<a class="headerlink" href="#pds-pipelines-recipe-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-redishash-module">
+<h2>pds_pipelines.RedisHash module<a class="headerlink" href="#pds-pipelines-redishash-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-redislock-module">
+<h2>pds_pipelines.RedisLock module<a class="headerlink" href="#pds-pipelines-redislock-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-redisqueue-module">
+<h2>pds_pipelines.RedisQueue module<a class="headerlink" href="#pds-pipelines-redisqueue-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-servicefinal-module">
+<h2>pds_pipelines.ServiceFinal module<a class="headerlink" href="#pds-pipelines-servicefinal-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-servicejobber-module">
+<h2>pds_pipelines.Servicejobber module<a class="headerlink" href="#pds-pipelines-servicejobber-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-pds_pipelines.SubLoggy">
+<span id="pds-pipelines-subloggy-module"></span><h2>pds_pipelines.SubLoggy module<a class="headerlink" href="#module-pds_pipelines.SubLoggy" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pds_pipelines.SubLoggy.SubLoggy">
+<em class="property">class </em><code class="descclassname">pds_pipelines.SubLoggy.</code><code class="descname">SubLoggy</code><span class="sig-paren">(</span><em>process</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.SubLoggy.SubLoggy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>process</strong> – </td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="pds_pipelines.SubLoggy.SubLoggy.errorOut">
+<code class="descname">errorOut</code><span class="sig-paren">(</span><em>error</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.SubLoggy.SubLoggy.errorOut" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>error</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.SubLoggy.SubLoggy.getSLprocess">
+<code class="descname">getSLprocess</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.SubLoggy.SubLoggy.getSLprocess" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>self.PDict</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)">dict</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.SubLoggy.SubLoggy.setCommand">
+<code class="descname">setCommand</code><span class="sig-paren">(</span><em>cmd</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.SubLoggy.SubLoggy.setCommand" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cmd</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.SubLoggy.SubLoggy.setHelpLink">
+<code class="descname">setHelpLink</code><span class="sig-paren">(</span><em>Hlink</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.SubLoggy.SubLoggy.setHelpLink" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>Hlink</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pds_pipelines.SubLoggy.SubLoggy.setStatus">
+<code class="descname">setStatus</code><span class="sig-paren">(</span><em>stat</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.SubLoggy.SubLoggy.setStatus" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>stat</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="pds-pipelines-upc-db-module">
+<h2>pds_pipelines.UPC_DB module<a class="headerlink" href="#pds-pipelines-upc-db-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-upc-process-module">
+<h2>pds_pipelines.UPC_process module<a class="headerlink" href="#pds-pipelines-upc-process-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-pds_pipelines.UPCkeywords">
+<span id="pds-pipelines-upckeywords-module"></span><h2>pds_pipelines.UPCkeywords module<a class="headerlink" href="#module-pds_pipelines.UPCkeywords" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pds_pipelines.UPCkeywords.UPCkeywords">
+<em class="property">class </em><code class="descclassname">pds_pipelines.UPCkeywords.</code><code class="descname">UPCkeywords</code><span class="sig-paren">(</span><em>pvlfile</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.UPCkeywords.UPCkeywords" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="method">
+<dt id="pds_pipelines.UPCkeywords.UPCkeywords.getKeyword">
+<code class="descname">getKeyword</code><span class="sig-paren">(</span><em>keyword</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.UPCkeywords.UPCkeywords.getKeyword" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pds_pipelines.UPCkeywords.find_keyword">
+<code class="descclassname">pds_pipelines.UPCkeywords.</code><code class="descname">find_keyword</code><span class="sig-paren">(</span><em>obj</em>, <em>key</em>, <em>group=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.UPCkeywords.find_keyword" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="pds_pipelines.UPCkeywords.lower_keys">
+<code class="descclassname">pds_pipelines.UPCkeywords.</code><code class="descname">lower_keys</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.UPCkeywords.lower_keys" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="pds-pipelines-upcqueueing-module">
+<h2>pds_pipelines.UPCqueueing module<a class="headerlink" href="#pds-pipelines-upcqueueing-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-batchupc-module">
+<h2>pds_pipelines.batchUPC module<a class="headerlink" href="#pds-pipelines-batchupc-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-browse-process-module">
+<h2>pds_pipelines.browse_process module<a class="headerlink" href="#pds-pipelines-browse-process-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-browse-queueing-module">
+<h2>pds_pipelines.browse_queueing module<a class="headerlink" href="#pds-pipelines-browse-queueing-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-db-module">
+<h2>pds_pipelines.db module<a class="headerlink" href="#pds-pipelines-db-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-jobconfig-module">
+<h2>pds_pipelines.jobconfig module<a class="headerlink" href="#pds-pipelines-jobconfig-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-lock-queue-module">
+<h2>pds_pipelines.lock_queue module<a class="headerlink" href="#pds-pipelines-lock-queue-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-pds_pipelines.notify">
+<span id="pds-pipelines-notify-module"></span><h2>pds_pipelines.notify module<a class="headerlink" href="#module-pds_pipelines.notify" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="pds_pipelines.notify.notify_error">
+<code class="descclassname">pds_pipelines.notify.</code><code class="descname">notify_error</code><span class="sig-paren">(</span><em>server</em>, <em>session</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.notify.notify_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends an email notification that a process has failed.</p>
+<p>Sends an email notification to a user when their product has failed and
+they have not received a previous notification.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>server</strong> (<a class="reference external" href="https://docs.python.org/3/library/smtplib.html#smtplib.SMTP" title="(in Python v3.7)"><em>smtplib.SMTP</em></a>) – The SMTP server responsible for sending the message.</li>
+<li><strong>session</strong> (<em>sqlalchemy.session</em>) – The sqlalchemy session by which the database will be queried.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.7)">None</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pds_pipelines.notify.notify_finished">
+<code class="descclassname">pds_pipelines.notify.</code><code class="descname">notify_finished</code><span class="sig-paren">(</span><em>server</em>, <em>session</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.notify.notify_finished" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends an email notification when a user’s product is ready for download.</p>
+<p>Sends an email notification to a user when their product is marked ‘finished’ and
+they have not received a previous notification.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>server</strong> (<a class="reference external" href="https://docs.python.org/3/library/smtplib.html#smtplib.SMTP" title="(in Python v3.7)"><em>smtplib.SMTP</em></a>) – The SMTP server responsible for sending the message.</li>
+<li><strong>session</strong> (<em>sqlalchemy.session</em>) – The sqlalchemy session by which the database will be queried.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.7)">None</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pds_pipelines.notify.notify_upcoming_purge">
+<code class="descclassname">pds_pipelines.notify.</code><code class="descname">notify_upcoming_purge</code><span class="sig-paren">(</span><em>server</em>, <em>session</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.notify.notify_upcoming_purge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends an email notification that products will be deleted within 2 days.</p>
+<p>Sends an email notification to a user when their products are nearing expiration.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>server</strong> (<a class="reference external" href="https://docs.python.org/3/library/smtplib.html#smtplib.SMTP" title="(in Python v3.7)"><em>smtplib.SMTP</em></a>) – The SMTP server responsible for sending the message.</li>
+<li><strong>session</strong> (<em>sqlalchemy.session</em>) – The sqlalchemy session by which the database will be queried.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.7)">None</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pds_pipelines.notify.setup_smtp">
+<code class="descclassname">pds_pipelines.notify.</code><code class="descname">setup_smtp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.notify.setup_smtp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="pds-pipelines-notify-finished-module">
+<h2>pds_pipelines.notify_finished module<a class="headerlink" href="#pds-pipelines-notify-finished-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-notify-upcoming-purge-module">
+<h2>pds_pipelines.notify_upcoming_purge module<a class="headerlink" href="#pds-pipelines-notify-upcoming-purge-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-projectionbrowse-process-module">
+<h2>pds_pipelines.projectionbrowse_process module<a class="headerlink" href="#pds-pipelines-projectionbrowse-process-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-rm-expired-products-module">
+<h2>pds_pipelines.rm_expired_products module<a class="headerlink" href="#pds-pipelines-rm-expired-products-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-thumbnail-process-module">
+<h2>pds_pipelines.thumbnail_process module<a class="headerlink" href="#pds-pipelines-thumbnail-process-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pds-pipelines-thumbnail-queueing-module">
+<h2>pds_pipelines.thumbnail_queueing module<a class="headerlink" href="#pds-pipelines-thumbnail-queueing-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-pds_pipelines.xml2json">
+<span id="pds-pipelines-xml2json-module"></span><h2>pds_pipelines.xml2json module<a class="headerlink" href="#module-pds_pipelines.xml2json" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="pds_pipelines.xml2json.main">
+<code class="descclassname">pds_pipelines.xml2json.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.xml2json.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="pds_pipelines.xml2json.set_cal">
+<code class="descclassname">pds_pipelines.xml2json.</code><code class="descname">set_cal</code><span class="sig-paren">(</span><em>in_dict</em>, <em>out_dict</em>, <em>group_name</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.xml2json.set_cal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="pds_pipelines.xml2json.set_default_c2m">
+<code class="descclassname">pds_pipelines.xml2json.</code><code class="descname">set_default_c2m</code><span class="sig-paren">(</span><em>in_dict</em>, <em>out_dict</em>, <em>group_name</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.xml2json.set_default_c2m" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="pds_pipelines.xml2json.set_even_odd">
+<code class="descclassname">pds_pipelines.xml2json.</code><code class="descname">set_even_odd</code><span class="sig-paren">(</span><em>in_dict</em>, <em>out_dict</em>, <em>group_name</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.xml2json.set_even_odd" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="pds_pipelines.xml2json.set_i2s">
+<code class="descclassname">pds_pipelines.xml2json.</code><code class="descname">set_i2s</code><span class="sig-paren">(</span><em>in_dict</em>, <em>out_dict</em>, <em>group_name</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.xml2json.set_i2s" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="pds_pipelines.xml2json.set_instrument">
+<code class="descclassname">pds_pipelines.xml2json.</code><code class="descname">set_instrument</code><span class="sig-paren">(</span><em>in_dict</em>, <em>out_dict</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.xml2json.set_instrument" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="pds_pipelines.xml2json.set_pow">
+<code class="descclassname">pds_pipelines.xml2json.</code><code class="descname">set_pow</code><span class="sig-paren">(</span><em>in_dict</em>, <em>out_dict</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.xml2json.set_pow" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="pds_pipelines.xml2json.set_projected">
+<code class="descclassname">pds_pipelines.xml2json.</code><code class="descname">set_projected</code><span class="sig-paren">(</span><em>in_dict</em>, <em>out_dict</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.xml2json.set_projected" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="pds_pipelines.xml2json.set_reduce">
+<code class="descclassname">pds_pipelines.xml2json.</code><code class="descname">set_reduce</code><span class="sig-paren">(</span><em>in_dict</em>, <em>out_dict</em>, <em>group_name</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.xml2json.set_reduce" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="pds_pipelines.xml2json.set_thumbnail">
+<code class="descclassname">pds_pipelines.xml2json.</code><code class="descname">set_thumbnail</code><span class="sig-paren">(</span><em>in_dict</em>, <em>out_dict</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.xml2json.set_thumbnail" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="pds_pipelines.xml2json.set_upc">
+<code class="descclassname">pds_pipelines.xml2json.</code><code class="descname">set_upc</code><span class="sig-paren">(</span><em>in_dict</em>, <em>out_dict</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.xml2json.set_upc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="pds_pipelines.xml2json.writejson">
+<code class="descclassname">pds_pipelines.xml2json.</code><code class="descname">writejson</code><span class="sig-paren">(</span><em>out_file</em>, <em>out_dict</em><span class="sig-paren">)</span><a class="headerlink" href="#pds_pipelines.xml2json.writejson" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-pds_pipelines">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pds_pipelines" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">PDS-Pipelines</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Emilee Bovre.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="../_sources/source/pds_pipelines.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

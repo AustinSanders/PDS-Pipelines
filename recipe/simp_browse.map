@@ -1,7 +1,0 @@
-Group = Mapping
-  ProjectionName  = SimpleCylindrical
-  CenterLongitude = 0.0
-  LongitudeDomain = 180
-  PixelResolution = 60.0 <meters/pixel>
-End_Group
-End
