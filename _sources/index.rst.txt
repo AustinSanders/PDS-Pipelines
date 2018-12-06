@@ -10,3 +10,12 @@ Welcome to PDS-Pipelines's documentation!
    :maxdepth: 5
    :caption: Contents:
 
+.. automodule:: pds_pipelines
+   :members:
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
