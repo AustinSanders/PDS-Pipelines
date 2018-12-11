@@ -10,11 +10,12 @@ rdb = redis.StrictRedis(host=ri['host'], port=ri['port'], db=ri['db'])
 
 status = {}
 
-for key, value in redis_queues:
+for key, value in redis_queues.items():
     queue_name = '%s:%s' % (default_namespace, value)
     status[key] = rdb.llen(queue_name)
 
-for key, value in redis_keys:
+for key, value in redis_keys.items():
     status[key] = rdb.llen(value)
 
-json.dumps(status)
+# json.dumps(status)
+print (status)
