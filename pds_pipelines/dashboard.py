@@ -15,7 +15,6 @@ for key, value in redis_queues.items():
     status[key] = rdb.llen(queue_name)
 
 for key, value in redis_keys.items():
-    status[key] = rdb.llen(value)
+    status[key] = int(rdb.get(value).decode('utf-8'))
 
-# json.dumps(status)
-print (status)
+print (json.dumps(status))
