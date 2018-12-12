@@ -2,19 +2,15 @@
 
 import os
 import sys
-import pvl
 import subprocess
 import logging
 import shutil
-import argparse
-
-import pds_pipelines.config
+import pvl
 
 from pysis import isis
 from pysis.exceptions import ProcessError
 
-from pds_pipelines.config import lock_obj
-from pds_pipelines.RedisLock import RedisLock
+from pds_pipelines.config import lock_obj, scratch, pds_log
 from pds_pipelines.RedisQueue import RedisQueue
 from pds_pipelines.RedisLock import RedisLock
 from pds_pipelines.RedisHash import RedisHash
@@ -22,34 +18,20 @@ from pds_pipelines.Process import Process
 from pds_pipelines.Loggy import Loggy
 from pds_pipelines.SubLoggy import SubLoggy
 
-class Args:
-    def __init__(self):
-        pass
-
-    def parse_args(self):
-        parser = argparse.ArgumentParser()
-        parser.add_argument('Key')
-        args = parser.parse_args()
-        self.Key = args.Key
 
 def main():
-    args = Args()
-    args.parse_args()
-    #    pdb.set_trace()
+    key = sys.argv[-1]
 
-    #Key = sys.argv[-1]
+    workarea = scratch + key + '/'
 
-    #workarea = '/scratch/pds_services/' + args.Key + '/'
-    workarea = scratch + args.Key + '/'
-
-    RQ_file = RedisQueue(Key + '_FileQueue')
-    RQ_work = RedisQueue(Key + '_WorkQueue')
-    RQ_zip = RedisQueue(Key + '_ZIP')
-    RQ_loggy = RedisQueue(Key + '_loggy')
+    RQ_file = RedisQueue(key + '_FileQueue')
+    RQ_work = RedisQueue(key + '_WorkQueue')
+    RQ_zip = RedisQueue(key + '_ZIP')
+    RQ_loggy = RedisQueue(key + '_loggy')
     RQ_final = RedisQueue('FinalQueue')
-    RHash = RedisHash(Key + '_info')
-    RHerror = RedisHash(Key + '_error')
-    RQ_lock = Redislock(lock_obj)
+    RHash = RedisHash(key + '_info')
+    RHerror = RedisHash(key + '_error')
+    RQ_lock = RedisLock(lock_obj)
     RQ_lock.add({'POW':'1'})
 
     if int(RQ_file.QueueSize()) == 0 and RQ_lock.available('POW'):
@@ -57,16 +39,14 @@ def main():
     else:
         print(RQ_file.getQueueName())
         jobFile = RQ_file.Qfile2Qwork(
-            RQ_file.getQueueName(), RQ_work.getQueueName())
+            RQ_file.getQueueName(), RQ_work.getQueueName()).decode('utf-8')
 
         # Setup system logging
         basename = os.path.splitext(os.path.basename(jobFile))[0]
-        logger = logging.getLogger(Key + '.' + basename)
+        logger = logging.getLogger(key + '.' + basename)
         logger.setLevel(logging.INFO)
-        
-        # logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Service.log')
+
         logFileHandle = logging.FileHandler(pds_log + '/Service.log')
-        
         formatter = logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
         logFileHandle.setFormatter(formatter)
@@ -78,7 +58,7 @@ def main():
         loggyOBJ = Loggy(basename)
 
 
-        # File Naming 
+        # File Naming
         if '+' in jobFile:
             bandSplit = jobFile.split('+')
             inputFile = bandSplit[0]
@@ -90,7 +70,7 @@ def main():
         outfile = workarea + \
             os.path.splitext(os.path.basename(jobFile))[0] + '.output.cub'
 
-        RQ_recipe = RedisQueue(Key + '_recipe')
+        RQ_recipe = RedisQueue(key + '_recipe')
 
         status = 'success'
         for element in RQ_recipe.RecipeGet():
@@ -114,9 +94,9 @@ def main():
                         else:
                             continue
                     elif 'cubeatt-bit' in processOBJ.getProcessName():
-                        if RHash.OutBit() == 'unsignedbyte':
+                        if RHash.OutBit().decode('utf-8') == 'unsignedbyte':
                             temp_outfile = outfile + '+lsb+tile+attached+unsignedbyte+1:254'
-                        elif RHash.OutBit() == 'signedword':
+                        elif RHash.OutBit().decode('utf-8') == 'signedword':
                             temp_outfile = outfile + '+lsb+tile+attached+signedword+-32765:32765'
                         processOBJ.updateParameter('from_', infile)
                         processOBJ.updateParameter('to', temp_outfile)
@@ -156,7 +136,7 @@ def main():
                         processOBJ.updateParameter('from_', infile)
                         processOBJ.updateParameter('to', outfile)
 
-                        if RHash.getGRtype() == 'smart' or RHash.getGRtype() == 'fill':
+                        if RHash.getGRtype().decode('utf-8') == 'smart' or RHash.getGRtype().decode('utf-8') == 'fill':
                             subloggyOBJ = SubLoggy('cam2map')
                             camrangeOUT = workarea + basename + '_camrange.txt'
                             isis.camrange(from_=infile,
@@ -164,10 +144,10 @@ def main():
 
                             cam = pvl.load(camrangeOUT)
 
-                            if cam['UniversalGroundRange']['MaximumLatitude'] < float(RHash.getMinLat()) or \
-                               cam['UniversalGroundRange']['MinimumLatitude'] > float(RHash.getMaxLat()) or \
-                               cam['UniversalGroundRange']['MaximumLongitude'] < float(RHash.getMinLon()) or \
-                               cam['UniversalGroundRange']['MinimumLongitude'] > float(RHash.getMaxLon()):
+                            if cam['UniversalGroundRange']['MaximumLatitude'] < float(RHash.getMinLat().decode('utf-8')) or \
+                               cam['UniversalGroundRange']['MinimumLatitude'] > float(RHash.getMaxLat().decode('utf-8')) or \
+                               cam['UniversalGroundRange']['MaximumLongitude'] < float(RHash.getMinLon().decode('utf-8')) or \
+                               cam['UniversalGroundRange']['MinimumLongitude'] > float(RHash.getMaxLon().decode('utf-8')):
 
                                 status = 'error'
                                 eSTR = "Error Ground Range Outside Extent Range"
@@ -178,31 +158,31 @@ def main():
                                 loggyOBJ.AddProcess(subloggyOBJ.getSLprocess())
                                 break
 
-                            elif RHash.getGRtype() == 'smart':
-                                if cam['UniversalGroundRange']['MinimumLatitude'] > float(RHash.getMinLat()):
+                            elif RHash.getGRtype().decode('utf-8') == 'smart':
+                                if cam['UniversalGroundRange']['MinimumLatitude'] > float(RHash.getMinLat().decode('utf-8')):
                                     minlat = cam['UniversalGroundRange']['MinimumLatitude']
                                 else:
-                                    minlat = RHash.getMinLat()
+                                    minlat = RHash.getMinLat().decode('utf-8')
 
                                 if cam['UniversalGroundRange']['MaximumLatitude'] < float(RHash.getMaxLat()):
                                     maxlat = cam['UniversalGroundRange']['MaximumLatitude']
                                 else:
-                                    maxlat = RHash.getMaxLat()
+                                    maxlat = RHash.getMaxLat().decode('utf-8')
 
-                                if cam['UniversalGroundRange']['MinimumLongitude'] > float(RHash.getMinLon()):
+                                if cam['UniversalGroundRange']['MinimumLongitude'] > float(RHash.getMinLon()).decode('utf-8'):
                                     minlon = cam['UniversalGroundRange']['MinimumLongitude']
                                 else:
-                                    minlon = RHash.getMinLon()
+                                    minlon = RHash.getMinLon().decode('utf-8')
 
-                                if cam['UniversalGroundRange']['MaximumLongitude'] < float(RHash.getMaxLon()):
+                                if cam['UniversalGroundRange']['MaximumLongitude'] < float(RHash.getMaxLon().decode('utf-8')):
                                     maxlon = cam['UniversalGroundRange']['MaximumLongitude']
                                 else:
-                                    maxlon = RHash.getMaxLon()
-                            elif RHash.getGRtype() == 'fill':
-                                minlat = RHash.getMinLat()
-                                maxlat = RHash.getMaxLat()
-                                minlon = RHash.getMinLon()
-                                maxlon = RHash.getMaxLon()
+                                    maxlon = RHash.getMaxLon().decode('utf-8')
+                            elif RHash.getGRtype().decode('utf-8') == 'fill':
+                                minlat = RHash.getMinLat().decode('utf-8')
+                                maxlat = RHash.getMaxLat().decode('utf-8')
+                                minlon = RHash.getMinLon().decode('utf-8')
+                                maxlon = RHash.getMaxLon().decode('utf-8')
 
                             processOBJ.AddParameter('minlat', minlat)
                             processOBJ.AddParameter('maxlat', maxlat)
@@ -259,15 +239,16 @@ def main():
                         for key, value in v.items():
                             GDALcmd += ' ' + key + ' ' + value
 
-                    if RHash.Format() == 'GeoTiff-BigTiff':
+                    frmt = RHash.Format().decode('utf-8')
+                    if frmt == 'GeoTiff-BigTiff':
                         fileext = 'tif'
-                    elif RHash.Format() == 'GeoJPEG-2000':
+                    elif frmt == 'GeoJPEG-2000':
                         fileext = 'jp2'
-                    elif RHash.Format() == 'JPEG':
+                    elif frmt == 'JPEG':
                         fileext = 'jpg'
-                    elif RHash.Format() == 'PNG':
+                    elif frmt == 'PNG':
                         fileext = 'png'
-                    elif RHash.Format() == 'GIF':
+                    elif frmt == 'GIF':
                         fileext = 'gif'
 
                     logGDALcmd = GDALcmd + ' ' + basename + \
@@ -302,10 +283,10 @@ def main():
 
         if status == 'success':
 
-            if RHash.Format() == 'ISIS3':
+            if RHash.Format().decode('utf-8') == 'ISIS3':
                 finalfile = infile.replace('.input.cub', '_final.cub')
                 shutil.move(infile, finalfile)
-            if RHash.getStatus() != 'ERROR':
+            if RHash.getStatus().decode('utf-8') != 'ERROR':
                 RHash.Status('SUCCESS')
 
             try:
@@ -328,8 +309,8 @@ def main():
 
         if RQ_file.QueueSize() == 0 and RQ_work.QueueSize() == 0:
             try:
-                RQ_final.QueueAdd(Key)
-                logger.info('Key %s Added to Final Queue: Success', Key)
+                RQ_final.QueueAdd(key)
+                logger.info('Key %s Added to Final Queue: Success', key)
                 logger.info('Both Queues Empty: filequeue = %s  work queue = %s', str(
                     RQ_file.QueueSize()), str(RQ_work.QueueSize()))
                 logger.info('JOB Complete')

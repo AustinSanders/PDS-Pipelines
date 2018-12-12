@@ -446,13 +446,11 @@ class jobXML(object):
 
     def getBand(self):
         for info in self.root.iter('bands'):
-            #            for info2 in self.root.iter('bands'):
             testband = info.findall('.//bandfilter')
             print len(testband)
             for test in testband:
                 print "test"
                 print test.text
-#            return bandF
 
     def getFileListWB(self):
         """
@@ -522,15 +520,14 @@ def main():
     #    pdb.set_trace()
 
     DBQO = PDS_DBquery('JOBS')
-    Key = DBQO.jobKey()
-#    Key = '2d7379497fed4c092046b2a06f5471a5'
-    DBQO.setJobsQueued(Key)
+    key = DBQO.jobKey()
+    DBQO.setJobsQueued(key)
 
-#*************** Setup logging ******************
-    logger = logging.getLogger(Key)
+    # Set up logging
+    logger = logging.getLogger(key)
     logger.setLevel(logging.INFO)
 
-    logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Service.log')
+    logFileHandle = logging.FileHandler(pds_log + 'Service.log')
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
@@ -538,22 +535,20 @@ def main():
 
     logger.info('Starting Process')
 
-    xmlOBJ = jobXML(DBQO.jobXML4Key(Key))
+    xmlOBJ = jobXML(DBQO.jobXML4Key(key))
 
-# ********** Test if Directory exists and make it if not *******
-
-    directory = '/scratch/pds_services/' + Key
+    # Make directory if it doesn't exist
+    directory = scratch + key
     if not os.path.exists(directory):
         os.makedirs(directory)
 
     logger.info('Working Area: %s', directory)
 
 
-# ******************** Setup Redis Hash for ground range *********
-
-    RedisH = RedisHash(Key + '_info')
+    # Set up Redis Hash for ground range
+    RedisH = RedisHash(key + '_info')
     RedisH.RemoveAll()
-    RedisErrorH = RedisHash(Key + '_error')
+    RedisErrorH = RedisHash(key + '_error')
     RedisErrorH.RemoveAll()
     RedisH_DICT = {}
     RedisH_DICT['service'] = xmlOBJ.getProcess()
@@ -575,17 +570,17 @@ def main():
     else:
         logger.error('Redis info Hash Not Found')
 
-# ***end ground range **
+    # End ground range
 
-    RQ_recipe = RedisQueue(Key + '_recipe')
+    RQ_recipe = RedisQueue(key + '_recipe')
     RQ_recipe.RemoveAll()
-    RQ_file = RedisQueue(Key + '_FileQueue')
+    RQ_file = RedisQueue(key + '_FileQueue')
     RQ_file.RemoveAll()
-    RQ_WorkQueue = RedisQueue(Key + '_WorkQueue')
+    RQ_WorkQueue = RedisQueue(key + '_WorkQueue')
     RQ_WorkQueue.RemoveAll()
-    RQ_loggy = RedisQueue(Key + '_loggy')
+    RQ_loggy = RedisQueue(key + '_loggy')
     RQ_loggy.RemoveAll()
-    RQ_zip = RedisQueue(Key + '_ZIP')
+    RQ_zip = RedisQueue(key + '_ZIP')
     RQ_zip.RemoveAll()
 
     if xmlOBJ.getProcess() == 'POW':
@@ -595,30 +590,29 @@ def main():
 
     for List_file in fileList:
 
-        ######### Input and output file naming and path stuff ############
-
+        # Input and output file naming and path stuff
         if xmlOBJ.getProcess() == 'POW':
             if xmlOBJ.getInst() == 'THEMIS_IR':
                 Input_file = List_file.replace('odtie1_', 'odtir1_')
                 Input_file = Input_file.replace('xxedr', 'xxrdr')
                 Input_file = Input_file.replace('EDR.QUB', 'RDR.QUB')
                 Input_file = Input_file.replace(
-                    'http://pdsimage.wr.usgs.gov/Missions/', '/pds_san/PDS_Archive/')
+                    'http://pdsimage.wr.usgs.gov/Missions/', archive_base)
             elif xmlOBJ.getInst() == 'ISSNA':
                 Input_file = List_file.replace('.IMG', '.LBL')
                 Input_file = Input_file.replace(
-                    'http://pdsimage.wr.usgs.gov/Missions/', '/pds_san/PDS_Archive/')
+                    'http://pdsimage.wr.usgs.gov/Missions/', archive_base)
             elif xmlOBJ.getInst() == 'ISSWA':
                 Input_file = List_file.replace('.IMG', '.LBL')
                 Input_file = Input_file.replace(
-                    'http://pdsimage.wr.usgs.gov/Missions/', '/pds_san/PDS_Archive/')
+                    'http://pdsimage.wr.usgs.gov/Missions/', archive_base)
             elif xmlOBJ.getInst() == 'SOLID STATE IMAGING SYSTEM':
                 Input_file = List_file.replace('.img', '.lbl')
                 Input_file = Input_file.replace(
-                    'http://pdsimage.wr.usgs.gov/Missions/', '/pds_san/PDS_Archive/')
+                    'http://pdsimage.wr.usgs.gov/Missions/', archive_base)
             else:
                 Input_file = List_file.replace(
-                    'http://pdsimage.wr.usgs.gov/Missions/', '/pds_san/PDS_Archive/')
+                    'http://pdsimage.wr.usgs.gov/Missions/', archive_base)
 
         elif xmlOBJ.getProcess() == 'MAP2':
             Input_file = List_file.replace('file://pds_san', '/pds_san')
@@ -629,7 +623,7 @@ def main():
             else:
                 tempFile = Input_file
             label = pvl.load(tempFile)
-#*********Output final file naming **************
+    # Output final file naming
             Tbasename = os.path.splitext(os.path.basename(tempFile))[0]
             splitBase = Tbasename.split('_')
 
@@ -663,7 +657,7 @@ def main():
     RedisH.FileCount(RQ_file.QueueSize())
     logger.info('Count of Files Queue: %s', str(RQ_file.QueueSize()))
 
-# ************* Map Template Stuff ******************
+    # Map Template Stuff
     logger.info('Making Map File')
     mapOBJ = MakeMap()
 
@@ -708,7 +702,7 @@ def main():
 
     mapOBJ.Map2pvl()
 
-    MAPfile = directory + "/" + Key + '.map'
+    MAPfile = directory + "/" + key + '.map'
     mapOBJ.Map2File(MAPfile)
 
     try:
@@ -718,18 +712,17 @@ def main():
     except IOError as e:
         logger.error('Map File %s Not Found', MAPfile)
 
-# ** End Map Template Stuff **
+    # ** End Map Template Stuff **
 
 
-# *************************************************
     logger.info('Building Recipe')
     recipeOBJ = Recipe()
     if xmlOBJ.getProcess() == 'POW':
         recipeOBJ.AddJsonFile(recipe_dict[xmlOBJ.getInst()])
     elif xmlOBJ.getProcess() == 'MAP2':
         recipeOBJ.AddJsonFile(recipe_dict['MAP'])
-# ************** Test for stretch and add to recipe **********************
-# if MAP2 and 8 or 16 bit run stretch to set range
+    # Test for stretch and add to recipe
+    # if MAP2 and 8 or 16 bit run stretch to set range
 
     if xmlOBJ.getOutBit() == 'input':
         testBitType = str(label['IsisCube']['Core']['Pixels']['Type']).upper()
@@ -801,7 +794,7 @@ def main():
         recipeOBJ.AddProcess(STRprocessOBJ.getProcess())
 
 
-# ************* Test for output bit type and add to recipe *************
+    # Test for output bit type and add to recipe
     if xmlOBJ.getProcess() == 'POW':
         if xmlOBJ.getOutBit().upper() == 'UNSIGNEDBYTE' or xmlOBJ.getOutBit().upper() == 'SIGNEDWORD':
             CAprocessOBJ = Process()
@@ -819,7 +812,7 @@ def main():
                     CAprocessOBJ.AddParameter('to', 'value')
                     recipeOBJ.AddProcess(CAprocessOBJ.getProcess())
 
-# **************** Add Grid(MAP2) *************
+    # Add Grid(MAP2)
     if xmlOBJ.getGridInterval() is not None:
         GprocessOBJ = Process()
         GprocessOBJ.newProcess('grid')
@@ -832,8 +825,8 @@ def main():
         GprocessOBJ.AddParameter('linewidth', '3')
         recipeOBJ.AddProcess(GprocessOBJ.getProcess())
 
-# ********OUTPUT FORMAT ***************
-# ************* Test for GDAL and add to recipe *************************
+    # OUTPUT FORMAT
+    # Test for GDAL and add to recipe
     Oformat = xmlOBJ.getOutFormat()
     if Oformat == 'GeoTiff-BigTiff' or Oformat == 'GeoJPEG-2000' or Oformat == 'JPEG' or Oformat == 'PNG':
         if Oformat == 'GeoJPEG-2000':
@@ -841,7 +834,6 @@ def main():
         if Oformat == 'GeoTiff-BigTiff':
             Oformat = 'GTiff'
         GDALprocessOBJ = Process()
-#        GDALprocessOBJ.newProcess('/usgs/dev/contrib/bin/FWTools-linux-x86_64-3.0.3/bin_safe/gdal_translate')
         GDALprocessOBJ.newProcess('/usgs/apps/anaconda/bin/gdal_translate')
         if xmlOBJ.getOutBit() != 'input':
             GDALprocessOBJ.AddParameter(
@@ -853,7 +845,7 @@ def main():
                 '-co', GDALprocessOBJ.GDAL_Creation(Oformat))
 
         recipeOBJ.AddProcess(GDALprocessOBJ.getProcess())
-# **************** set up pds2isis and add to recipe
+    # set up pds2isis and add to recipe
     elif Oformat == 'PDS':
         pdsProcessOBJ = Process()
         pdsProcessOBJ.newProcess('isis2pds')
@@ -905,15 +897,13 @@ def main():
         except Exception as e:
             logger.warn('Recipe Element NOT Added to Redis: %s', item)
 
-# ** *************** HPC job stuff ***********************
+    # HPC job stuff
     logger.info('HPC Cluster job Submission Starting')
     jobOBJ = HPCjob()
-    jobOBJ.setJobName(Key + '_Service')
-    jobOBJ.setStdOut('/usgs/cdev/PDS/output/' + Key + '_%A_%a.out')
-    jobOBJ.setStdError('/usgs/cdev/PDS/output/' + Key + '_%A_%a.err')
+    jobOBJ.setJobName(key + '_Service')
+    jobOBJ.setStdOut('/usgs/cdev/PDS/output/' + key + '_%A_%a.out')
+    jobOBJ.setStdError('/usgs/cdev/PDS/output/' + key + '_%A_%a.err')
     jobOBJ.setWallClock('24:00:00')
-#    jobOBJ.setMemory('8192')
-#    jobOBJ.setMemory('16384')
     jobOBJ.setMemory('24576')
     jobOBJ.setPartition('pds')
     JAsize = RQ_file.QueueSize()
@@ -923,14 +913,14 @@ def main():
     jobOBJ.addPath('/usgs/apps/anaconda/bin')
 
     if xmlOBJ.getProcess() == 'POW':
-        cmd = '/usgs/cdev/PDS/bin/POWprocess.py ' + Key
+        cmd = '/usgs/cdev/PDS/bin/POWprocess.py ' + key
     elif xmlOBJ.getProcess() == 'MAP2':
-        cmd = '/usgs/cdev/PDS/bin/MAPprocess.py ' + Key
+        cmd = '/usgs/cdev/PDS/bin/MAPprocess.py ' + key
 
     logger.info('HPC Command: %s', cmd)
     jobOBJ.setCommand(cmd)
 
-    SBfile = directory + '/' + Key + '.sbatch'
+    SBfile = directory + '/' + key + '.sbatch'
     jobOBJ.MakeJobFile(SBfile)
 
     try:
@@ -943,7 +933,7 @@ def main():
     try:
         jobOBJ.Run()
         logger.info('Job Submission to HPC: Success')
-        DBQO.setJobsStarted(Key)
+        DBQO.setJobsStarted(key)
     except IOError as e:
         logger.error('Jobs NOT Submitted to HPC')
 
