@@ -5,6 +5,7 @@ import sys
 import pvl
 import lxml.etree as ET
 import logging
+import argparse
 
 from pds_pipelines.PDS_DBquery import PDS_DBquery
 from pds_pipelines.RedisQueue import RedisQueue
@@ -13,7 +14,7 @@ from pds_pipelines.Recipe import Recipe
 from pds_pipelines.Process import Process
 from pds_pipelines.MakeMap import MakeMap
 from pds_pipelines.HPCjob import HPCjob
-from pds_pipelines.config import recipe_dict
+from pds_pipelines.config import recipe_base, pds_log, scratch, archive_base
 
 
 class jobXML(object):
@@ -447,10 +448,10 @@ class jobXML(object):
     def getBand(self):
         for info in self.root.iter('bands'):
             testband = info.findall('.//bandfilter')
-            print len(testband)
+            print(len(testband))
             for test in testband:
-                print "test"
-                print test.text
+                print("test")
+                print(test.text)
 
     def getFileListWB(self):
         """
@@ -515,13 +516,24 @@ class jobXML(object):
         return listArray
 
 
+class Args(object):
+
+    def __init__(self):
+        pass
+
+    def parse_args(self):
+        parser = argparse.ArgumentParser(description='Service job manager')
+        parser.add_argument('--key',
+                            '-k',
+                            dest='key',
+                            help="Target key -- if blank, process all elements in queue")
+        args = parser.parse_args()
+        self.key = args.key
+
 def main():
-
-    #    pdb.set_trace()
-
-    DBQO = PDS_DBquery('JOBS')
-    key = DBQO.jobKey()
-    DBQO.setJobsQueued(key)
+    args = Args()
+    args.parse_args()
+    key = args.key
 
     # Set up logging
     logger = logging.getLogger(key)
@@ -532,6 +544,20 @@ def main():
         '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
     logger.addHandler(logFileHandle)
+
+    # Connect to database and access 'jobs' table
+    DBQO = PDS_DBquery('JOBS')
+    if key is None:
+        # If no key is specified, grab the first key
+        key = DBQO.jobKey()
+    try:
+        # Set the 'queued' column to current time i.e. prep for processing
+        DBQO.setJobsQueued(key)
+        print("Wow this worked for {}?".format(key))
+    except KeyError as e:
+        logger.error('%s', e)
+        exit(1)
+
 
     logger.info('Starting Process')
 
@@ -714,13 +740,12 @@ def main():
 
     # ** End Map Template Stuff **
 
-
     logger.info('Building Recipe')
     recipeOBJ = Recipe()
     if xmlOBJ.getProcess() == 'POW':
-        recipeOBJ.AddJsonFile(recipe_dict[xmlOBJ.getInst()])
+        recipeOBJ.AddJsonFile(recipe_base + xmlOBJ.getInst().decode('utf-8') + '.json', "pow")
     elif xmlOBJ.getProcess() == 'MAP2':
-        recipeOBJ.AddJsonFile(recipe_dict['MAP'])
+        recipeOBJ.AddJsonFile(recipe_base + "map2_process.json", "map")
     # Test for stretch and add to recipe
     # if MAP2 and 8 or 16 bit run stretch to set range
 

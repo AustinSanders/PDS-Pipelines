@@ -28,6 +28,7 @@ class PDS_DBquery(PDS_DBsessions):
         for key in queryOBJ:
             return key
 
+
     def jobXML4Key(self, key):
         """
         Parameters
@@ -41,13 +42,17 @@ class PDS_DBquery(PDS_DBsessions):
         """
         queryOBJ = self.session.query(self.processingTAB.xml).filter(
             self.processingTAB.key == key).first()
-        return queryOBJ.xml
+        try:
+            return queryOBJ.xml
+        except AttributeError:
+            raise KeyError("Key {} not found in jobs database".format(key))
 
-    def setJobsQueued(self, inkey):
+
+    def setJobsQueued(self, key):
         """
         Parameters
         ----------
-        inkey
+        key
 
         Returns
         -------
@@ -57,18 +62,18 @@ class PDS_DBquery(PDS_DBsessions):
         date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
         try:
             queryOBJ = self.session.query(self.processingTAB).filter(
-                self.processingTAB.key == inkey).one()
+                self.processingTAB.key == key).first()
             queryOBJ.queued = date
             self.session.commit()
-            return 'Success'
-        except:
-            return 'Error'
+            return date
+        except AttributeError:
+            raise KeyError("Key {} not found in jobs database".format(key))
 
-    def setJobsStarted(self, inkey):
+    def setJobsStarted(self, key):
         """
         Parameters
         ----------
-        inkey
+        key
 
         Returns
         -------
@@ -78,18 +83,18 @@ class PDS_DBquery(PDS_DBsessions):
         date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
         try:
             queryOBJ = self.session.query(self.processingTAB).filter(
-                self.processingTAB.key == inkey).one()
+                self.processingTAB.key == key).first()
             queryOBJ.started = date
             self.session.commit()
-            return 'Success'
-        except:
-            return 'Error'
+            return date
+        except AttributeError:
+            raise KeyError("Key {} not found in jobs database".format(key))
 
-    def setJobsFinished(self, inkey):
+    def setJobsFinished(self, key):
         """
         Parameters
         ----------
-        inkey
+        key
 
         Reurns
         ------
@@ -99,7 +104,7 @@ class PDS_DBquery(PDS_DBsessions):
         date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
         try:
             queryOBJ = self.session.query(self.processingTAB).filter(
-                self.processingTAB.key == inkey).one()
+                self.processingTAB.key == key).first()
             queryOBJ.finished = date
             self.session.commit()
             return 'Success'
@@ -118,11 +123,7 @@ class PDS_DBquery(PDS_DBsessions):
         str
             Success is succesful, Error otherwise
         """
-        try:
-            queryOBJ = self.session.query(self.processingTAB).filter(
-                self.processingTAB.key == key).one()
-            queryOBJ.error = errorxml
-            self.session.commit()
-            return 'Success'
-        except:
-            return 'Error'
+        queryOBJ = self.session.query(self.processingTAB).filter(
+            self.processingTAB.key == key).first()
+        queryOBJ.error = errorxml
+        self.session.commit()

@@ -9,6 +9,7 @@ import pytz
 import sqlalchemy
 from sqlalchemy import *
 from sqlalchemy.orm.util import *
+from sqlalchemy.ext.automap import automap_base
 
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files, Archives
@@ -24,10 +25,10 @@ class PDS_DBsessions(object):
         database : str
         """
         if database == "JOBS":
-            self.session, _ =  db_connect('clusterjob_prd')
+            self.session, self.engine =  db_connect('clusterjob_prd')
             DBsession = self.session
             Base = automap_base()
-            Base.prepare(engine, reflect=True)
+            Base.prepare(self.engine, reflect=True)
             self.processingTAB = Base.classes.processing
         elif database == "DI":
             base = automap_base()
