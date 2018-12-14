@@ -944,10 +944,12 @@ def main():
 
     jobOBJ.addPath('/usgs/apps/anaconda/bin')
 
+    # Whether or not we use the default namespace, this guarantees that the POW/MAP queues will match the namespace
+    #  used in the job manager.
     if xmlOBJ.getProcess() == 'POW':
-        cmd = '/usgs/cdev/PDS/bin/POWprocess.py ' + key
+        cmd = "/usgs/cdev/PDS/bin/POWprocess.py -k {} -n {}".format(key, namespace)
     elif xmlOBJ.getProcess() == 'MAP2':
-        cmd = '/usgs/cdev/PDS/bin/MAPprocess.py ' + key
+        cmd = "/usgs/cdev/PDS/bin/MAPprocess.py -k {} -n {}".format(key, namespace)
 
     logger.info('HPC Command: %s', cmd)
     jobOBJ.setCommand(cmd)

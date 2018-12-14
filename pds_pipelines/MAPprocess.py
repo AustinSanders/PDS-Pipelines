@@ -10,7 +10,7 @@ import argparse
 from pysis import isis
 from pysis.exceptions import ProcessError
 
-from pds_pipelines.config import lock_obj, scratch, pds_log
+from pds_pipelines.config import lock_obj, scratch, pds_log, default_namespace
 from pds_pipelines.RedisQueue import RedisQueue
 from pds_pipelines.RedisLock import RedisLock
 from pds_pipelines.RedisHash import RedisHash
@@ -25,24 +25,34 @@ class Args(object):
 
     def parse_args(self):
         parser = argparse.ArgumentParser()
-        parser.add_argument('key')
+        parser.add_argument('--key',
+                            '-k',
+                            dest='key',
+                            help="Target key -- if blank, process first element in queue")
+        parser.add_argument('--namespace',
+                            '-n',
+                            dest='namespace',
+                            help="Queue namespace")
         args = parser.parse_args()
         self.key = args.key
+        self.namespace = args.namespace
 
 
 def main():
     args = Args()
     args.parse_args()
     key = args.key
+    namespace = args.namespace
+
+    if namespace is None:
+        namespace is default_namespace
 
     workarea = scratch + args.key + '/'
-
-
-    RQ_file = RedisQueue(key + '_FileQueue')
-    RQ_work = RedisQueue(key + '_WorkQueue')
-    RQ_zip = RedisQueue(key + '_ZIP')
-    RQ_loggy = RedisQueue(key + '_loggy')
-    RQ_final = RedisQueue('FinalQueue')
+    RQ_file = RedisQueue(key + '_FileQueue', namespace)
+    RQ_work = RedisQueue(key + '_WorkQueue', namespace)
+    RQ_zip = RedisQueue(key + '_ZIP', namespace)
+    RQ_loggy = RedisQueue(key + '_loggy', namespace)
+    RQ_final = RedisQueue('FinalQueue', namespace)
     RHash = RedisHash(key + '_info')
     RHerror = RedisHash(key + '_error')
     RQ_lock = RedisLock(lock_obj)
