@@ -566,7 +566,6 @@ def main():
         logger.error('%s', e)
         exit(1)
 
-
     logger.info('Starting Process')
 
     xmlOBJ = jobXML(DBQO.jobXML4Key(key))
