@@ -14,7 +14,7 @@ from pds_pipelines.Recipe import Recipe
 from pds_pipelines.Process import Process
 from pds_pipelines.MakeMap import MakeMap
 from pds_pipelines.HPCjob import HPCjob
-from pds_pipelines.config import recipe_base, pds_log, scratch, archive_base
+from pds_pipelines.config import recipe_base, pds_log, scratch, archive_base, default_namespace
 
 
 class jobXML(object):
@@ -526,14 +526,23 @@ class Args(object):
         parser.add_argument('--key',
                             '-k',
                             dest='key',
-                            help="Target key -- if blank, process all elements in queue")
+                            help="Target key -- if blank, process first element in queue")
+        parser.add_argument('--namespace',
+                            '-n',
+                            dest='namespace',
+                            help="Queue namespace")
         args = parser.parse_args()
         self.key = args.key
+        self.namespace = args.namespace
 
 def main():
     args = Args()
     args.parse_args()
     key = args.key
+    namespace = args.namespace
+
+    if namespace is None:
+        namespace = default_namespace
 
     # Set up logging
     logger = logging.getLogger(key)
@@ -553,7 +562,6 @@ def main():
     try:
         # Set the 'queued' column to current time i.e. prep for processing
         DBQO.setJobsQueued(key)
-        print("Wow this worked for {}?".format(key))
     except KeyError as e:
         logger.error('%s', e)
         exit(1)
@@ -598,15 +606,15 @@ def main():
 
     # End ground range
 
-    RQ_recipe = RedisQueue(key + '_recipe')
+    RQ_recipe = RedisQueue(key + '_recipe', namespace)
     RQ_recipe.RemoveAll()
-    RQ_file = RedisQueue(key + '_FileQueue')
+    RQ_file = RedisQueue(key + '_FileQueue', namespace)
     RQ_file.RemoveAll()
-    RQ_WorkQueue = RedisQueue(key + '_WorkQueue')
+    RQ_WorkQueue = RedisQueue(key + '_WorkQueue', namespace)
     RQ_WorkQueue.RemoveAll()
-    RQ_loggy = RedisQueue(key + '_loggy')
+    RQ_loggy = RedisQueue(key + '_loggy', namespace)
     RQ_loggy.RemoveAll()
-    RQ_zip = RedisQueue(key + '_ZIP')
+    RQ_zip = RedisQueue(key + '_ZIP', namespace)
     RQ_zip.RemoveAll()
 
     if xmlOBJ.getProcess() == 'POW':
