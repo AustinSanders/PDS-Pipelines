@@ -14,7 +14,7 @@ from pds_pipelines.Recipe import Recipe
 from pds_pipelines.Process import Process
 from pds_pipelines.MakeMap import MakeMap
 from pds_pipelines.HPCjob import HPCjob
-from pds_pipelines.config import recipe_base, pds_log, scratch, archive_base, default_namespace
+from pds_pipelines.config import recipe_base, pds_log, scratch, archive_base, default_namespace, slurm_log, cmd_dir
 
 
 class jobXML(object):
@@ -26,7 +26,7 @@ class jobXML(object):
         xml
         """
 
-        self.root = ET.fromstring(str(xml))
+        self.root = ET.fromstring(xml.encode())
 
     def getInst(self):
         """
@@ -39,6 +39,11 @@ class jobXML(object):
             inst = info.find('.//instrument').text
             return inst
 
+    def getCleanName(self):
+        for info in self.root.findall('.//Process'):
+            name = info.find('.//cleanname').text
+            return name
+            
     def getProcess(self):
         """
         Returns
@@ -750,7 +755,8 @@ def main():
     logger.info('Building Recipe')
     recipeOBJ = Recipe()
     if xmlOBJ.getProcess() == 'POW':
-        recipeOBJ.AddJsonFile(recipe_base + xmlOBJ.getInst().decode('utf-8') + '.json', "pow")
+        # @TODO fix XML instrument naming convention
+        recipeOBJ.AddJsonFile(recipe_base + xmlOBJ.getCleanName() + '.json', "pow")
     elif xmlOBJ.getProcess() == 'MAP2':
         recipeOBJ.AddJsonFile(recipe_base + "map2_process.json", "map")
     # Test for stretch and add to recipe
@@ -933,8 +939,8 @@ def main():
     logger.info('HPC Cluster job Submission Starting')
     jobOBJ = HPCjob()
     jobOBJ.setJobName(key + '_Service')
-    jobOBJ.setStdOut('/usgs/cdev/PDS/output/' + key + '_%A_%a.out')
-    jobOBJ.setStdError('/usgs/cdev/PDS/output/' + key + '_%A_%a.err')
+    jobOBJ.setStdOut(slurm_log + key + '_%A_%a.out')
+    jobOBJ.setStdError(slurm_log + key + '_%A_%a.err')
     jobOBJ.setWallClock('24:00:00')
     jobOBJ.setMemory('24576')
     jobOBJ.setPartition('pds')
@@ -942,14 +948,15 @@ def main():
     jobOBJ.setJobArray(JAsize)
     logger.info('Job Array Size : %s', str(JAsize))
 
-    jobOBJ.addPath('/usgs/apps/anaconda/bin')
+    # @TODO replace with source activate <env>
+    #jobOBJ.addPath('/usgs/apps/anaconda/bin')
 
     # Whether or not we use the default namespace, this guarantees that the POW/MAP queues will match the namespace
     #  used in the job manager.
     if xmlOBJ.getProcess() == 'POW':
-        cmd = "/usgs/cdev/PDS/bin/POWprocess.py -k {} -n {}".format(key, namespace)
+        cmd = cmd_dir + "POWprocess.py -k {} -n {}".format(key, namespace)
     elif xmlOBJ.getProcess() == 'MAP2':
-        cmd = "/usgs/cdev/PDS/bin/MAPprocess.py -k {} -n {}".format(key, namespace)
+        cmd = cmd_dir + "MAPprocess.py -k {} -n {}".format(key, namespace)
 
     logger.info('HPC Command: %s', cmd)
     jobOBJ.setCommand(cmd)

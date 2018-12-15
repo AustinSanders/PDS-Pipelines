@@ -32,9 +32,9 @@ class Args(object):
                             help='Target key')
         parser.add_argument('--namespace',
                             '-n',
-                            dest='key',
+                            dest='namespace',
                             help='Target key')
-        args = parse.parse_args()
+        args = parser.parse_args()
         self.key = args.key
         self.namespace = args.namespace
 
@@ -118,9 +118,9 @@ def main():
                         else:
                             continue
                     elif 'cubeatt-bit' in processOBJ.getProcessName():
-                        if RHash.OutBit().decode('utf-8') == 'unsignedbyte':
+                        if RHash.OutBit() == 'unsignedbyte':
                             temp_outfile = outfile + '+lsb+tile+attached+unsignedbyte+1:254'
-                        elif RHash.OutBit().decode('utf-8') == 'signedword':
+                        elif RHash.OutBit() == 'signedword':
                             temp_outfile = outfile + '+lsb+tile+attached+signedword+-32765:32765'
                         processOBJ.updateParameter('from_', infile)
                         processOBJ.updateParameter('to', temp_outfile)
@@ -157,10 +157,10 @@ def main():
                             processOBJ.updateParameter('from_', infile)
                             processOBJ.updateParameter('to', outfile)
                     elif 'cam2map' in processOBJ.getProcessName():
-                        processOBJ.updateParameter('from_', infile)
+                        processOBJ.updateParameter('from', infile)
                         processOBJ.updateParameter('to', outfile)
 
-                        if RHash.getGRtype().decode('utf-8') == 'smart' or RHash.getGRtype().decode('utf-8') == 'fill':
+                        if RHash.getGRtype() == 'smart' or RHash.getGRtype() == 'fill':
                             subloggyOBJ = SubLoggy('cam2map')
                             camrangeOUT = workarea + basename + '_camrange.txt'
                             isis.camrange(from_=infile,
@@ -168,10 +168,10 @@ def main():
 
                             cam = pvl.load(camrangeOUT)
 
-                            if cam['UniversalGroundRange']['MaximumLatitude'] < float(RHash.getMinLat().decode('utf-8')) or \
-                               cam['UniversalGroundRange']['MinimumLatitude'] > float(RHash.getMaxLat().decode('utf-8')) or \
-                               cam['UniversalGroundRange']['MaximumLongitude'] < float(RHash.getMinLon().decode('utf-8')) or \
-                               cam['UniversalGroundRange']['MinimumLongitude'] > float(RHash.getMaxLon().decode('utf-8')):
+                            if cam['UniversalGroundRange']['MaximumLatitude'] < float(RHash.getMinLat()) or \
+                               cam['UniversalGroundRange']['MinimumLatitude'] > float(RHash.getMaxLat()) or \
+                               cam['UniversalGroundRange']['MaximumLongitude'] < float(RHash.getMinLon()) or \
+                               cam['UniversalGroundRange']['MinimumLongitude'] > float(RHash.getMaxLon()):
 
                                 status = 'error'
                                 eSTR = "Error Ground Range Outside Extent Range"
@@ -182,38 +182,38 @@ def main():
                                 loggyOBJ.AddProcess(subloggyOBJ.getSLprocess())
                                 break
 
-                            elif RHash.getGRtype().decode('utf-8') == 'smart':
-                                if cam['UniversalGroundRange']['MinimumLatitude'] > float(RHash.getMinLat().decode('utf-8')):
+                            elif RHash.getGRtype() == 'smart':
+                                if cam['UniversalGroundRange']['MinimumLatitude'] > float(RHash.getMinLat()):
                                     minlat = cam['UniversalGroundRange']['MinimumLatitude']
                                 else:
-                                    minlat = RHash.getMinLat().decode('utf-8')
+                                    minlat = RHash.getMinLat()
 
                                 if cam['UniversalGroundRange']['MaximumLatitude'] < float(RHash.getMaxLat()):
                                     maxlat = cam['UniversalGroundRange']['MaximumLatitude']
                                 else:
-                                    maxlat = RHash.getMaxLat().decode('utf-8')
+                                    maxlat = RHash.getMaxLat()
 
-                                if cam['UniversalGroundRange']['MinimumLongitude'] > float(RHash.getMinLon()).decode('utf-8'):
+                                if cam['UniversalGroundRange']['MinimumLongitude'] > float(RHash.getMinLon()):
                                     minlon = cam['UniversalGroundRange']['MinimumLongitude']
                                 else:
-                                    minlon = RHash.getMinLon().decode('utf-8')
+                                    minlon = RHash.getMinLon()
 
-                                if cam['UniversalGroundRange']['MaximumLongitude'] < float(RHash.getMaxLon().decode('utf-8')):
+                                if cam['UniversalGroundRange']['MaximumLongitude'] < float(RHash.getMaxLon()):
                                     maxlon = cam['UniversalGroundRange']['MaximumLongitude']
                                 else:
-                                    maxlon = RHash.getMaxLon().decode('utf-8')
-                            elif RHash.getGRtype().decode('utf-8') == 'fill':
-                                minlat = RHash.getMinLat().decode('utf-8')
-                                maxlat = RHash.getMaxLat().decode('utf-8')
-                                minlon = RHash.getMinLon().decode('utf-8')
-                                maxlon = RHash.getMaxLon().decode('utf-8')
+                                    maxlon = RHash.getMaxLon()
+                            elif RHash.getGRtype() == 'fill':
+                                minlat = RHash.getMinLat()
+                                maxlat = RHash.getMaxLat()
+                                minlon = RHash.getMinLon()
+                                maxlon = RHash.getMaxLon()
 
                             processOBJ.AddParameter('minlat', minlat)
                             processOBJ.AddParameter('maxlat', maxlat)
                             processOBJ.AddParameter('minlon', minlon)
                             processOBJ.AddParameter('maxlon', maxlon)
 
-                            os.remove(camrangeOUT)
+                            #os.remove(camrangeOUT)
 
                     elif 'isis2pds' in processOBJ.getProcessName():
                         finalfile = infile.replace('.input.cub', '_final.img')
@@ -291,7 +291,7 @@ def main():
                         subloggyOBJ.setHelpLink(
                             'http://www.gdal.org/gdal_translate.html')
                         loggyOBJ.AddProcess(subloggyOBJ.getSLprocess())
-                        os.remove(infile)
+                        #os.remove(infile)
                     else:
                         errmsg = 'Error Executing GDAL translate: Error'
                         logger.error(errmsg)
@@ -307,10 +307,10 @@ def main():
 
         if status == 'success':
 
-            if RHash.Format().decode('utf-8') == 'ISIS3':
+            if RHash.Format() == 'ISIS3':
                 finalfile = infile.replace('.input.cub', '_final.cub')
                 shutil.move(infile, finalfile)
-            if RHash.getStatus().decode('utf-8') != 'ERROR':
+            if RHash.getStatus() != 'ERROR':
                 RHash.Status('SUCCESS')
 
             try:
@@ -322,7 +322,8 @@ def main():
         elif status == 'error':
             RHash.Status('ERROR')
             if os.path.isfile(infile):
-                os.remove(infile)
+                #os.remove(infile)
+                pass
 
         try:
             RQ_loggy.QueueAdd(loggyOBJ.Loggy2json())
