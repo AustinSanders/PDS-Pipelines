@@ -38,6 +38,7 @@ class Args(object):
         self.key = args.key
         self.namespace = args.namespace
 
+
 def main():
     args = Args()
     args.parse_args()

@@ -6,6 +6,7 @@ import pvl
 import lxml.etree as ET
 import logging
 import argparse
+import json
 
 from pds_pipelines.PDS_DBquery import PDS_DBquery
 from pds_pipelines.RedisQueue import RedisQueue
@@ -14,7 +15,7 @@ from pds_pipelines.Recipe import Recipe
 from pds_pipelines.Process import Process
 from pds_pipelines.MakeMap import MakeMap
 from pds_pipelines.HPCjob import HPCjob
-from pds_pipelines.config import recipe_base, pds_log, scratch, archive_base, default_namespace, slurm_log, cmd_dir
+from pds_pipelines.config import recipe_base, pds_log, scratch, archive_base, default_namespace, slurm_log, cmd_dir, pds_info
 
 
 class jobXML(object):
@@ -25,7 +26,7 @@ class jobXML(object):
         ----------
         xml
         """
-
+        self.pds_info = json.load(open(pds_info, 'r'))
         self.root = ET.fromstring(xml.encode())
 
     def getInst(self):
@@ -40,9 +41,21 @@ class jobXML(object):
             return inst
 
     def getCleanName(self):
-        for info in self.root.findall('.//Process'):
-            name = info.find('.//cleanname').text
-            return name
+        """ Get the internally consistent representation of the instrument name.
+
+        Searches the PDSinfo dict for the 'clean name' that matches the recipes.  This function essentially
+        maps URL->file path->internally consistent name.
+        """
+        # Get any file listed.  Assumes that all files are from the same instrument
+        file_name = self.getFileList()[0]
+        file_name = file_name.replace('http://pdsimage.wr.usgs.gov/Missions/', archive_base)
+        # Note: I know this is really, really bad.  We're kind of backed into a corner here,
+        #  and partial string matching on a value-based lookup of a nested dict is the temporary solution.
+        for key in self.pds_info:
+            if file_name.startswith(self.pds_info[key]['path']):
+                return key
+        raise(KeyError('No key found in PDSInfo dict for path {}'.format(file_name)))
+
             
     def getProcess(self):
         """
