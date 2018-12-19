@@ -46,15 +46,39 @@ class jobXML(object):
         Searches the PDSinfo dict for the 'clean name' that matches the recipes.  This function essentially
         maps URL->file path->internally consistent name.
         """
+        # @TODO Fix after refactor
+        # NOTE: I know this is really, really bad.  We're kind of backed into a corner here,
+        #  and partial string matching on a value-based lookup of a nested dict is the temporary solution.
+
         # Get any file listed.  Assumes that all files are from the same instrument
         file_name = self.getFileList()[0]
         file_name = file_name.replace('http://pdsimage.wr.usgs.gov/Missions/', archive_base)
-        # Note: I know this is really, really bad.  We're kind of backed into a corner here,
-        #  and partial string matching on a value-based lookup of a nested dict is the temporary solution.
+
+        candidates = []
+
         for key in self.pds_info:
             if file_name.startswith(self.pds_info[key]['path']):
-                return key
-        raise(KeyError('No key found in PDSInfo dict for path {}'.format(file_name)))
+                candidates.append(key)
+
+        # try to filter list based on upc_reqs.  If upc_reqs isn't specified, just skip the filtering step
+        # ps can't use 'filter' because not all elements have upc_reqs, so they may raise exceptions.
+        for item in candidates:
+            try:
+                if not all(x in file_name for x in self.pds_info[item]['upc_reqs']):
+                    candidates.remove(item)
+            except KeyError:
+                # Intentionally left blank.  Unspecified upc_reqs is valid -- there's just nothing to do for those elements
+                pass
+                
+        # If multiple candidates still exist, then it is not possible to uniquely identify the clean name
+        if len(candidates) > 1:
+            raise(RuntimeError('Multiple candidates found for {} with no resolvable clean name'.format(file_name)))
+
+        try:
+            return candidates[0]
+        except IndexError:
+            raise(KeyError('No key found in PDSInfo dict for path {}'.format(file_name)))
+
 
             
     def getProcess(self):

@@ -119,9 +119,9 @@ def main():
                         else:
                             continue
                     elif 'cubeatt-bit' in processOBJ.getProcessName():
-                        if RHash.OutBit() == 'unsignedbyte':
+                        if RHash.OutBit() == b'unsignedbyte':
                             temp_outfile = outfile + '+lsb+tile+attached+unsignedbyte+1:254'
-                        elif RHash.OutBit() == 'signedword':
+                        elif RHash.OutBit() == b'signedword':
                             temp_outfile = outfile + '+lsb+tile+attached+signedword+-32765:32765'
                         processOBJ.updateParameter('from_', infile)
                         processOBJ.updateParameter('to', temp_outfile)
