@@ -792,7 +792,6 @@ def main():
     logger.info('Building Recipe')
     recipeOBJ = Recipe()
     if xmlOBJ.getProcess() == 'POW':
-        # @TODO fix XML instrument naming convention
         recipeOBJ.AddJsonFile(recipe_base + xmlOBJ.getCleanName() + '.json', "pow")
     elif xmlOBJ.getProcess() == 'MAP2':
         recipeOBJ.AddJsonFile(recipe_base + "map2_process.json", "map")
@@ -909,6 +908,8 @@ def main():
         if Oformat == 'GeoTiff-BigTiff':
             Oformat = 'GTiff'
         GDALprocessOBJ = Process()
+        # @TODO remove hard-coded path in favor of using whichever utilities are found within the conda environment --
+        #  we need more information here to ensure that whichever utilities are found are capable of supporting GeoJPEG-2000.
         GDALprocessOBJ.newProcess('/usgs/apps/anaconda/bin/gdal_translate')
         if xmlOBJ.getOutBit() != 'input':
             GDALprocessOBJ.AddParameter(
