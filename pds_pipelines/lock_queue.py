@@ -59,7 +59,7 @@ def main():
     if target is not None:
         t = target['key']
         if redis_lock.get(t) is None:
-            print("Unable to locate '{}'\nAvailble queues:".format(t))
+            print("Unable to locate '{}'\nAvailable queues:".format(t))
             for key in redis_lock.get_all():
                 print("\t{}".format(key))
             return

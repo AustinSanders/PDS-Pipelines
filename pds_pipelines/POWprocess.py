@@ -2,19 +2,16 @@
 
 import os
 import sys
-import pvl
 import subprocess
 import logging
 import shutil
 import argparse
-
-import pds_pipelines.config
+import pvl
 
 from pysis import isis
 from pysis.exceptions import ProcessError
 
-from pds_pipelines.config import lock_obj
-from pds_pipelines.RedisLock import RedisLock
+from pds_pipelines.config import lock_obj, scratch, pds_log, default_namespace
 from pds_pipelines.RedisQueue import RedisQueue
 from pds_pipelines.RedisLock import RedisLock
 from pds_pipelines.RedisHash import RedisHash
@@ -22,34 +19,44 @@ from pds_pipelines.Process import Process
 from pds_pipelines.Loggy import Loggy
 from pds_pipelines.SubLoggy import SubLoggy
 
-class Args:
+
+class Args(object):
     def __init__(self):
         pass
 
     def parse_args(self):
-        parser = argparse.ArgumentParser()
-        parser.add_argument('Key')
+        parser = argparse.ArgumentParser(description='Processing for Projection on the Web')
+        parser.add_argument('--key',
+                            '-k',
+                            dest='key',
+                            help='Target key')
+        parser.add_argument('--namespace',
+                            '-n',
+                            dest='namespace',
+                            help='Target key')
         args = parser.parse_args()
-        self.Key = args.Key
+        self.key = args.key
+        self.namespace = args.namespace
+
 
 def main():
     args = Args()
     args.parse_args()
-    #    pdb.set_trace()
+    key = args.key
+    namespace = args.namespace
 
-    #Key = sys.argv[-1]
+    if namespace is None:
+        namespace is default_namespace
+    workarea = scratch + key + '/'
 
-    #workarea = '/scratch/pds_services/' + args.Key + '/'
-    workarea = scratch + args.Key + '/'
-
-    RQ_file = RedisQueue(Key + '_FileQueue')
-    RQ_work = RedisQueue(Key + '_WorkQueue')
-    RQ_zip = RedisQueue(Key + '_ZIP')
-    RQ_loggy = RedisQueue(Key + '_loggy')
-    RQ_final = RedisQueue('FinalQueue')
-    RHash = RedisHash(Key + '_info')
-    RHerror = RedisHash(Key + '_error')
-    RQ_lock = Redislock(lock_obj)
+    RQ_file = RedisQueue(key + '_FileQueue', namespace)
+    RQ_work = RedisQueue(key + '_WorkQueue', namespace)
+    RQ_zip = RedisQueue(key + '_ZIP', namespace)
+    RQ_loggy = RedisQueue(key + '_loggy', namespace)
+    RQ_final = RedisQueue('FinalQueue', namespace)
+    RHash = RedisHash(key + '_info')
+    RHerror = RedisHash(key + '_error')
+    RQ_lock = RedisLock(lock_obj)
     RQ_lock.add({'POW':'1'})
 
     if int(RQ_file.QueueSize()) == 0 and RQ_lock.available('POW'):
@@ -57,16 +64,14 @@ def main():
     else:
         print(RQ_file.getQueueName())
         jobFile = RQ_file.Qfile2Qwork(
-            RQ_file.getQueueName(), RQ_work.getQueueName())
+            RQ_file.getQueueName(), RQ_work.getQueueName()).decode('utf-8')
 
         # Setup system logging
         basename = os.path.splitext(os.path.basename(jobFile))[0]
-        logger = logging.getLogger(Key + '.' + basename)
+        logger = logging.getLogger(key + '.' + basename)
         logger.setLevel(logging.INFO)
-        
-        # logFileHandle = logging.FileHandler('/usgs/cdev/PDS/logs/Service.log')
+
         logFileHandle = logging.FileHandler(pds_log + '/Service.log')
-        
         formatter = logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
         logFileHandle.setFormatter(formatter)
@@ -78,7 +83,7 @@ def main():
         loggyOBJ = Loggy(basename)
 
 
-        # File Naming 
+        # File Naming
         if '+' in jobFile:
             bandSplit = jobFile.split('+')
             inputFile = bandSplit[0]
@@ -90,7 +95,7 @@ def main():
         outfile = workarea + \
             os.path.splitext(os.path.basename(jobFile))[0] + '.output.cub'
 
-        RQ_recipe = RedisQueue(Key + '_recipe')
+        RQ_recipe = RedisQueue(key + '_recipe')
 
         status = 'success'
         for element in RQ_recipe.RecipeGet():
@@ -114,9 +119,9 @@ def main():
                         else:
                             continue
                     elif 'cubeatt-bit' in processOBJ.getProcessName():
-                        if RHash.OutBit() == 'unsignedbyte':
+                        if RHash.OutBit() == b'unsignedbyte':
                             temp_outfile = outfile + '+lsb+tile+attached+unsignedbyte+1:254'
-                        elif RHash.OutBit() == 'signedword':
+                        elif RHash.OutBit() == b'signedword':
                             temp_outfile = outfile + '+lsb+tile+attached+signedword+-32765:32765'
                         processOBJ.updateParameter('from_', infile)
                         processOBJ.updateParameter('to', temp_outfile)
@@ -153,7 +158,7 @@ def main():
                             processOBJ.updateParameter('from_', infile)
                             processOBJ.updateParameter('to', outfile)
                     elif 'cam2map' in processOBJ.getProcessName():
-                        processOBJ.updateParameter('from_', infile)
+                        processOBJ.updateParameter('from', infile)
                         processOBJ.updateParameter('to', outfile)
 
                         if RHash.getGRtype() == 'smart' or RHash.getGRtype() == 'fill':
@@ -209,7 +214,7 @@ def main():
                             processOBJ.AddParameter('minlon', minlon)
                             processOBJ.AddParameter('maxlon', maxlon)
 
-                            os.remove(camrangeOUT)
+                            #os.remove(camrangeOUT)
 
                     elif 'isis2pds' in processOBJ.getProcessName():
                         finalfile = infile.replace('.input.cub', '_final.img')
@@ -259,15 +264,16 @@ def main():
                         for key, value in v.items():
                             GDALcmd += ' ' + key + ' ' + value
 
-                    if RHash.Format() == 'GeoTiff-BigTiff':
+                    frmt = RHash.Format().decode('utf-8')
+                    if frmt == 'GeoTiff-BigTiff':
                         fileext = 'tif'
-                    elif RHash.Format() == 'GeoJPEG-2000':
+                    elif frmt == 'GeoJPEG-2000':
                         fileext = 'jp2'
-                    elif RHash.Format() == 'JPEG':
+                    elif frmt == 'JPEG':
                         fileext = 'jpg'
-                    elif RHash.Format() == 'PNG':
+                    elif frmt == 'PNG':
                         fileext = 'png'
-                    elif RHash.Format() == 'GIF':
+                    elif frmt == 'GIF':
                         fileext = 'gif'
 
                     logGDALcmd = GDALcmd + ' ' + basename + \
@@ -286,7 +292,7 @@ def main():
                         subloggyOBJ.setHelpLink(
                             'http://www.gdal.org/gdal_translate.html')
                         loggyOBJ.AddProcess(subloggyOBJ.getSLprocess())
-                        os.remove(infile)
+                        #os.remove(infile)
                     else:
                         errmsg = 'Error Executing GDAL translate: Error'
                         logger.error(errmsg)
@@ -317,7 +323,8 @@ def main():
         elif status == 'error':
             RHash.Status('ERROR')
             if os.path.isfile(infile):
-                os.remove(infile)
+                #os.remove(infile)
+                pass
 
         try:
             RQ_loggy.QueueAdd(loggyOBJ.Loggy2json())
@@ -328,8 +335,8 @@ def main():
 
         if RQ_file.QueueSize() == 0 and RQ_work.QueueSize() == 0:
             try:
-                RQ_final.QueueAdd(Key)
-                logger.info('Key %s Added to Final Queue: Success', Key)
+                RQ_final.QueueAdd(key)
+                logger.info('Key %s Added to Final Queue: Success', key)
                 logger.info('Both Queues Empty: filequeue = %s  work queue = %s', str(
                     RQ_file.QueueSize()), str(RQ_work.QueueSize()))
                 logger.info('JOB Complete')
