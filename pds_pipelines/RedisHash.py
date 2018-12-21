@@ -18,6 +18,7 @@ class RedisHash(object):
             host=ri['host'], port=ri['port'], db=ri['db'])
         self.id_name = '%s:%s' % (namespace, name)
 
+
     def IsInHash(self, element):
         """
         Parameters
@@ -32,6 +33,7 @@ class RedisHash(object):
         test = self._db.hexists(self.id_name, element)
         return test
 
+
     def HashCount(self):
         """
         Returns
@@ -40,7 +42,13 @@ class RedisHash(object):
             item
         """
         item = self._db.hlen(self.id_name)
+        try:
+            item = item.decode('utf-8')
+        except AttributeError:
+            # If the item is not found, it can't be decoded
+            pass
         return item
+
 
     def AddHash(self, element):
         """
@@ -50,8 +58,10 @@ class RedisHash(object):
         """
         self._db.hmset(self.id_name, element)
 
+
     def RemoveAll(self):
         self._db.delete(self.id_name)
+
 
     def Status(self, element):
         """
@@ -60,6 +70,7 @@ class RedisHash(object):
         element : str
         """
         self._db.hset(self.id_name, 'status', element)
+        
 
     def MAPname(self, element):
         """
@@ -69,6 +80,7 @@ class RedisHash(object):
         """
         self._db.hset(self.id_name, 'MAPname', element)
 
+
     def getMAPname(self):
         """
         Returns
@@ -77,7 +89,14 @@ class RedisHash(object):
             item
         """
         item = self._db.hget(self.id_name, 'MAPname')
+        try:
+            item = item.decode('utf-8')
+        except AttributeError:
+            # If the item is not found, it can't be decoded
+            pass
+
         return item
+
 
     def getStatus(self):
         """
@@ -87,6 +106,12 @@ class RedisHash(object):
             item
         """
         item = self._db.hget(self.id_name, 'status')
+
+        try:
+            item =  item.decode('utf-8')
+        except AttributeError:
+            pass
+
         return item
 
     def FileCount(self, element):
@@ -97,6 +122,7 @@ class RedisHash(object):
         """
         self._db.hset(self.id_name, 'filecount', element)
 
+
     def getFileCount(self):
         """
         Returns
@@ -105,7 +131,14 @@ class RedisHash(object):
             item
         """
         item = self._db.hget(self.id_name, 'filecount')
+        try:
+            item = item.decode('utf-8')
+        except AttributeError:
+            # If the item is not found, it can't be decoded
+            pass
+
         return item
+
 
     def Service(self):
         """
@@ -115,7 +148,14 @@ class RedisHash(object):
             item
         """
         item = self._db.hget(self.id_name, 'service')
+        try:
+            item = item.decode('utf-8')
+        except AttributeError:
+            # If the item is not found, it can't be decoded
+            pass
+
         return item
+
 
     def Format(self):
         """
@@ -125,7 +165,14 @@ class RedisHash(object):
             item
         """
         item = self._db.hget(self.id_name, 'fileformat')
+        try:
+            item = item.decode('utf-8')
+        except AttributeError:
+            # If the item is not found, it can't be decoded
+            pass
+
         return item
+
 
     def OutBit(self):
         """
@@ -135,7 +182,14 @@ class RedisHash(object):
             item
         """
         item = self._db.hget(self.id_name, 'outbit')
+        try:
+            item = item.decode('utf-8')
+        except AttributeError:
+            # If the item is not found, it can't be decoded
+            pass
+
         return item
+
 
     def getGRtype(self):
         """
@@ -145,7 +199,14 @@ class RedisHash(object):
             item
         """
         item = self._db.hget(self.id_name, 'grtype')
+        try:
+            item = item.decode('utf-8')
+        except AttributeError:
+            # If the item is not found, it can't be decoded
+            pass
+
         return item
+
 
     def getMinLat(self):
         """
@@ -155,7 +216,14 @@ class RedisHash(object):
             item
         """
         item = self._db.hget(self.id_name, 'minlat')
+        try:
+            item = item.decode('utf-8')
+        except AttributeError:
+            # If the item is not found, it can't be decoded
+            pass
+
         return item
+
 
     def getMaxLat(self):
         """
@@ -165,7 +233,14 @@ class RedisHash(object):
             item
         """
         item = self._db.hget(self.id_name, 'maxlat')
+        try:
+            item = item.decode('utf-8')
+        except AttributeError:
+            # If the item is not found, it can't be decoded
+            pass
+
         return item
+
 
     def getMinLon(self):
         """
@@ -175,7 +250,14 @@ class RedisHash(object):
             item
         """
         item = self._db.hget(self.id_name, 'minlon')
+        try:
+            item = item.decode('utf-8')
+        except AttributeError:
+            # If the item is not found, it can't be decoded
+            pass
+
         return item
+
 
     def getMaxLon(self):
         """
@@ -185,7 +267,14 @@ class RedisHash(object):
             item
         """
         item = self._db.hget(self.id_name, 'maxlon')
+        try:
+            item = item.decode('utf-8')
+        except AttributeError:
+            # If the item is not found, it can't be decoded
+            pass
+
         return item
+
 
     def addError(self, infile, error):
         """
@@ -201,6 +290,7 @@ class RedisHash(object):
         """
         self._db.hset(self.id_name, infile, error)
 
+
     def getKeys(self):
         """
         Returns
@@ -209,14 +299,27 @@ class RedisHash(object):
             item
         """
         item = self._db.hkeys(self.id_name)
+        try:
+            item = item.decode('utf-8')
+        except AttributeError:
+            # If the item is not found, it can't be decoded
+            pass
+
         return item
 
-    def getError(self, file):
+
+    def getError(self, input_file):
         """
         Returns
         ------
         str
             item
         """
-        item = self._db.hget(self.id_name, file)
+        item = self._db.hget(self.id_name, input_file)
+        try:
+            item = item.decode('utf-8')
+        except AttributeError:
+            # If the item is not found, it can't be decoded
+            pass
+
         return item

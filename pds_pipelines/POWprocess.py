@@ -119,9 +119,9 @@ def main():
                         else:
                             continue
                     elif 'cubeatt-bit' in processOBJ.getProcessName():
-                        if RHash.OutBit() == b'unsignedbyte':
+                        if RHash.OutBit() == 'unsignedbyte':
                             temp_outfile = outfile + '+lsb+tile+attached+unsignedbyte+1:254'
-                        elif RHash.OutBit() == b'signedword':
+                        elif RHash.OutBit() == 'signedword':
                             temp_outfile = outfile + '+lsb+tile+attached+signedword+-32765:32765'
                         processOBJ.updateParameter('from_', infile)
                         processOBJ.updateParameter('to', temp_outfile)
@@ -264,7 +264,7 @@ def main():
                         for key, value in v.items():
                             GDALcmd += ' ' + key + ' ' + value
 
-                    frmt = RHash.Format().decode('utf-8')
+                    frmt = RHash.Format()
                     if frmt == 'GeoTiff-BigTiff':
                         fileext = 'tif'
                     elif frmt == 'GeoJPEG-2000':
