@@ -67,6 +67,7 @@ def main():
         item = literal_eval(RQ.QueueGet().decode("utf-8"))
         inputfile = item[0]
         archive = item[1]
+        logger.debug("%s - %s", inputfile, archive) 
         try:
             Qelement = session.query(Files).filter(
                 Files.filename == inputfile).one()
