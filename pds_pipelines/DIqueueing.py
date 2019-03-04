@@ -65,7 +65,7 @@ class Args(object):
                             help="Enter string to set job array size")
 
         parser.add_argument('--log', '-l', dest="log_level",
-                            choice=['DEBUG', 'INFO',
+                            choices=['DEBUG', 'INFO',
                                     'WARNING', 'ERROR', 'CRITICAL'],
                             help="Set the log level.", default='INFO')
 
