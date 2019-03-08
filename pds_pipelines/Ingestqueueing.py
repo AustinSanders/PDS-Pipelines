@@ -31,7 +31,7 @@ class Args(object):
                             help="Enter volume to Ingest")
 
         parser.add_argument('--log', '-l', dest="log_level",
-                            choice=['DEBUG', 'INFO', 'WARNING',
+                            choices=['DEBUG', 'INFO', 'WARNING',
                                     'ERROR', 'CRITICAL'],
                             help="Set the log level.", default='INFO')
 
