@@ -22,7 +22,7 @@ from pds_pipelines.UPCkeywords import UPCkeywords
 from pds_pipelines.db import db_connect
 from pds_pipelines.models import upc_models, pds_models
 from pds_pipelines.models.upc_models import MetaTime, MetaGeometry, MetaString, MetaBoolean
-from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj
+from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj, search_terms
 
 from sqlalchemy import and_
 
@@ -286,9 +286,9 @@ def main():
                 if isinstance(infile_bandlist, list):
                     index = 0
                     while index < len(infile_bandlist):
-                        B_DBinput = upc_models.MetaBands(
-                            upcid=UPCid, filter=str(
-                                infile_bandlist[index]), centerwave=infile_centerlist[index])
+                        B_DBinput = upc_models.MetaBands(upcid=UPCid,
+                                                         filter=str(infile_bandlist[index]),
+                                                         centerwave=infile_centerlist[index])
                         session.merge(B_DBinput)
                         index = index + 1
                 else:
@@ -301,69 +301,19 @@ def main():
                     session.merge(B_DBinput)
                 session.commit()
 
-                # Block to add common keywords
-                testjson = json.load(
-                    open(keyword_def, 'r'))
-                for element_1 in testjson['instrument']['COMMON']:
-                    keyvalue = ""
-                    keytype = testjson['instrument']['COMMON'][element_1]['type']
-                    keyword = testjson['instrument']['COMMON'][element_1]['keyword']
-                    keyword_Qobj = session.query(upc_models.Keywords).filter(
-                        and_(upc_models.Keywords.typename == element_1,
-                             upc_models.Keywords.instrumentid == 1)).first()
+                # Create a dictionary with keys from the search_terms configuration
+                attributes = dict.fromkeys(search_terms, None)
 
-                    if keyword_Qobj is None:
-                        continue
-                    else:
-                        keyvalue = keywordsOBJ.getKeyword(keyword)
-                    if keyvalue is None:
-                        continue
-                    keyvalue = db2py(keytype, keyvalue)
-                    try:
-                        DBinput = upc_models.create_table(keytype,
-                                                          upcid=UPCid,
-                                                          typeid=keyword_Qobj.typeid,
-                                                          value=keyvalue)
-                    except Exception as e:
-                        logger.warn("Unable to enter %s into table\n\n%s", keytype, e)
-                        continue
-                    session.merge(DBinput)
-                    try:
-                        session.flush()
-                    except:
-                        logger.warn("Unable to flush database connection")
-                session.commit()
+                # For each key in the dictionary, get the related keyword from the keywords object
+                for key in attributes:
+                    attributes[key] = keywordsOBJ.getKeyword(key)
 
-                for element_1 in testjson['instrument'][archive]:
-                    keyvalue = ""
-                    keytype = testjson['instrument'][archive][element_1]['type']
-                    keyword = testjson['instrument'][archive][element_1]['keyword']
-                    keyword_Qobj = session.query(upc_models.Keywords).filter(
-                        and_(upc_models.Keywords.typename == element_1,
-                             upc_models.Keywords.instrumentid.in_(
-                                 (1, instrument_Qobj.instrumentid)))).first()
-
-                    if keyword_Qobj is None:
-                        continue
-                    else:
-                        keyvalue = keywordsOBJ.getKeyword(keyword)
-                    if keyvalue is None:
-                        logger.debug("Keyword %s not found", keyword)
-                        continue
-                    keyvalue = db2py(keytype, keyvalue)
-                    try:
-                        DBinput = upc_models.create_table(keytype,
-                                                          upcid=UPCid,
-                                                          typeid=keyword_Qobj.typeid,
-                                                          value=keyvalue)
-                    except Exception as e:
-                        logger.warn("Unable to enter %s into database\n\n%s", keytype, e)
-                        continue
-                    session.merge(DBinput)
-                    try:
-                        session.flush()
-                    except:
-                        logger.warn("Unable to flush database connection")
+                db_input = upc_models.SearchTerms(**attributes)
+                session.merge(db_input)
+                try:
+                    session.flush()
+                except:
+                    logger.warn("Unable to flush database connection")
                 session.commit()
 
                 # geometry stuff

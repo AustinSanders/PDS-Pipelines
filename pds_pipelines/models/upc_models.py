@@ -138,6 +138,7 @@ class MetaBoolean(Meta, Base):
             raise ValueError("MetaBoolean requires a value of type bool")
         Base.__init__(self, **kwargs)
 
+
 class MetaBands(Base):
     __tablename__ = 'meta_bands'
     __table_args__ = (PrimaryKeyConstraint('upcid', 'filter', 'centerwave'),)
@@ -173,8 +174,23 @@ class NewStats(Base):
     bands = Column(Integer)
     total = Column(Integer)
     errors = Column(Integer)
-    
 
+
+class SearchTerms(Base):
+    __tablename__ = 'search_terms'
+    upcid = Column(Integer, primary_key=True)
+    starttime = Column(Time)
+    solarlongitude = Column(Float)
+    meangroundresolution = Column(Float)
+    phaseangle = Column(Float)
+    incidenceangle = Column(Float)
+    emissionangle = Column(Float)
+    boundingboxintesections = Column(Float)
+    targetid = Column(Integer)
+    instrumentid = Column(Integer)
+    missionid = Column(Integer)
+    pdsproductid = Column(Integer)
+    
 
 class_map = {
     'string': MetaString,
