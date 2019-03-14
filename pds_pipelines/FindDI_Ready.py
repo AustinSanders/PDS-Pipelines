@@ -2,6 +2,7 @@
 
 import sys
 import datetime
+import time
 import argparse
 import json
 import logging
@@ -9,7 +10,6 @@ import pytz
 
 from sqlalchemy import Date, cast
 
-from sqlalchemy.orm.util import *
 from sqlalchemy import or_
 
 from pds_pipelines.db import db_connect
@@ -36,7 +36,7 @@ class Args(object):
                             help="Enter Volume to Test")
 
         parser.add_argument('--log', '-l', dest="log_level",
-                            choice=['DEBUG', 'INFO',
+                            choices=['DEBUG', 'INFO',
                                     'WARNING', 'ERROR', 'CRITICAL'],
                             help="Set the log level.", default='INFO')
 
@@ -123,11 +123,18 @@ def main():
     logger = logging.getLogger('DI_Ready.' + args.archive)
     level = logging.getLevelName(args.log_level)
     logger.setLevel(level)
-    logFileHandle = logging.FileHandler(pds_log + 'DI.log')
+    timestr = time.strftime("%Y%m%d_%H%M%S")
+    logFileHandle = logging.FileHandler(pds_log + 'DI_Ready_' + timestr + '.log')
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
+
+    # Add handler to print to stdout
+    logStreamHandle = logging.StreamHandler()
+    logStreamHandle.setLevel(level)
+    
     logger.addHandler(logFileHandle)
+    logger.addHandler(logStreamHandle)
 
     try:
         # Throws away 'engine' information
