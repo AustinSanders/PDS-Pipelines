@@ -1,6 +1,6 @@
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy import (Column, Integer, Float,
-                        Time, String, Boolean, PrimaryKeyConstraint, ForeignKey)
+                        Time, String, Boolean, PrimaryKeyConstraint, ForeignKey, JSON)
 from geoalchemy2 import Geometry
 
 import datetime
@@ -190,6 +190,12 @@ class SearchTerms(Base):
     instrumentid = Column(Integer)
     missionid = Column(Integer)
     pdsproductid = Column(Integer)
+    
+
+class JsonKeywords(Base):
+    __tablename__ = "json_keywords"
+    upcid = Column(Integer, primary_key=True)
+    jsonkeywords = Column(JSON)
     
 
 class_map = {
