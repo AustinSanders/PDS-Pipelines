@@ -21,8 +21,8 @@ from pds_pipelines.Process import Process
 from pds_pipelines.UPCkeywords import UPCkeywords
 from pds_pipelines.db import db_connect
 from pds_pipelines.models import upc_models, pds_models
-from pds_pipelines.models.upc_models import MetaTime, MetaGeometry, MetaString, MetaBoolean
-from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj, search_terms
+from pds_pipelines.models.upc_models import MetaTime, MetaGeometry, MetaString, MetaBoolean, SearchTerms
+from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj
 
 from sqlalchemy import and_
 
@@ -116,6 +116,11 @@ def main():
     logger.addHandler(logFileHandle)
 
     PDSinfoDICT = json.load(open(pds_info, 'r'))
+
+    try:
+        SearchTerms.__table__.create(engine)
+    except Exception as e:
+        logger.error("Unable to create SearchTerms table: %s", e)
 
     # Redis Queue Objects
     RQ_main = RedisQueue('UPC_ReadyQueue')
@@ -281,7 +286,6 @@ def main():
                     upc_models.DataFiles.isisid == keywordsOBJ.getKeyword('IsisId')).first()
 
                 UPCid = Qobj.upcid
-                print(UPCid)
                 # block to add band information to meta_bands
                 if isinstance(infile_bandlist, list):
                     index = 0
@@ -301,15 +305,23 @@ def main():
                     session.merge(B_DBinput)
                 session.commit()
 
-                # Create a dictionary with keys from the search_terms configuration
-                attributes = dict.fromkeys(search_terms, None)
+                # Create a dictionary with keys from the SearchTerms model
+                attributes = dict.fromkeys(SearchTerms.__table__.columns.keys(), None)
 
                 # For each key in the dictionary, get the related keyword from the keywords object
                 for key in attributes:
-                    attributes[key] = keywordsOBJ.getKeyword(key)
+                    try:
+                        attributes[key] = keywordsOBJ.getKeyword(key)
+                    except KeyError:
+                        logger.warn("Unable to find key '%s' in keywords object", key)
 
                 db_input = upc_models.SearchTerms(**attributes)
                 session.merge(db_input)
+
+                # Encode the keywords dictionary as json and put it in the json keywords table
+                db_input = upc_models.JsonKeywords(upcid=attributes['upcid'], jsonkeywords=json.loads(keywordsOBJ))
+                session.merge(db_input)
+
                 try:
                     session.flush()
                 except:
