@@ -319,7 +319,7 @@ def main():
                 session.merge(db_input)
 
                 # Encode the keywords dictionary as json and put it in the json keywords table
-                db_input = upc_models.JsonKeywords(upcid=attributes['upcid'], jsonkeywords=json.loads(keywordsOBJ))
+                db_input = upc_models.JsonKeywords(upcid=attributes['upcid'], jsonkeywords=keywordsOBJ)
                 session.merge(db_input)
 
                 try:
