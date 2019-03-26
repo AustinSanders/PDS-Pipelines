@@ -908,9 +908,7 @@ def main():
         if Oformat == 'GeoTiff-BigTiff':
             Oformat = 'GTiff'
         GDALprocessOBJ = Process()
-        # @TODO remove hard-coded path in favor of using whichever utilities are found within the conda environment --
-        #  we need more information here to ensure that whichever utilities are found are capable of supporting GeoJPEG-2000.
-        GDALprocessOBJ.newProcess('/usgs/apps/anaconda/bin/gdal_translate')
+        GDALprocessOBJ.newProcess('gdal_translate')
         if xmlOBJ.getOutBit() != 'input':
             GDALprocessOBJ.AddParameter(
                 '-ot', GDALprocessOBJ.GDAL_OBit(xmlOBJ.getOutBit()))
