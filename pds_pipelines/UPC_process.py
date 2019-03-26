@@ -129,6 +129,8 @@ def main():
     # If the queue isn't registered, add it and set it to "running"
     RQ_lock.add({RQ_main.id_name: '1'})
 
+
+
     proc_date_tid = get_tid('processdate', session)
     err_type_tid = get_tid('errortype', session)
     err_msg_tid = get_tid('errormessage', session)
@@ -271,15 +273,14 @@ def main():
                         upc_models.DataFiles.isisid == keywordsOBJ.getKeyword(
                             'IsisId')).first() is None:
 
-                    test_input = upc_models.DataFiles(
-                        isisid=keywordsOBJ.getKeyword('IsisId'),
-                        productid=keywordsOBJ.getKeyword('ProductId'),
-                        edr_source=EDRsource,
-                        edr_detached_label='',
-                        instrumentid=instrument_Qobj.instrumentid,
-                        targetid=target_Qobj.targetid)
+                    input_datafile = upc_models.DataFiles(isisid=keywordsOBJ.getKeyword('IsisId'),
+                                                          productid=keywordsOBJ.getKeyword('ProductId'),
+                                                          edr_source=EDRsource,
+                                                          edr_detached_label='',
+                                                          instrumentid=instrument_Qobj.instrumentid,
+                                                          targetid=target_Qobj.targetid)
 
-                    session.merge(test_input)
+                    session.merge(input_datafile)
                     session.commit()
 
                 Qobj = session.query(upc_models.DataFiles).filter(
@@ -356,6 +357,7 @@ def main():
                 checksum = f_hash.hexdigest()
 
 
+                # @TODO deal with checksum and err flag without using Meta tables
                 DBinput = upc_models.MetaString(upcid=UPCid, typeid=checksum_tid, value=checksum)
                 session.merge(DBinput)
                 DBinput = upc_models.MetaBoolean(upcid=UPCid, typeid=err_flag_tid, value=False)
@@ -371,6 +373,8 @@ def main():
                 except Exception as e:
                     logger.info('%s', e)
                     continue
+                err_dict = {}
+                upc_id = None
                 date = datetime.datetime.now(pytz.utc).strftime(
                     "%Y-%m-%d %H:%M:%S")
 
@@ -396,42 +400,17 @@ def main():
 
                     EQ1obj = session.query(upc_models.DataFiles).filter(
                         upc_models.DataFiles.edr_source == EDRsource).first()
-                    UPCid = EQ1obj.upcid
+                    upc_id = EQ1obj.upcid
 
                     errorMSG = 'Error running {} on file {}'.format(
                         processError, inputfile)
 
-                    DBinput = MetaTime(upcid=UPCid,
-                                       typeid=proc_date_tid,
-                                       value=date)
-                    session.merge(DBinput)
-
-                    DBinput = MetaString(upcid=UPCid,
-                                         typeid=err_type_tid,
-                                         value=processError)
-                    session.merge(DBinput)
-
-                    DBinput = MetaString(upcid=UPCid,
-                                         typeid=err_msg_tid,
-                                         value=errorMSG)
-                    session.merge(DBinput)
-
-                    DBinput = MetaBoolean(upcid=UPCid,
-                                          typeid=err_flag_tid,
-                                          value=True)
-                    session.merge(DBinput)
-
-                    DBinput = MetaGeometry(upcid=UPCid,
-                                           typeid=isis_footprint_tid,
-                                           value='POINT(361 0)')
-                    session.merge(DBinput)
-
-                    DBinput = MetaGeometry(upcid=UPCid,
-                                           typeid=isis_centroid_tid,
-                                           value='POINT(361 0)')
-                    session.merge(DBinput)
-
-                    session.commit()
+                    err_dict['processdate'] = date
+                    err_dict['errortype'] = processError
+                    err_dict['errormessage'] = errorMSG
+                    err_dict['error'] = True
+                    err_dict['isisfootprint'] = 'POINT(361 0)'
+                    err_dict['isiscentroid'] = 'POINT(361 0)'
                 else:
                     try:
                         label = pvl.load(infile)
@@ -456,74 +435,50 @@ def main():
                         if target_Qobj is None or instrument_Qobj is None:
                             continue
 
-                        error2_input = upc_models.DataFiles(isisid=isisSerial, productid=label['IsisCube']['Archive']['ProductId'], edr_source=EDRsource, instrumentid=instrument_Qobj.instrumentid, targetid=target_Qobj.targetid)
-                    session.merge(error2_input)
-                    session.commit()
+                        error2_input = upc_models.DataFiles(isisid=isisSerial,
+                                                            productid=label['IsisCube']['Archive']['ProductId'],
+                                                            edr_source=EDRsource,
+                                                            instrumentid=instrument_Qobj.instrumentid,
+                                                            targetid=target_Qobj.targetid)
+                        session.merge(error2_input)
+                        session.commit()
 
                     try:
                         EQ2obj = session.query(upc_models.DataFiles).filter(
                             upc_models.DataFiles.isisid == isisSerial).first()
-                        UPCid = EQ2obj.upcid
+                        upc_id = EQ2obj.upcid
                         errorMSG = 'Error running {} on file {}'.format(
                             processError, inputfile)
-
-                        DBinput = MetaTime(upcid=UPCid,
-                                           typeid=proc_date_tid,
-                                           value=date)
-                        session.merge(DBinput)
-
-                        DBinput = MetaString(upcid=UPCid,
-                                             typeid=err_type_tid,
-                                             value=processError)
-                        session.merge(DBinput)
-
-                        DBinput = MetaString(upcid=UPCid,
-                                             typeid=err_msg_tid,
-                                             value=errorMSG)
-                        session.merge(DBinput)
-
-                        DBinput = MetaBoolean(upcid=UPCid,
-                                              typeid=err_flag_tid,
-                                              value=True)
-                        session.merge(DBinput)
-
-                        DBinput = MetaGeometry(upcid=UPCid,
-                                               typeid=isis_footprint_tid,
-                                               value='POINT(361 0)')
-                        session.merge(DBinput)
-
-                        DBinput = MetaGeometry(upcid=UPCid,
-                                               typeid=isis_centroid_tid,
-                                               value='POINT(361 0)')
-                        session.merge(DBinput)
+                        err_dict['processdate'] = date
+                        err_dict['errortype'] = processError
+                        err_dict['errormessage'] = errorMSG
+                        err_dict['error'] = True
+                        err_dict['isisfootprint'] = 'POINT(361 0)'
+                        err_dict['isiscentroid'] = 'POINT(361 0)'
                     except:
                         pass
 
                     try:
-                        v = label['IsisCube']['Instrument']['StartTime']
+                        start_time = label['IsisCube']['Instrument']['StartTime']
                     except KeyError:
-                        v = None
+                        start_time = None
                     except:
                         continue
 
-                    try:
-                        DBinput = MetaTime(upcid=UPCid,
-                                           typeid=start_time_tid,
-                                           value=v)
-                        session.merge(DBinput)
-                    except:
-                        continue
+                    err_dict['starttime'] = start_time
 
                     try:
-                        v = label['IsisCube']['Instrument']['StopTime']
+                        stop_time = label['IsisCube']['Instrument']['StopTime']
                     except KeyError:
-                        v = None
-                    DBinput = MetaTime(upcid=UPCid,
-                                       typeid=stop_time_tid,
-                                       value=v)
-                    session.merge(DBinput)
+                        stop_time = None
 
-                    session.commit()
+                    err_dict['stoptime'] = stop_time
+
+
+
+                db_input = JsonKeywords(upcid=upc_id, jsonkeywords=err_dict)
+                session.merge(db_input)
+                session.commit()
 
                 AddProcessDB(pds_session, fid, False)
                 os.remove(infile)
