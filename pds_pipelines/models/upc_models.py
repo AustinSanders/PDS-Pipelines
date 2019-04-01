@@ -1,6 +1,6 @@
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy import (Column, Integer, Float,
-                        Time, String, Boolean, PrimaryKeyConstraint, ForeignKey, JSON)
+                        Time, String, Boolean, PrimaryKeyConstraint, ForeignKey, JSON, Char)
 from geoalchemy2 import Geometry
 
 import datetime
@@ -33,10 +33,11 @@ class DataFiles(Base):
     upcid = Column(Integer, primary_key=True, autoincrement = True)
     isisid = Column(String(256))
     productid = Column(String(256))
-    edr_source = Column(String(1024))
-    edr_detached_label = Column(String(1024))
+    source = Column(String(1024))
+    detached_label = Column(String(1024))
     instrumentid = Column(Integer, ForeignKey("instruments_meta.instrumentid"))
     targetid = Column(Integer, ForeignKey("targets_meta.targetid"))
+    level = Column(Char(1))
 
 
 class Instruments(Base):
@@ -85,18 +86,25 @@ class NewStats(Base):
 class SearchTerms(Base):
     __tablename__ = 'search_terms'
     upcid = Column(Integer, primary_key=True)
+    upctime = Column(Time)
     starttime = Column(Time)
     solarlongitude = Column(Float)
     meangroundresolution = Column(Float)
-    phaseangle = Column(Float)
-    incidenceangle = Column(Float)
-    emissionangle = Column(Float)
-    boundingboxintesections = Column(Float)
+    minimumemissionangle = Column(Float)
+    maximumemissionangle = Column(Float)
+    centeremissionangle = Column(Float)
+    minimumincidenceangle = Column(Float)
+    maximumincidenceangle = Column(Float)
+    centerincidenceangle = Column(Float)
+    minimumphaseangle = Column(Float)
+    maximumphaseangle = Column(Float)
+    centerphaseangle = Column(Float)
     targetid = Column(Integer)
     instrumentid = Column(Integer)
     missionid = Column(Integer)
     pdsproductid = Column(Integer)
-    
+    err_flag = Column(Integer)
+    isisfootprint = Column(Geometry('geometry'))
 
 class JsonKeywords(Base):
     __tablename__ = "json_keywords"
