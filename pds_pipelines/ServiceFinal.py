@@ -102,12 +102,10 @@ def main():
             logger.error('Addin Error XML to JOBS DB: Error')
         print(fh.getvalue())
 
-    #Fdir = '/pds_san/PDS_Services/' + infoHash.Service() + '/' + FKey
     Fdir = pow_map2_base + infoHash.Service() + '/' + FKey
-#    Fdir = '/scratch/bsucharski/PDS_service/' + FKey
-    #Wpath = '/scratch/pds_services/' + FKey
     Wpath = scratch + FKey
-#********* Make final directory ************
+
+    # Make final directory
     if not os.path.exists(Fdir):
         try:
             os.makedirs(Fdir)
@@ -115,7 +113,7 @@ def main():
         except:
             logger.error('Error Making Final Directory')
 
-#********** Block to build job log file **************
+    # Block to build job log file
 
     outputLOG = Wpath + "/" + FKey + '.log'
     logOBJ = open(outputLOG, "w")
@@ -197,6 +195,27 @@ def main():
         os.remove(outputLOG)
     except IOError as e:
         logger.error('Log File %s NOT COPIED to Final Area', Lfile)
+        logger.error(e)
+
+    # Add map file to zip
+    try:
+        map_file = Wpath + "/" + FKey + '.map'
+        Zcmd = 'zip -j ' + FKey + '.map' + " -q " map_file
+        process = subprocess.Popen(
+            Zcmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        (stdout, stderr) = process.communicate()
+
+        loggerinfo('Map file %s addded to zip file: Success', map_file)
+        logger.info('zip stdout: ' + stdout)
+        logger.info('zip stderr: ' + stderr)
+    except:
+        logger.error('Log File %s NOT added to Zip File', map_file)
+
+    try:
+        shutil.copyfile(map_file, Fdir + "/" + FKey + '.map')
+        logger.info('Copied map file %s to final area: success', FKey + '.map')
+    except IOError as e:
+        logger.error('Map file %s NOT COPIED to final area', FKey + '.map')
         logger.error(e)
 
 # file stuff
