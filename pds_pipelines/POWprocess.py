@@ -60,6 +60,7 @@ def main():
     RQ_lock = RedisLock(lock_obj)
     RQ_lock.add({'POW':'1'})
 
+    print(type(key))
     if int(RQ_file.QueueSize()) == 0 and RQ_lock.available('POW'):
         print("No Files Found in Redis Queue")
     else:

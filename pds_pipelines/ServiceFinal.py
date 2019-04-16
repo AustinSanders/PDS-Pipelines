@@ -52,7 +52,7 @@ def main():
     FKey = sys.argv[-1]
 
 #***************** Setup Logging **************
-    logger = logging.getLogger('ServiceFinal.' + FKey)
+    logger = logging.getLogger('ServiceFinal.{}'.format(FKey))
     level = logging.getLevelName(args.log_level)
     logger.setLevel(level)
     logFileHandle = logging.FileHandler(pds_log+'Service.log')
@@ -205,7 +205,7 @@ def main():
             Zcmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         (stdout, stderr) = process.communicate()
 
-        loggerinfo('Map file %s addded to zip file: Success', map_file)
+        loggerinfo('Map file %s added to zip file: Success', map_file)
         logger.info('zip stdout: ' + stdout)
         logger.info('zip stderr: ' + stderr)
     except:
