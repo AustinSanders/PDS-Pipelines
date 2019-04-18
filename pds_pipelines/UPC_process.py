@@ -21,7 +21,7 @@ from pds_pipelines.Process import Process
 from pds_pipelines.UPCkeywords import UPCkeywords
 from pds_pipelines.db import db_connect
 from pds_pipelines.models import upc_models, pds_models
-from pds_pipelines.models.upc_models import MetaTime, MetaGeometry, MetaString, MetaBoolean, SearchTerms
+from pds_pipelines.models.upc_models import SearchTerms
 from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj
 
 from sqlalchemy import and_
@@ -90,15 +90,6 @@ def AddProcessDB(session, fid, outvalue):
         return 'ERROR'
 
 
-def get_tid(keyword, session):
-    try:
-        tid = session.query(upc_models.Keywords.typeid).filter(
-            upc_models.Keywords.typename == keyword).first()[0]
-        return tid
-    except:
-        return None
-
-
 def main():
     # Connect to database - ignore engine information
     pds_session, pds_engine = db_connect(pds_db)
@@ -128,18 +119,6 @@ def main():
     RQ_lock = RedisLock(lock_obj)
     # If the queue isn't registered, add it and set it to "running"
     RQ_lock.add({RQ_main.id_name: '1'})
-
-
-
-    proc_date_tid = get_tid('processdate', session)
-    err_type_tid = get_tid('errortype', session)
-    err_msg_tid = get_tid('errormessage', session)
-    err_flag_tid = get_tid('error', session)
-    isis_footprint_tid = get_tid('isisfootprint', session)
-    isis_centroid_tid = get_tid('isiscentroid', session)
-    start_time_tid = get_tid('starttime', session)
-    stop_time_tid = get_tid('stoptime', session)
-    checksum_tid = get_tid('checksum', session)
 
     # while there are items in the redis queue
     while int(RQ_main.QueueSize()) > 0 and RQ_lock.available(RQ_main.id_name):
@@ -286,6 +265,7 @@ def main():
                     upc_models.DataFiles.isisid == keywordsOBJ.getKeyword('IsisId')).first()
 
                 UPCid = Qobj.upcid
+                # TODO
                 # block to add band information to meta_bands
                 if isinstance(infile_bandlist, list):
                     index = 0
@@ -315,11 +295,24 @@ def main():
                     except KeyError:
                         logger.warn("Unable to find key '%s' in keywords object", key)
 
+                attributes['upctime'] = datetime.datetime.now(pytz.utc).strftime(
+                    "%Y-%m-%d %H:%M:%S")
+
+                # Calculate checksum and store in JSON
+                f_hash = hashlib.md5()
+                with open(inputfile, "rb") as f:
+                    for chunk in iter(lambda: f.read(4096), b""):
+                        f_hash.update(chunk)
+                checksum = f_hash.hexdigest()
+                keywordsOBJ.label['checksum'] = checksum
+
+                attributes['isisfootprint'] = keywordsOBJ.getKeyword('GisFootprint')
+                attributes['err_flag'] = False
+
                 db_input = upc_models.SearchTerms(**attributes)
                 session.merge(db_input)
 
-                # Encode the keywords dictionary as json and put it in the json keywords table
-                db_input = upc_models.JsonKeywords(upcid=attributes['upcid'], jsonkeywords=keywordsOBJ)
+                db_input = upc_models.JsonKeywords(upcid=attributes['upcid'], jsonkeywords=keywordsOBJ.label)
                 session.merge(db_input)
 
                 try:
@@ -328,40 +321,6 @@ def main():
                     logger.warn("Unable to flush database connection")
                 session.commit()
 
-                # geometry stuff
-                G_centroid = 'point ({} {})'.format(
-                    str(keywordsOBJ.getKeyword('CentroidLongitude')),
-                    str(keywordsOBJ.getKeyword('CentroidLatitude')))
-
-                G_keyword_Qobj = session.query(upc_models.Keywords.typeid).filter(
-                    upc_models.Keywords.typename == 'isiscentroid').first()
-                G_footprint_Qobj = session.query(upc_models.Keywords.typeid).filter(
-                    upc_models.Keywords.typename == 'isisfootprint').first()
-                G_footprint = keywordsOBJ.getKeyword('GisFootprint')
-                G_DBinput = upc_models.MetaGeometry(upcid=UPCid,
-                                                    typeid=G_keyword_Qobj,
-                                                    value=G_centroid)
-                session.merge(G_DBinput)
-                G_DBinput = upc_models.MetaGeometry(upcid=UPCid,
-                                                    typeid=G_footprint_Qobj,
-                                                    value=G_footprint)
-                session.merge(G_DBinput)
-                session.flush()
-                session.commit()
-
-                f_hash = hashlib.md5()
-                with open(inputfile, "rb") as f:
-                    for chunk in iter(lambda: f.read(4096), b""):
-                        f_hash.update(chunk)
-                checksum = f_hash.hexdigest()
-
-
-                # @TODO deal with checksum and err flag without using Meta tables
-                DBinput = upc_models.MetaString(upcid=UPCid, typeid=checksum_tid, value=checksum)
-                session.merge(DBinput)
-                DBinput = upc_models.MetaBoolean(upcid=UPCid, typeid=err_flag_tid, value=False)
-                session.merge(DBinput)
-                session.commit()
                 AddProcessDB(pds_session, fid, True)
                 os.remove(infile)
                 os.remove(caminfoOUT)
@@ -474,6 +433,9 @@ def main():
                     err_dict['stoptime'] = stop_time
 
 
+
+                db_input = SearchTerms(upcid=upc_id, upctime=date, err_flag=True)
+                session.merge(db_input)
 
                 db_input = JsonKeywords(upcid=upc_id, jsonkeywords=err_dict)
                 session.merge(db_input)
