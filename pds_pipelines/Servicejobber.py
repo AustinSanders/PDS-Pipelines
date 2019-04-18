@@ -573,9 +573,14 @@ class Args(object):
                             '-n',
                             dest='namespace',
                             help="Queue namespace")
+        parser.add_argument('--norun',
+                            help="Set up queues and write out SBATCH script, but do not submit it to SLURM",
+                            action="store_true")
+
         args = parser.parse_args()
         self.key = args.key
         self.namespace = args.namespace
+        self.norun = args.norun
 
 def main():
     args = Args()
@@ -600,7 +605,12 @@ def main():
     DBQO = PDS_DBquery('JOBS')
     if key is None:
         # If no key is specified, grab the first key
-        key = DBQO.jobKey()
+        try:
+            key = DBQO.jobKey()
+        # If the queue is empty, it'll throw a type error.
+        except TypeError:
+            logger.debug('No keys found in clusterjobs database')
+            exit(1)
     try:
         # Set the 'queued' column to current time i.e. prep for processing
         DBQO.setJobsQueued(key)
@@ -908,9 +918,7 @@ def main():
         if Oformat == 'GeoTiff-BigTiff':
             Oformat = 'GTiff'
         GDALprocessOBJ = Process()
-        # @TODO remove hard-coded path in favor of using whichever utilities are found within the conda environment --
-        #  we need more information here to ensure that whichever utilities are found are capable of supporting GeoJPEG-2000.
-        GDALprocessOBJ.newProcess('/usgs/apps/anaconda/bin/gdal_translate')
+        GDALprocessOBJ.newProcess('gdal_translate')
         if xmlOBJ.getOutBit() != 'input':
             GDALprocessOBJ.AddParameter(
                 '-ot', GDALprocessOBJ.GDAL_OBit(xmlOBJ.getOutBit()))
@@ -1009,12 +1017,16 @@ def main():
     except IOError as e:
         logger.error('SBATCH File %s Not Found', SBfile)
 
-    try:
-        jobOBJ.Run()
-        logger.info('Job Submission to HPC: Success')
-        DBQO.setJobsStarted(key)
-    except IOError as e:
-        logger.error('Jobs NOT Submitted to HPC')
+
+    if args.norun:
+        logger.info('No-run mode, will not submit HPC job.')
+    else:
+        try:
+            jobOBJ.Run()
+            logger.info('Job Submission to HPC: Success')
+            DBQO.setJobsStarted(key)
+        except IOError as e:
+            logger.error('Jobs NOT Submitted to HPC')
 
 
 if __name__ == "__main__":

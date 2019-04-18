@@ -10,6 +10,11 @@
                 "from_": "value",
                 "to": "value"
             },
+            "spiceinit": {
+                "from_": "value",
+                "cknadir": "yes",
+                "cksmithed": "yes"
+            },
             "moccal": {
                 "from_": "value",
                 "to": "value"

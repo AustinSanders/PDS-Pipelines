@@ -46,14 +46,15 @@ def main():
     namespace = args.namespace
 
     if namespace is None:
-        namespace is default_namespace
-    workarea = scratch + key + '/'
+        namespace = default_namespace
 
+    workarea = scratch + key + '/'
     RQ_file = RedisQueue(key + '_FileQueue', namespace)
     RQ_work = RedisQueue(key + '_WorkQueue', namespace)
     RQ_zip = RedisQueue(key + '_ZIP', namespace)
     RQ_loggy = RedisQueue(key + '_loggy', namespace)
     RQ_final = RedisQueue('FinalQueue', namespace)
+    RQ_recipe = RedisQueue(key + '_recipe', namespace)
     RHash = RedisHash(key + '_info')
     RHerror = RedisHash(key + '_error')
     RQ_lock = RedisLock(lock_obj)
@@ -63,8 +64,8 @@ def main():
         print("No Files Found in Redis Queue")
     else:
         print(RQ_file.getQueueName())
-        jobFile = RQ_file.Qfile2Qwork(
-            RQ_file.getQueueName(), RQ_work.getQueueName()).decode('utf-8')
+        jobFile = RQ_file.Qfile2Qwork(RQ_file.getQueueName(),
+                                      RQ_work.getQueueName())
 
         # Setup system logging
         basename = os.path.splitext(os.path.basename(jobFile))[0]
@@ -95,7 +96,6 @@ def main():
         outfile = workarea + \
             os.path.splitext(os.path.basename(jobFile))[0] + '.output.cub'
 
-        RQ_recipe = RedisQueue(key + '_recipe')
 
         status = 'success'
         for element in RQ_recipe.RecipeGet():
@@ -261,8 +261,8 @@ def main():
                     for process, v, in processOBJ.getProcess().items():
                         subloggyOBJ = SubLoggy(process)
                         GDALcmd += process
-                        for key, value in v.items():
-                            GDALcmd += ' ' + key + ' ' + value
+                        for dict_key, value in v.items():
+                            GDALcmd += ' ' + dict_key + ' ' + value
 
                     frmt = RHash.Format()
                     if frmt == 'GeoTiff-BigTiff':
