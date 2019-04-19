@@ -67,7 +67,7 @@ def main():
         jobOBJ.setMemory('8192')
         jobOBJ.setPartition('pds')
 
-        cmd = "{}ServiceFinal.py -n {} {}".format(cmd_dir, namespace, FKey)
+        cmd = "{}ServiceFinal.py -n {} -k {}".format(cmd_dir, namespace, FKey)
         jobOBJ.setCommand(cmd)
         logger.info('HPC Command: %s', cmd)
 
