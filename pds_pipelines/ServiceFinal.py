@@ -41,14 +41,21 @@ class Args(object):
                                     'WARNING', 'ERROR', 'CRITICAL'],
                             help="Set the log level.", default='INFO')
 
+        parser.add_argument('--namespace',
+                            '-n',
+                            dest='namespace',
+                            help="Queue namespace")
+
         args = parser.parse_args()
         self.log_level = args.log_level
+        self.namespace = args.namespace
 
 
 def main():
 
     args = Args()
     args.parse_args()
+    namespace = args.namespace
     FKey = sys.argv[-1]
 
 #***************** Setup Logging **************
@@ -64,11 +71,11 @@ def main():
 
     logger.info('Starting Final Process')
 #************Set up REDIS Queues ****************
-    zipQueue = RedisQueue(FKey + '_ZIP')
-    loggyQueue = RedisQueue(FKey + '_loggy')
-    infoHash = RedisHash(FKey + '_info')
-    recipeQueue = RedisQueue(FKey + '_recipe')
-    errorHash = RedisHash(FKey + '_error')
+    zipQueue = RedisQueue(FKey + '_ZIP', namespace)
+    loggyQueue = RedisQueue(FKey + '_loggy', namespace)
+    infoHash = RedisHash(FKey + '_info', namespace)
+    recipeQueue = RedisQueue(FKey + '_recipe', namespace)
+    errorHash = RedisHash(FKey + '_error', namespace)
 
     DBQO = PDS_DBquery('JOBS')
 
