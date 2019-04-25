@@ -265,25 +265,17 @@ def main():
                     upc_models.DataFiles.isisid == keywordsOBJ.getKeyword('IsisId')).first()
 
                 UPCid = Qobj.upcid
-                # TODO
-                # block to add band information to meta_bands
+
+                bandlist = {}
                 if isinstance(infile_bandlist, list):
-                    index = 0
-                    while index < len(infile_bandlist):
-                        B_DBinput = upc_models.MetaBands(upcid=UPCid,
-                                                         filter=str(infile_bandlist[index]),
-                                                         centerwave=infile_centerlist[index])
-                        session.merge(B_DBinput)
-                        index = index + 1
+                    bandlist = dict(zip(infile_bandlist, infile_centerlist))
                 else:
                     try:
-                        # If infile_centerlist is in "Units" format, grab the value
-                        f_centerlist = float(infile_centerlist[0])
+                        bandlist = {infile_bandlist: float(infile_centerlist[0])}
                     except TypeError:
-                        f_centerlist = float(infile_centerlist)
-                    B_DBinput = upc_models.MetaBands(upcid=UPCid, filter=infile_bandlist, centerwave=f_centerlist)
-                    session.merge(B_DBinput)
-                session.commit()
+                        bandlist = {infile_bandlist: float(infile_centerlist)}
+
+                keywordsOBJ.label.update(bandlist)
 
                 # Create a dictionary with keys from the SearchTerms model
                 attributes = dict.fromkeys(SearchTerms.__table__.columns.keys(), None)
