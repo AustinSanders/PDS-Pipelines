@@ -607,6 +607,10 @@ def main():
         # If no key is specified, grab the first key
         try:
             key = DBQO.jobKey()
+            try:
+                key = key.decode('utf-8')
+            except:
+                pass
         # If the queue is empty, it'll throw a type error.
         except TypeError:
             logger.debug('No keys found in clusterjobs database')

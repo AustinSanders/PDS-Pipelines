@@ -118,4 +118,4 @@ class RedisQueue(object):
             item
         """
         item = self._db.rpoplpush(popQ, pushQ)
-        return item
+        return conditional_decode(item)
