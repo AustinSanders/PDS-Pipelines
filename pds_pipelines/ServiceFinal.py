@@ -41,18 +41,31 @@ class Args(object):
                                     'WARNING', 'ERROR', 'CRITICAL'],
                             help="Set the log level.", default='INFO')
 
+        parser.add_argument('--namespace',
+                            '-n',
+                            dest='namespace',
+                            help="Queue namespace")
+
+        parser.add_argument('--key',
+                            '-k',
+                            dest='key',
+                            help='Job key')
+
         args = parser.parse_args()
         self.log_level = args.log_level
+        self.namespace = args.namespace
+        self.key = args.key
 
 
 def main():
 
     args = Args()
     args.parse_args()
-    FKey = sys.argv[-1]
+    namespace = args.namespace
+    key = args.key
 
 #***************** Setup Logging **************
-    logger = logging.getLogger('ServiceFinal.' + FKey)
+    logger = logging.getLogger('ServiceFinal_' + key)
     level = logging.getLevelName(args.log_level)
     logger.setLevel(level)
     logFileHandle = logging.FileHandler(pds_log+'Service.log')
@@ -64,11 +77,11 @@ def main():
 
     logger.info('Starting Final Process')
 #************Set up REDIS Queues ****************
-    zipQueue = RedisQueue(FKey + '_ZIP')
-    loggyQueue = RedisQueue(FKey + '_loggy')
-    infoHash = RedisHash(FKey + '_info')
-    recipeQueue = RedisQueue(FKey + '_recipe')
-    errorHash = RedisHash(FKey + '_error')
+    zipQueue = RedisQueue(key + '_ZIP', namespace)
+    loggyQueue = RedisQueue(key + '_loggy', namespace)
+    infoHash = RedisHash(key + '_info')
+    recipeQueue = RedisQueue(key + '_recipe', namespace)
+    errorHash = RedisHash(key + '_error')
 
     DBQO = PDS_DBquery('JOBS')
 
@@ -95,19 +108,17 @@ def main():
 
         fh = BytesIO()
         tree.write(fh, encoding='utf-8', xml_declaration=True)
-        testval = DBQO.addErrors(FKey, fh.getvalue())
+        testval = DBQO.addErrors(key , fh.getvalue())
         if testval == 'Success':
             logger.info('Error XML add to JOBS DB')
         elif testval == 'Error':
             logger.error('Addin Error XML to JOBS DB: Error')
         print(fh.getvalue())
 
-    #Fdir = '/pds_san/PDS_Services/' + infoHash.Service() + '/' + FKey
-    Fdir = pow_map2_base + infoHash.Service() + '/' + FKey
-#    Fdir = '/scratch/bsucharski/PDS_service/' + FKey
-    #Wpath = '/scratch/pds_services/' + FKey
-    Wpath = scratch + FKey
-#********* Make final directory ************
+    Fdir = pow_map2_base + infoHash.Service() + '/' + key 
+    Wpath = scratch + key 
+
+    # Make final directory
     if not os.path.exists(Fdir):
         try:
             os.makedirs(Fdir)
@@ -115,9 +126,9 @@ def main():
         except:
             logger.error('Error Making Final Directory')
 
-#********** Block to build job log file **************
+    # Block to build job log file
 
-    outputLOG = Wpath + "/" + FKey + '.log'
+    outputLOG = Wpath + "/" + key + '.log'
     logOBJ = open(outputLOG, "w")
 
     logOBJ.write("       U.S. Geological Survey Cloud Processing Services\n")
@@ -133,11 +144,11 @@ def main():
 
     logOBJ.write("JOB INFORMATION\n\n")
     logOBJ.write("     SERVICE:         " + infoHash.Service() + "\n")
-    logOBJ.write("     JOB KEY:         " + FKey + "\n")
+    logOBJ.write("     JOB KEY:         " + key + "\n")
     logOBJ.write("     PROCESSING DATE: " +
                  datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + "\n")
 
-    isisV = subprocess.check_output(['ls', '-la', '/usgs/pkgs/isis3'])
+    isisV = subprocess.check_output(['ls', '-la', '/usgs/pkgs/isis3']).decode('utf-8')
     isisA = isisV.split('>')
     logOBJ.write("     ISIS VERSION:   " + isisA[-1])
     if infoHash.getStatus() == 'ERROR':
@@ -174,12 +185,12 @@ def main():
     logOBJ.close()
 
 #******** Block for to copy and zip files to final directory ******
-    Zfile = Wpath + '/' + FKey + '.zip'
+    Zfile = Wpath + '/' + key + '.zip'
     logger.info('Making Zip File %s', Zfile)
 
 # log file stuff
     try:
-        Lfile = FKey + '.log'
+        Lfile = key + '.log'
         Zcmd = 'zip -j ' + Zfile + " -q " + outputLOG
         process = subprocess.Popen(
             Zcmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
@@ -197,6 +208,27 @@ def main():
         os.remove(outputLOG)
     except IOError as e:
         logger.error('Log File %s NOT COPIED to Final Area', Lfile)
+        logger.error(e)
+
+    # Add map file to zip
+    try:
+        map_file = Wpath + "/" + key + '.map'
+        Zcmd = 'zip -j ' + Zfile + " -q " + map_file
+        process = subprocess.Popen(
+            Zcmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        (stdout, stderr) = process.communicate()
+
+        loggerinfo('Map file %s added to zip file: Success', map_file)
+        logger.info('zip stdout: ' + stdout)
+        logger.info('zip stderr: ' + stderr)
+    except:
+        logger.error('Map File %s NOT added to Zip File', map_file)
+
+    try:
+        shutil.copyfile(map_file, Fdir + "/" + key + '.map')
+        logger.info('Copied map file %s to final area: success', key + '.map')
+    except IOError as e:
+        logger.error('Map file %s NOT COPIED to final area', key + '.map')
         logger.error(e)
 
 # file stuff
@@ -238,7 +270,7 @@ def main():
 #    zOBJ.close()
 
     try:
-        shutil.copy(Zfile, Fdir + '/' + FKey + '.zip')
+        shutil.copy(Zfile, Fdir + '/' + key + '.zip')
         os.remove(Zfile)
         logger.info('Zip File Copied to Final Directory')
     except IOError as e:
@@ -246,8 +278,8 @@ def main():
         logger.error(e)
 
 #************** Clean up *******************
-    os.remove(Wpath + '/' + FKey + '.map')
-    os.remove(Wpath + '/' + FKey + '.sbatch')
+    os.remove(Wpath + '/' + key + '.map')
+    os.remove(Wpath + '/' + key + '.sbatch')
     try:
         #        os.rmdir(Wpath)
         shutil.rmtree(Wpath)
@@ -256,14 +288,14 @@ def main():
         logger.error('Working Directory NOT Removed')
 
     DBQO2 = PDS_DBquery('JOBS')
-    DBQO2.setJobsFinished(FKey)
+    DBQO2.setJobsFinished(key )
 
     infoHash.RemoveAll()
     loggyQueue.RemoveAll()
     zipQueue.RemoveAll()
     recipeQueue.RemoveAll()
 
-    logger.info('Job %s is Complete', FKey)
+    logger.info('Job %s is Complete', key)
 
 
 if __name__ == "__main__":

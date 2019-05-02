@@ -21,13 +21,21 @@ class Args(object):
                                     'WARNING', 'ERROR', 'CRITICAL'],
                             help="Set the log level.", default='INFO')
 
+        parser.add_argument('--namespace',
+                            '-n',
+                            dest='namespace',
+                            help="Queue namespace")
+
+
         args = parser.parse_args()
         self.log_level = args.log_level
+        self.namespace = args.namespace
 
 
 def main():
     args = Args()
     args.parse_args()
+    namespace = args.namespace
 
     logger = logging.getLogger('FinalJobber')
     level = logging.getLevelName(args.log_level)
@@ -39,7 +47,7 @@ def main():
     logger.addHandler(logFileHandle)
 
 #***************Look at Final queue for work************
-    RQ_final = RedisQueue('FinalQueue')
+    RQ_final = RedisQueue('FinalQueue', namespace)
     logger.debug("Reddis Queue: %s", RQ_final.id_name)
 
     if int(RQ_final.QueueSize()) == 0:
@@ -59,7 +67,7 @@ def main():
         jobOBJ.setMemory('8192')
         jobOBJ.setPartition('pds')
 
-        cmd = cmd_dir+'ServiceFinal.py ' + FKey
+        cmd = "{}ServiceFinal.py -n {} -k {}".format(cmd_dir, namespace, FKey)
         jobOBJ.setCommand(cmd)
         logger.info('HPC Command: %s', cmd)
 
