@@ -113,33 +113,21 @@ def AddProcessDB(session, fid, outvalue):
         return 'ERROR'
 
 
-class Args(object):
-    def __init__(self):
-        pass
+def parse_args(self):
+    parser = argparse.ArgumentParser(description="DI Process")
 
-    def parse_args(self):
-        parser = argparse.ArgumentParser(description="DI Process")
+    parser.add_argument('--log', '-l', dest="log_level",
+                        choices=['DEBUG', 'INFO',
+                                'WARNING', 'ERROR', 'CRITICAL'],
+                        help="Set the log level.", default='INFO')
 
-        parser.add_argument('--log', '-l', dest="log_level",
-                            choices=['DEBUG', 'INFO',
-                                    'WARNING', 'ERROR', 'CRITICAL'],
-                            help="Set the log level.", default='INFO')
-
-        args = parser.parse_args()
-        self.log_level = args.log_level
+    args = parser.parse_args()
+    return args
 
 
-
-def main():
-
-#    pdb.set_trace()
-
-    args = Args()
-    args.parse_args()
-
-
+def main(log_level):
     logger = logging.getLogger('Browse_Process')
-    level = logging.getLevelName(args.log_level)
+    level = logging.getLevelName(log_level)
     logger.setLevel(level)
     logFileHandle = logging.FileHandler(pds_log + 'Process.log')
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s, %(message)s')
@@ -263,4 +251,5 @@ def main():
     pds_engine.dispose()
 
 if __name__ == "__main__":
-    sys.exit(main())
+    args = parse_args()
+    sys.exit(main(**vars(args)))

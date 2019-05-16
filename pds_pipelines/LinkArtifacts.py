@@ -5,36 +5,28 @@ import pvl
 import json
 import logging
 import argparse
-from xmljson import badgerfish as bf
 from pds_pipelines.config import recipe_base, link_dest
 from pds_pipelines.RedisQueue import RedisQueue
 from ast import literal_eval
 from pds_pipelines.config import pds_log
 
 
-class Args(object):
-    def __init__(self):
-        pass
+def parse_args():
+    parser = argparse.ArgumentParser(description="DI Process")
 
-    def parse_args(self):
-        parser = argparse.ArgumentParser(description="DI Process")
+    parser.add_argument('--log', '-l', dest="log_level",
+                        choices=['DEBUG', 'INFO',
+                                'WARNING', 'ERROR', 'CRITICAL'],
+                        help="Set the log level.", default='INFO')
 
-        parser.add_argument('--log', '-l', dest="log_level",
-                            choices=['DEBUG', 'INFO',
-                                    'WARNING', 'ERROR', 'CRITICAL'],
-                            help="Set the log level.", default='INFO')
+    args = parser.parse_args()
+    return args
 
-        args = parser.parse_args()
-        self.log_level = args.log_level
-
-
-def main():
+def main(log_level):
     RQ = RedisQueue('LinkQueue')
-    args = Args()
-    args.parse_args()
 
     logger = logging.getLogger('LINK_Process')
-    level = logging.getLevelName(args.log_level)
+    level = logging.getLevelName(log_level)
     logger.setLevel(level)
     logFileHandle = logging.FileHandler(pds_log + 'Link.log')
     formatter = logging.Formatter(
@@ -112,4 +104,5 @@ def load_pvl(pvl_file_path):
 
 
 if __name__ == '__main__':
-    main()
+    args = parse_args()
+    main(**vars(args))
