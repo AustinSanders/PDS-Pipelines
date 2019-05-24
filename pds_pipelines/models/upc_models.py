@@ -1,6 +1,6 @@
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy import (Column, Integer, Float,
-                        Time, String, Boolean, PrimaryKeyConstraint, ForeignKey, JSON, Char)
+                        Time, String, Boolean, PrimaryKeyConstraint, ForeignKey, JSON, CHAR)
 from geoalchemy2 import Geometry
 
 import datetime
@@ -35,13 +35,13 @@ class DataFiles(Base):
     productid = Column(String(256))
     source = Column(String(1024))
     detached_label = Column(String(1024))
-    instrumentid = Column(Integer, ForeignKey("instruments_meta.instrumentid"))
-    targetid = Column(Integer, ForeignKey("targets_meta.targetid"))
-    level = Column(Char(1))
+    instrumentid = Column(Integer, ForeignKey("instruments.instrumentid"))
+    targetid = Column(Integer, ForeignKey("targets.targetid"))
+    level = Column(CHAR(1))
 
 
 class Instruments(Base):
-    __tablename__ = 'instruments_meta'
+    __tablename__ = 'instruments'
     instrumentid = Column(Integer, primary_key=True, autoincrement = True)
     instrument = Column(String(256), nullable=False)
     displayname = Column(String(256))
@@ -52,7 +52,7 @@ class Instruments(Base):
 
 
 class Targets(Base):
-    __tablename__ = 'targets_meta'
+    __tablename__ = 'targets'
     targetid = Column(Integer, primary_key = True, autoincrement = True)
     naifid = Column(Integer)
     targetname = Column(String(20), nullable = False)
@@ -104,7 +104,7 @@ class SearchTerms(Base):
     missionid = Column(Integer)
     pdsproductid = Column(Integer)
     err_flag = Column(Integer)
-    isisfootprint = Column(Geometry('geometry'))
+    isisfootprint = Column(Geometry())
 
 class JsonKeywords(Base):
     __tablename__ = "json_keywords"
