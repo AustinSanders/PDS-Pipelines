@@ -21,7 +21,7 @@ from pds_pipelines.Process import Process
 from pds_pipelines.UPCkeywords import UPCkeywords
 from pds_pipelines.db import db_connect
 from pds_pipelines.models import upc_models, pds_models
-from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments
+from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, DataFiles
 from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj
 
 from sqlalchemy import and_
@@ -108,22 +108,7 @@ def main():
 
     PDSinfoDICT = json.load(open(pds_info, 'r'))
 
-    try:
-        SearchTerms.__table__.create(upc_engine)
-    except Exception as e:
-        logger.error("Unable to create SearchTerms table: %s", e)
-
-    try:
-        Targets.__table__.create(upc_engine)
-    except Exception as e:
-        logger.error("Unable to create Targets table: %s", e)
-
-    try:
-        Instruments.__table__.create(upc_engine)
-    except Exception as e:
-        logger.error("Unable to create Instruments table: %s", e)
-
-
+    create_tables(upc_engine)
 
     # Redis Queue Objects
     RQ_main = RedisQueue('UPC_ReadyQueue')
@@ -458,3 +443,25 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+def create_tables(engine):
+    try:
+        SearchTerms.__table__.create(engine)
+    except Exception as e:
+        logger.error("Unable to create SearchTerms table: %s", e)
+
+    try:
+        Targets.__table__.create(engine)
+    except Exception as e:
+        logger.error("Unable to create Targets table: %s", e)
+
+    try:
+        Instruments.__table__.create(engine)
+    except Exception as e:
+        logger.error("Unable to create Instruments table: %s", e)
+
+    try:
+        DataFiles.__table__.create(engine)
+    except Exception as e:
+        logger.error("Unable to create DataFiles table: %s", e)
