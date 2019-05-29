@@ -263,8 +263,6 @@ def main():
                         f.write(filedata)
 
                     keywordsOBJ = UPCkeywords(caminfoOUT)
-                print(keywordsOBJ)
-
                 target_Qobj = session.query(upc_models.Targets).filter(
                     upc_models.Targets.targetname == keywordsOBJ.getKeyword(
                         'targetname').upper()).first()
