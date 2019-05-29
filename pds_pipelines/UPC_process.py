@@ -21,7 +21,7 @@ from pds_pipelines.Process import Process
 from pds_pipelines.UPCkeywords import UPCkeywords
 from pds_pipelines.db import db_connect
 from pds_pipelines.models import upc_models, pds_models
-from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, DataFiles
+from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, DataFiles, JsonKeywords
 from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj
 
 from sqlalchemy import and_
@@ -90,7 +90,7 @@ def AddProcessDB(session, fid, outvalue):
         return 'ERROR'
 
 
-def create_tables(engine):
+def create_tables(engine, logger):
     try:
         SearchTerms.__table__.create(engine)
     except Exception as e:
@@ -111,6 +111,11 @@ def create_tables(engine):
     except Exception as e:
         logger.error("Unable to create DataFiles table: %s", e)
 
+    try:
+        JsonKeywords.__table__.create(engine)
+    except Exception as e:
+        logger.error("Unable to create JsonKeywords table: %s", e)
+
 
 def main():
     # Connect to database - ignore engine information
@@ -130,7 +135,7 @@ def main():
 
     PDSinfoDICT = json.load(open(pds_info, 'r'))
 
-    create_tables(upc_engine)
+    create_tables(upc_engine, logger)
 
     # Redis Queue Objects
     RQ_main = RedisQueue('UPC_ReadyQueue')
@@ -258,13 +263,34 @@ def main():
                         f.write(filedata)
 
                     keywordsOBJ = UPCkeywords(caminfoOUT)
+                print(keywordsOBJ)
+
                 target_Qobj = session.query(upc_models.Targets).filter(
                     upc_models.Targets.targetname == keywordsOBJ.getKeyword(
-                        'TargetName').upper()).first()
+                        'targetname').upper()).first()
+
+                if target_Qobj is None:
+                    target_input = upc_models.Targets(targetname=keywordsOBJ.getKeyword('target_name'),
+                                                      displayname=keywordsOBJ.getKeyword('target'),
+                                                      system=keywordsOBJ.getKeyword('target'))
+                    session.merge(target_input)
+                    session.commit()
+                    target_Qobj = session.query(upc_models.Targets).filter(
+                       upc_models.Targets.targetname == keywordsOBJ.getKeyword(
+                           'targetname').upper()).first()
+
 
                 instrument_Qobj = session.query(upc_models.Instruments).filter(
                     upc_models.Instruments.instrument == keywordsOBJ.getKeyword(
                         'InstrumentId')).first()
+                if instrument_Qobj is None:
+                    instrument_input = upc_models.Instruments(instrument=keywordsOBJ.getKeyword('instrumentid'),
+                                                              spacecraft=keywordsOBJ.getKeyword('spacecraft_name'))
+                    session.merge(instrument_input)
+                    session.commit()
+                    instrument_Qobj = session.query(upc_models.Instruments).filter(
+		        upc_models.Instruments.instrument == keywordsOBJ.getKeyword('InstrumentId')).first()
+
 
                 if session.query(upc_models.DataFiles).filter(
                         upc_models.DataFiles.isisid == keywordsOBJ.getKeyword(
@@ -272,8 +298,8 @@ def main():
 
                     input_datafile = upc_models.DataFiles(isisid=keywordsOBJ.getKeyword('IsisId'),
                                                           productid=keywordsOBJ.getKeyword('ProductId'),
-                                                          edr_source=EDRsource,
-                                                          edr_detached_label='',
+                                                          source=EDRsource,
+                                                          detached_label='',
                                                           instrumentid=instrument_Qobj.instrumentid,
                                                           targetid=target_Qobj.targetid)
 
@@ -323,7 +349,8 @@ def main():
                 db_input = upc_models.SearchTerms(**attributes)
                 session.merge(db_input)
 
-                db_input = upc_models.JsonKeywords(upcid=attributes['upcid'], jsonkeywords=keywordsOBJ.label)
+                json_keywords = json.dumps(keywordsOBJ.label, indent=4, sort_keys=True, default=str)
+                db_input = upc_models.JsonKeywords(upcid=attributes['upcid'], jsonkeywords=json_keywords)
                 session.merge(db_input)
 
                 try:
@@ -349,7 +376,7 @@ def main():
 
                 if '2isis' in processError or processError == 'thmproc':
                     if session.query(upc_models.DataFiles).filter(
-                            upc_models.DataFiles.edr_source == EDRsource.decode(
+                            upc_models.DataFiles.source == EDRsource.decode(
                                 "utf-8")).first() is None:
 
                         target_Qobj = session.query(upc_models.Targets).filter(
@@ -363,12 +390,12 @@ def main():
                                 ['InstrumentId'])).first()
 
                         error1_input = upc_models.DataFiles(isisid='1',
-                                                            edr_source=EDRsource)
+                                                            source=EDRsource)
                         session.merge(error1_input)
                         session.commit()
 
                     EQ1obj = session.query(upc_models.DataFiles).filter(
-                        upc_models.DataFiles.edr_source == EDRsource).first()
+                        upc_models.DataFiles.source == EDRsource).first()
                     upc_id = EQ1obj.upcid
 
                     errorMSG = 'Error running {} on file {}'.format(
@@ -406,7 +433,7 @@ def main():
 
                         error2_input = upc_models.DataFiles(isisid=isisSerial,
                                                             productid=label['IsisCube']['Archive']['ProductId'],
-                                                            edr_source=EDRsource,
+                                                            source=EDRsource,
                                                             instrumentid=instrument_Qobj.instrumentid,
                                                             targetid=target_Qobj.targetid)
                         session.merge(error2_input)
