@@ -92,11 +92,6 @@ def AddProcessDB(session, fid, outvalue):
 
 def create_tables(engine, logger):
     try:
-        SearchTerms.__table__.create(engine)
-    except Exception as e:
-        logger.error("Unable to create SearchTerms table: %s", e)
-
-    try:
         Targets.__table__.create(engine)
     except Exception as e:
         logger.error("Unable to create Targets table: %s", e)
@@ -115,6 +110,12 @@ def create_tables(engine, logger):
         JsonKeywords.__table__.create(engine)
     except Exception as e:
         logger.error("Unable to create JsonKeywords table: %s", e)
+
+    try:
+        SearchTerms.__table__.create(engine)
+    except Exception as e:
+        logger.error("Unable to create SearchTerms table: %s", e)
+
 
 
 def main():
@@ -344,10 +345,14 @@ def main():
                 attributes['isisfootprint'] = keywordsOBJ.getKeyword('GisFootprint')
                 attributes['err_flag'] = False
 
+                attributes['targetid'] = target_Qobj.targetid
+                attributes['instrumentid'] = instrument_Qobj.instrumentid
                 db_input = upc_models.SearchTerms(**attributes)
                 session.merge(db_input)
 
+                # dictionary -> str -> dictionary for jsonb workaround. Converts datetime to serializable format
                 json_keywords = json.dumps(keywordsOBJ.label, indent=4, sort_keys=True, default=str)
+                json_keywords = json.loads(json_keywords)
                 db_input = upc_models.JsonKeywords(upcid=attributes['upcid'], jsonkeywords=json_keywords)
                 session.merge(db_input)
 

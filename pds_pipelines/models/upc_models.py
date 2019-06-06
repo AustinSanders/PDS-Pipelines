@@ -1,6 +1,7 @@
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy import (Column, Integer, Float,
-                        Time, String, Boolean, PrimaryKeyConstraint, ForeignKey, JSON, CHAR)
+                        Time, String, Boolean, PrimaryKeyConstraint, ForeignKey, CHAR)
+from sqlalchemy.dialects.postgresql import JSONB
 from geoalchemy2 import Geometry
 
 import datetime
@@ -99,8 +100,8 @@ class SearchTerms(Base):
     minimumphase = Column(Float)
     maximumphase = Column(Float)
     phaseangle = Column(Float)
-    targetid = Column(String(256))
-    instrumentid = Column(String(256))
+    targetid = Column(Integer, ForeignKey("targets.targetid"))
+    instrumentid = Column(Integer, ForeignKey("instruments.instrumentid"))
     missionid = Column(Integer)
     pdsproductid = Column(Integer)
     err_flag = Column(Boolean)
@@ -110,7 +111,7 @@ class SearchTerms(Base):
 class JsonKeywords(Base):
     __tablename__ = "json_keywords"
     upcid = Column(Integer, primary_key=True)
-    jsonkeywords = Column(JSON)
+    jsonkeywords = Column(JSONB)
     
 
 class_map = {
