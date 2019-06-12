@@ -19,35 +19,25 @@ from pds_pipelines.SubLoggy import SubLoggy
 from pds_pipelines.Process import Process
 
 
-class Args(object):
-    def __init__(self):
-        pass
-
-    def parse_args(self):
-        parser = argparse.ArgumentParser()
-        parser.add_argument('--key',
-                            '-k',
-                            dest='key',
-                            help="Target key -- if blank, process first element in queue")
-        parser.add_argument('--namespace',
-                            '-n',
-                            dest='namespace',
-                            help="Queue namespace")
-        args = parser.parse_args()
-        self.key = args.key
-        self.namespace = args.namespace
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--key',
+                        '-k',
+                        dest='key',
+                        help="Target key -- if blank, process first element in queue")
+    parser.add_argument('--namespace',
+                        '-n',
+                        dest='namespace',
+                        help="Queue namespace")
+    args = parser.parse_args()
+    return args
 
 
-def main():
-    args = Args()
-    args.parse_args()
-    key = args.key
-    namespace = args.namespace
-
+def main(key, namespace=None):
     if namespace is None:
         namespace = default_namespace
 
-    workarea = scratch + args.key + '/'
+    workarea = scratch + key + '/'
     RQ_file = RedisQueue(key + '_FileQueue', namespace)
     RQ_work = RedisQueue(key + '_WorkQueue', namespace)
     RQ_zip = RedisQueue(key + '_ZIP', namespace)
@@ -252,4 +242,5 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    args = parse_args()
+    sys.exit(main(**vars(args)))
