@@ -1,0 +1,12 @@
+<dataStore>
+  <name>upcdev</name>
+  <configure>all</configure>
+  <connectionParameters>
+    <host>dino.wr.usgs.gov</host>
+    <port>3309</port>
+    <database>upc_dev</database>
+    <user>upcmgr</user>
+    <passwd>un1pl@c0</passwd>
+    <dbtype>postgis</dbtype>
+  </connectionParameters>
+</dataStore>
