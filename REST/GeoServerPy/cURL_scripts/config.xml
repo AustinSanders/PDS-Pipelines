@@ -1,12 +1,13 @@
+
+<!-- This configuration is only needed if you are going to be using the BASH 'database.sh' file  -->
 <dataStore>
-  <name>upcdev</name>
-  <configure>all</configure>
+  <name>name_of_store</name>
   <connectionParameters>
-    <host>dino.wr.usgs.gov</host>
-    <port>3309</port>
-    <database>upc_dev</database>
-    <user>upcmgr</user>
-    <passwd>un1pl@c0</passwd>
-    <dbtype>postgis</dbtype>
+    <host>hostname</host>
+    <port>port</port>
+    <database>db_name</database>
+    <user>username</user>
+    <passwd>password</passwd>
+    <dbtype>db_type</dbtype>
   </connectionParameters>
 </dataStore>
