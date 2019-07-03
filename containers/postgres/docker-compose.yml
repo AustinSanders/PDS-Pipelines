@@ -1,29 +1,17 @@
 version: "3.1"
 services:
-    upc_db:
+    postgres:
         image: mdillon/postgis:9.6-alpine
-        environment: 
-            POSTGRES_PASSWORD_FILE: /run/secrets/pg_password
-            POSTGRES_USER_FILE: /run/secrets/pg_user
-            POSTGRES_DB_FILE: /run/secrets/pg_db
-        secrets:
-            - pg_password
-            - pg_user
-            - pg_database
+        environment:
+            POSTGRES_PASSWORD: 1234
+            POSTGRES_USER: upcmgr
+            POSTGRES_DB: upc
         volumes: 
             - "/scratch/pds_services/database:/var/lib/postgresql/data"
         ports:
-            - "9001:5432"
+            - "9010:5432"
 
     admin:
         image: jlaura/pgadmin4:0.2
         ports:
-            - "9003:5050"
-
-secrets:
-    pg_user:
-        file: pg_user_file.txt
-    pg_password:
-        file: pg_password_file.txt
-    pg_database:
-        file: pg_database_file.txt
+            - "9011:5050"
