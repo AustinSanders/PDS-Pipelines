@@ -90,34 +90,6 @@ def AddProcessDB(session, fid, outvalue):
         return 'ERROR'
 
 
-def create_tables(engine, logger):
-    try:
-        Targets.__table__.create(engine)
-    except Exception as e:
-        logger.error("Unable to create Targets table: %s", e)
-
-    try:
-        Instruments.__table__.create(engine)
-    except Exception as e:
-        logger.error("Unable to create Instruments table: %s", e)
-
-    try:
-        DataFiles.__table__.create(engine)
-    except Exception as e:
-        logger.error("Unable to create DataFiles table: %s", e)
-
-    try:
-        JsonKeywords.__table__.create(engine)
-    except Exception as e:
-        logger.error("Unable to create JsonKeywords table: %s", e)
-
-    try:
-        SearchTerms.__table__.create(engine)
-    except Exception as e:
-        logger.error("Unable to create SearchTerms table: %s", e)
-
-
-
 def main():
     # Connect to database - ignore engine information
     pds_session, pds_engine = db_connect(pds_db)
@@ -135,8 +107,6 @@ def main():
     logger.addHandler(logFileHandle)
 
     PDSinfoDICT = json.load(open(pds_info, 'r'))
-
-    create_tables(upc_engine, logger)
 
     # Redis Queue Objects
     RQ_main = RedisQueue('UPC_ReadyQueue')
