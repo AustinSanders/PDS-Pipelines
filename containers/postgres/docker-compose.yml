@@ -7,11 +7,16 @@ services:
             POSTGRES_USER: upcmgr
             POSTGRES_DB: upc
         volumes: 
-            - "/scratch/pds_services/database:/var/lib/postgresql/data"
+            - "/scratch/sakins/upc:/var/lib/postgresql/data"
         ports:
             - "9010:5432"
 
     admin:
-        image: jlaura/pgadmin4:0.2
+        image: dpage/pgadmin4
+        environment:
+          PGADMIN_DEFAULT_EMAIL: admin
+          PGADMIN_DEFAULT_PASSWORD: 1234
+        volumes:
+          - ./pgadmin-config:/var/lib/pgadmin
         ports:
-            - "9011:5050"
+            - "9011:80"
