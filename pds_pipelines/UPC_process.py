@@ -111,6 +111,9 @@ def main():
     # Redis Queue Objects
     RQ_main = RedisQueue('UPC_ReadyQueue')
     logger.info("UPC Processing Queue: %s", RQ_main.id_name)
+
+    # @TODO Consider using a single error queue instead of UPC specific
+    RQ_error = RedisQueue('UPC_ErrorQueue')
     RQ_lock = RedisLock(lock_obj)
     # If the queue isn't registered, add it and set it to "running"
     RQ_lock.add({RQ_main.id_name: '1'})
@@ -420,30 +423,13 @@ def main():
                             processError, inputfile)
                         err_dict['processdate'] = date
                         err_dict['errortype'] = processError
+                        err_dict['file'] = inputfile
                         err_dict['errormessage'] = errorMSG
                         err_dict['error'] = True
-                        err_dict['isisfootprint'] = 'POINT(361 0)'
-                        err_dict['isiscentroid'] = 'POINT(361 0)'
+                        logger.warn('%s', errorMSG)
+                        RQ_error.QueueAdd((inputfile, processError))
                     except:
                         pass
-
-                    try:
-                        start_time = label['IsisCube']['Instrument']['StartTime']
-                    except KeyError:
-                        start_time = None
-                    except:
-                        continue
-
-                    err_dict['starttime'] = start_time
-
-                    try:
-                        stop_time = label['IsisCube']['Instrument']['StopTime']
-                    except KeyError:
-                        stop_time = None
-
-                    err_dict['stoptime'] = stop_time
-
-
 
                 db_input = SearchTerms(upcid=upc_id, upctime=date, err_flag=True)
                 session.merge(db_input)
@@ -465,5 +451,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-
-
