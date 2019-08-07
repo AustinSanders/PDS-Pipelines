@@ -117,7 +117,7 @@ def main(archive, volume, log_level):
     # Add handler to print to stdout
     logStreamHandle = logging.StreamHandler()
     logStreamHandle.setLevel(level)
-    
+
     logger.addHandler(logFileHandle)
     logger.addHandler(logStreamHandle)
 
@@ -129,6 +129,14 @@ def main(archive, volume, log_level):
     except Exception as e:
         logger.error("%s", e)
     else:
+        if volume:
+            volstr = '%' + volume + '%'
+            vol_exists = session.query(Files).filter(
+                Files.archiveid == archiveID, Files.filename.like(volstr)).first()
+            if not vol_exists:
+                print(f"No files exist in the database for volume \"{volume}\"."
+                "  Either the volume does not exist or it has not been properly ingested.\n")
+                exit()
         # if db connection fails, there's no sense in doing this part
         td = (datetime.datetime.now(pytz.utc)
               - datetime.timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
