@@ -593,6 +593,9 @@ def main(key, norun, namespace=None):
     RQ_lock = RedisLock(lock_obj)
     RQ_lock.add({'Services':'1'})
 
+    if not RQ_lock.available('Services'):
+        exit()
+        
     # Connect to database and access 'jobs' table
     DBQO = PDS_DBquery('JOBS')
     if key is None:
