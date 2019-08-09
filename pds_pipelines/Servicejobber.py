@@ -15,7 +15,8 @@ from pds_pipelines.Recipe import Recipe
 from pds_pipelines.Process import Process
 from pds_pipelines.MakeMap import MakeMap
 from pds_pipelines.HPCjob import HPCjob
-from pds_pipelines.config import recipe_base, pds_log, scratch, archive_base, default_namespace, slurm_log, cmd_dir, pds_info
+from pds_pipelines.RedisLock import RedisLock
+from pds_pipelines.config import recipe_base, pds_log, scratch, archive_base, default_namespace, slurm_log, cmd_dir, pds_info, lock_obj
 
 
 class jobXML(object):
@@ -69,7 +70,7 @@ class jobXML(object):
             except KeyError:
                 # Intentionally left blank.  Unspecified upc_reqs is valid -- there's just nothing to do for those elements
                 pass
-                
+
         # If multiple candidates still exist, then it is not possible to uniquely identify the clean name
         if len(candidates) > 1:
             raise(RuntimeError('Multiple candidates found for {} with no resolvable clean name'.format(file_name)))
@@ -80,7 +81,7 @@ class jobXML(object):
             raise(KeyError('No key found in PDSInfo dict for path {}'.format(file_name)))
 
 
-            
+
     def getProcess(self):
         """
         Returns
@@ -589,7 +590,12 @@ def main(key, norun, namespace=None):
         '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
     logger.addHandler(logFileHandle)
+    RQ_lock = RedisLock(lock_obj)
+    RQ_lock.add({'Services':'1'})
 
+    if not RQ_lock.available('Services'):
+        exit()
+        
     # Connect to database and access 'jobs' table
     DBQO = PDS_DBquery('JOBS')
     if key is None:
