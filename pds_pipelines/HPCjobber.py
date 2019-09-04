@@ -60,6 +60,7 @@ def main():
     logger.addHandler(logFileHandle)
     logger.info(job['info'])
 
+
     # Parametrize the HPC job using the configuration file
     date = datetime.datetime.now(pytz.utc).strftime("%Y%m%d%M")
     jobOBJ = HPCjob()
@@ -76,7 +77,19 @@ def main():
     cmd = job['cmd']
 
     if args.jobarray:
-        JA = args.jobarray
+        JA = int(args.jobarray)
+        try:
+            sctrl = subprocess.Popen("scontrol show config".split(), stdout=subprocess.PIPE)
+            grep = subprocess.Popen("grep -E MaxArraySize".split(), stdin=sctrl.stdout, stdout=subprocess.PIPE)
+            output, error = grep.communicate()
+            max_jobs = int(output.decode('utf-8').split('=')[1])
+        except:
+            logger.error("Unable to detect job array size")
+            exit()
+
+        if JA > max_jobs:
+            logger.error("%d exceeds job limit of %d", JA, max_jobs)
+            exit()
     else:
         JA = 1
 

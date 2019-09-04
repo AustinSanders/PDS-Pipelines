@@ -43,7 +43,8 @@
     },
     "galileo_ssi_edr": {
         "archiveid": "25",
-        "path": "/pds_san/PDS_Archive/Galileo/SSI/"
+        "path": "/pds_san/PDS_Archive/Galileo/SSI/",
+        "bandbinQuery": "FilterName"
     },
     "kaguya_lism": {
         "archiveid": "92",
