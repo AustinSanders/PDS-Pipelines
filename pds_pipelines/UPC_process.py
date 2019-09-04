@@ -91,13 +91,6 @@ def AddProcessDB(session, fid, outvalue):
 
 
 def main():
-    # Connect to database - ignore engine information
-    pds_session, pds_engine = db_connect(pds_db)
-
-    # Connect to database - ignore engine information
-    session, upc_engine = db_connect(upc_db)
-
-    # ***************** Set up logging *****************
     logger = logging.getLogger('UPC_Process')
     logger.setLevel(logging.INFO)
     logFileHandle = logging.FileHandler(pds_log + 'Process.log')
@@ -105,6 +98,18 @@ def main():
         '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
     logger.addHandler(logFileHandle)
+
+    try:
+        # Connect to database - ignore engine information
+        pds_session, pds_engine = db_connect(pds_db)
+
+        # Connect to database - ignore engine information
+        session, upc_engine = db_connect(upc_db)
+    except Exception as e:
+        logger.error('Unable to connect to database: %s', e)
+
+
+    # ***************** Set up logging *****************
 
     PDSinfoDICT = json.load(open(pds_info, 'r'))
 
@@ -118,8 +123,8 @@ def main():
     # If the queue isn't registered, add it and set it to "running"
     RQ_lock.add({RQ_main.id_name: '1'})
 
-    # while there are items in the redis queue
-    while int(RQ_main.QueueSize()) > 0 and RQ_lock.available(RQ_main.id_name):
+    # if there are items in the redis queue
+    if int(RQ_main.QueueSize()) > 0 and RQ_lock.available(RQ_main.id_name):
         # get a file from the queue
         item = literal_eval(RQ_main.QueueGet())
         inputfile = item[0]
@@ -139,12 +144,10 @@ def main():
             #recipe_json = recipeOBJ.getRecipeJSON(getMission(str(inputfile)))
             recipeOBJ.AddJsonFile(recipe_json, 'upc')
 
-            infile = workarea + os.path.splitext(
-                str(os.path.basename(inputfile)))[0] + '.UPCinput.cub'
-            outfile = workarea + os.path.splitext(
-                str(os.path.basename(inputfile)))[0] + '.UPCoutput.cub'
-            caminfoOUT = workarea + os.path.splitext(
-                str(os.path.basename(inputfile)))[0] + '_caminfo.pvl'
+            infile = os.path.splitext(inputfile)[0] + '.UPCinput.cub'
+            print(infile)
+            outfile = os.path.splitext(inputfile)[0] + '.UPCoutput.cub'
+            caminfoOUT= os.path.splitext(inputfile)[0] + '_caminfo.pvl'
             EDRsource = inputfile.replace(
                 '/pds_san/PDS_Archive/',
                 'https://pdsimage.wr.ugs.gov/Missions/')
@@ -283,6 +286,7 @@ def main():
 
                 UPCid = Qobj.upcid
 
+                """
                 bandlist = {}
                 if isinstance(infile_bandlist, list):
                     bandlist = dict(zip(infile_bandlist, infile_centerlist))
@@ -291,6 +295,7 @@ def main():
                         bandlist = {infile_bandlist: float(infile_centerlist[0])}
                     except TypeError:
                         bandlist = {infile_bandlist: float(infile_centerlist)}
+                """
 
                 keywordsOBJ.label.update(bandlist)
 
@@ -344,7 +349,8 @@ def main():
                     label = pvl.load(infile)
                 except Exception as e:
                     logger.info('%s', e)
-                    continue
+                    # @TODO make sure that this is the right logic.
+                    exit()
                 err_dict = {}
                 upc_id = None
                 date = datetime.datetime.now(pytz.utc).strftime(
@@ -388,7 +394,8 @@ def main():
                         label = pvl.load(infile)
                     except Exception as e:
                         logger.warn('%s', e)
-                        continue
+                        # @TODO make sure this is the right logic
+                        exit()
 
                     isisSerial = getISISid(infile)
 
@@ -405,7 +412,7 @@ def main():
                                 ['InstrumentId'])).first()
 
                         if target_Qobj is None or instrument_Qobj is None:
-                            continue
+                            exit()
 
                         error2_input = upc_models.DataFiles(isisid=isisSerial,
                                                             productid=label['IsisCube']['Archive']['ProductId'],
