@@ -32,13 +32,20 @@ class Args:
         parser.add_argument('--process', '-p', dest="process", required=True,
                             choices = choices, help="Enter process - {}".format(choices))
 
-        parser.add_argument('--jobarray', '-j', dest="jobarray",
+        parser.add_argument('--jobarray', '-j', dest="jobarray", type=int, 
                             help="Enter string to set job array size")
 
+        parser.add_argument('--norun',  action='store_true')
+
+        parser.add_argument('--args', dest='process_args', nargs='*', required=False)
+
+        parser.set_defaults(norun=False)
         args = parser.parse_args()
 
         self.process = args.process
         self.jobarray = args.jobarray
+        self.norun = args.norun
+        self.process_args = args.process_args
 
 
 def main():
@@ -75,6 +82,8 @@ def main():
     #  a @date@ tag that we replace with the current date
     SBfile = job['SBfile'].replace('@date@', date)
     cmd = job['cmd']
+    if args.process_args:
+        cmd += ' ' + ' '.join(args.process_args)
 
     if args.jobarray:
         JA = int(args.jobarray)
@@ -93,9 +102,11 @@ def main():
     else:
         JA = 1
 
-    jobOBJ.setJobArray(JA)
+    jobOBJ.setJobArray(str(JA))
     jobOBJ.setCommand(cmd)
     jobOBJ.MakeJobFile(SBfile)
+
+    logger.info('SBATCH file: %s', SBfile)
 
     try:
         sb = open(SBfile)
@@ -104,11 +115,14 @@ def main():
     except IOError as e:
         logger.error('SBATCH File %s Not Found', SBfile)
 
-    try:
-        jobOBJ.Run()
-        logger.info('Job Submission to HPC: Success')
-    except IOError as e:
-        logger.error('Jobs NOT Submitted to HPC')
+    if args.norun:
+        logger.info('No-run mode, will not submit HPC job.')
+    else:
+        try:
+            jobOBJ.Run()
+            logger.info('Job Submission to HPC: Success')
+        except IOError as e:
+            logger.error('Jobs NOT Submitted to HPC')
 
 if __name__ == "__main__":
     sys.exit(main())
