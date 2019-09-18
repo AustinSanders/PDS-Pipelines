@@ -23,7 +23,7 @@ from pds_pipelines.UPCkeywords import UPCkeywords
 from pds_pipelines.db import db_connect
 from pds_pipelines.models import pds_models
 from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, DataFiles, JsonKeywords
-from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj, upc_error_queue
+from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj, upc_error_queue, web_base
 
 from sqlalchemy import and_
 
@@ -118,12 +118,17 @@ def parse_args():
     parser.add_argument('--persist', '-p', dest="persist",
                         help="Keep intermediate .cub files.", action='store_true')
     parser.set_defaults(persist=False)
-    return parser
+    args = parser.parse_args()
+    return args
 
 
 def main(persist):
-    slurm_job_id = os.environ['SLURM_JOB_ID']
-    slurm_array_id = os.environ['SLURM_ARRAY_TASK_ID']
+    try:
+        slurm_job_id = os.environ['SLURM_ARRAY_JOB_ID']
+        slurm_array_id = os.environ['SLURM_ARRAY_TASK_ID']
+    except:
+        slurm_job_id = ''
+        slurm_array_id = ''
     inputfile = ''
     context = {'job_id': slurm_job_id, 'array_id':slurm_array_id,'inputfile':inputfile}
     logger = logging.getLogger('UPC_Process')
@@ -132,8 +137,8 @@ def main(persist):
     formatter = logging.Formatter(
         '%(asctime)s - %(job_id)s - %(array_id)s - %(inputfile)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
-    logger = logging.LoggerAdapter(logger, context)
     logger.addHandler(logFileHandle)
+    logger = logging.LoggerAdapter(logger, context)
 
     try:
         # Connect to database - ignore engine information
@@ -172,6 +177,9 @@ def main(persist):
             exit()
         logger.info('Starting Process: %s', inputfile)
 
+        # Update the logger context to include inputfile
+        context['inputfile'] = inputfile
+
         # @TODO refactor this logic.  We're using an object to find a path, returning it,
         #  then passing it back to the object so that the object can use it.
         recipeOBJ = Recipe()
@@ -184,8 +192,8 @@ def main(persist):
         outfile = os.path.splitext(inputfile)[0] + '.UPCoutput.cub'
         caminfoOUT= os.path.splitext(inputfile)[0] + '_caminfo.pvl'
         EDRsource = inputfile.replace(
-            '/pds_san/PDS_Archive/',
-            'https://pdsimage.wr.ugs.gov/Missions/')
+            workarea,
+            web_base)
 
         status = 'success'
         # Iterate through each process listed in the recipe
@@ -268,6 +276,7 @@ def main(persist):
                     f.write(filedata)
 
                 keywordsOBJ = UPCkeywords(caminfoOUT)
+
             target_Qobj = session.query(Targets).filter(
                 Targets.targetname == keywordsOBJ.getKeyword(
                 'targetname').upper()).first()
@@ -284,8 +293,8 @@ def main(persist):
 
 
             instrument_Qobj = session.query(Instruments).filter(
-                Instruments.instrument == keywordsOBJ.getKeyword(
-                    'InstrumentId')).first()
+                Instruments.instrument == keywordsOBJ.getKeyword('instrumentid'),
+                Instruments.spacecraft == keywordsOBJ.getKeyword('spacecraft_name')).first()
             if instrument_Qobj is None:
                 instrument_input = Instruments(instrument=keywordsOBJ.getKeyword('instrumentid'),
                                                           spacecraft=keywordsOBJ.getKeyword('spacecraft_name'))
@@ -297,11 +306,18 @@ def main(persist):
 
             Qobj = session.query(DataFiles).filter(DataFiles.source==EDRsource).first()
 
+            label = pvl.load(inputfile)
+
             if Qobj is None:
+                try:
+                    d_label = label['^IMAGE'][0]
+                except TypeError:
+                    d_label = None
+
                 input_datafile = DataFiles(isisid=keywordsOBJ.getKeyword('IsisId'),
                                                       productid=keywordsOBJ.getKeyword('ProductId'),
                                                       source=EDRsource,
-                                                      detached_label='',
+                                                      detached_label=d_label,
                                                       instrumentid=instrument_Qobj.instrumentid,
                                                       targetid=target_Qobj.targetid)
 
@@ -322,8 +338,6 @@ def main(persist):
             #  additional context like upcid?
             Qobj = session.query(DataFiles).filter( DataFiles.source==EDRsource).first()
             UPCid = Qobj.upcid
-
-            keywordsOBJ.label.update(bandlist)
 
             # Create a dictionary with keys from the SearchTerms model
             attributes = dict.fromkeys(SearchTerms.__table__.columns.keys(), None)
@@ -394,13 +408,10 @@ def main(persist):
                             label['IsisCube']['Instrument']['TargetName']).upper()).first()
 
                     instrument_Qobj = session.query(Instruments).filter(
-                        Instruments.instrument == str(
-                            label['IsisCube']
-                            ['Instrument']
-                            ['InstrumentId'])).first()
+                        Instruments.instrument == str(label['IsisCube']['Instrument']['InstrumentId']),
+                        Instruments.spacecraft == str(label['IsisCube']['Instrument']['SpacecraftName'])).first()
 
-                    error_input = DataFiles(isisid='1',
-                                                        source=EDRsource)
+                    error_input = DataFiles(isisid='1', source=EDRsource)
                     session.merge(error_input)
                     session.commit()
 
@@ -419,8 +430,7 @@ def main(persist):
                 try:
                     label = pvl.load(infile)
                 except Exception as e:
-                    logger.warn('%s', e)
-                    # @TODO make sure this is the right logic
+                    logger.error('%s', e)
                     exit()
 
                 isisSerial = getISISid(infile)
@@ -431,11 +441,11 @@ def main(persist):
                         Targets.targetname == str(
                             label['IsisCube']['Instrument']['TargetName'])
                         .upper()).first()
+
                     instrument_Qobj = session.query(Instruments).filter(
-                        Instruments.instrument == str(
-                            label['IsisCube']
-                            ['Instrument']
-                            ['InstrumentId'])).first()
+                        Instruments.instrument == str(label['IsisCube']['Instrument']['InstrumentId']),
+                        Instruments.spacecraft == str(label['IsisCube']['Instrument']['SpacecraftName'])
+                    ).first()
 
                     if target_Qobj is None or instrument_Qobj is None:
                         exit()
@@ -480,7 +490,9 @@ def main(persist):
     # Disconnect from the engines
     pds_engine.dispose()
     upc_engine.dispose()
-    logger.info("UPC processing exited successfully")
+
+    # Log the EDRsource is available, otherwise default to inputfile
+    logger.info("UPC processing exited")
 
 if __name__ == "__main__":
     args = parse_args()
