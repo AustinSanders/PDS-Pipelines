@@ -191,9 +191,7 @@ def main(persist):
         logger.debug("Beginning processing on %s\n", inputfile)
         outfile = os.path.splitext(inputfile)[0] + '.UPCoutput.cub'
         caminfoOUT= os.path.splitext(inputfile)[0] + '_caminfo.pvl'
-        EDRsource = inputfile.replace(
-            workarea,
-            web_base)
+        EDRsource = inputfile.replace(workarea, web_base)
 
         status = 'success'
         # Iterate through each process listed in the recipe
@@ -256,6 +254,37 @@ def main(persist):
                         status = 'error'
                         processError = item
 
+        pds_label = pvl.load(inputfile)
+        # get the target from the targets table.
+        target_Qobj = session.query(Targets).filter(
+            Targets.targetname == pds_label['TARGET_NAME'].upper()).first()
+
+        # If no matching table is found, create the entry in the database and
+        #  access the new instance.
+        if target_Qobj is None:
+            target_input = Targets(targetname=pds_label['TARGET_NAME'],
+                                   displayname=pds_label['TARGET_NAME'].title(),
+                                   system=pds_label['TARGET_NAME'])
+            session.merge(target_input)
+            session.commit()
+            target_Qobj = session.query(Targets).filter(Targets.targetname == pds_label['TARGET_NAME']).first()
+
+        # Get the instrument from the instruments table.
+        instrument_Qobj = session.query(Instruments).filter(
+            Instruments.instrument == pds_label['INSTRUMENT_ID'],
+            Instruments.spacecraft == pds_label['SPACECRAFT_NAME'])
+
+        # If no matching instrument is found, create the entry in the database
+        #  and access the new instance.
+        if instrument_Qobj is None:
+            instrument_input = Instruments(instrument=pds_label['INSTRUMENT_ID'],
+                                           spacecraft=pds_label['SPACECRAFT_NAME'])
+            session.merge(instrument_input)
+            session.commit()
+            instrument_Qobj = session.query(Instruments).filter(
+                Instruments.instrument == pds_label['INSTRUMENT_ID'],
+                Instruments.spacecraft == pds_label['SPACECRAFT_NAME'])
+
         # keyword definitions
         keywordsOBJ = None
         if status == 'success':
@@ -277,65 +306,25 @@ def main(persist):
 
                 keywordsOBJ = UPCkeywords(caminfoOUT)
 
-            target_Qobj = session.query(Targets).filter(
-                Targets.targetname == keywordsOBJ.getKeyword(
-                'targetname').upper()).first()
-
-            if target_Qobj is None:
-                target_input = Targets(targetname=keywordsOBJ.getKeyword('target_name'),
-                                                  displayname=keywordsOBJ.getKeyword('target'),
-                                                  system=keywordsOBJ.getKeyword('target'))
-                session.merge(target_input)
-                session.commit()
-                target_Qobj = session.query(Targets).filter(
-                   Targets.targetname == keywordsOBJ.getKeyword(
-                       'targetname').upper()).first()
-
-
-            instrument_Qobj = session.query(Instruments).filter(
-                Instruments.instrument == keywordsOBJ.getKeyword('instrumentid'),
-                Instruments.spacecraft == keywordsOBJ.getKeyword('spacecraft_name')).first()
-            if instrument_Qobj is None:
-                instrument_input = Instruments(instrument=keywordsOBJ.getKeyword('instrumentid'),
-                                                          spacecraft=keywordsOBJ.getKeyword('spacecraft_name'))
-                session.merge(instrument_input)
-                session.commit()
-                instrument_Qobj = session.query(Instruments).filter(
-	        Instruments.instrument == keywordsOBJ.getKeyword('InstrumentId')).first()
-
-
             Qobj = session.query(DataFiles).filter(DataFiles.source==EDRsource).first()
 
             label = pvl.load(inputfile)
 
-            if Qobj is None:
-                try:
-                    d_label = label['^IMAGE'][0]
-                except TypeError:
-                    d_label = None
+            try:
+                d_label = label['^IMAGE'][0]
+            except TypeError:
+                d_label = None
 
-                input_datafile = DataFiles(isisid=keywordsOBJ.getKeyword('IsisId'),
-                                                      productid=keywordsOBJ.getKeyword('ProductId'),
-                                                      source=EDRsource,
-                                                      detached_label=d_label,
-                                                      instrumentid=instrument_Qobj.instrumentid,
-                                                      targetid=target_Qobj.targetid)
+            input_datafile = DataFiles(isisid=keywordsOBJ.getKeyword('IsisId'),
+                                                  productid=keywordsOBJ.getKeyword('ProductId'),
+                                                  source=EDRsource,
+                                                  detached_label=d_label,
+                                                  instrumentid=instrument_Qobj.instrumentid,
+                                                  targetid=target_Qobj.targetid)
 
-                session.merge(input_datafile)
-                session.commit()
+            session.merge(input_datafile)
+            session.commit()
 
-            else:
-                Qobj.isisid = keywordsOBJ.getKeyword('IsisId')
-                Qobj.productid = keywordsOBJ.getKeyword('ProductId')
-                Qobj.source = EDRsource
-                Qobj.detached_label = ''
-                Qobj.instrumentid = instrument_Qobj.instrumentid
-                Qobj.targetid = target_Qobj.targetid
-                session.merge(Qobj)
-                session.commit()
-
-            # @TODO is it necessary to grab the object from the database? Might include
-            #  additional context like upcid?
             Qobj = session.query(DataFiles).filter( DataFiles.source==EDRsource).first()
             UPCid = Qobj.upcid
 
@@ -403,14 +392,6 @@ def main(persist):
                         DataFiles.source == EDRsource.decode(
                             "utf-8")).first() is None:
 
-                    target_Qobj = session.query(Targets).filter(
-                        Targets.targetname == str(
-                            label['IsisCube']['Instrument']['TargetName']).upper()).first()
-
-                    instrument_Qobj = session.query(Instruments).filter(
-                        Instruments.instrument == str(label['IsisCube']['Instrument']['InstrumentId']),
-                        Instruments.spacecraft == str(label['IsisCube']['Instrument']['SpacecraftName'])).first()
-
                     error_input = DataFiles(isisid='1', source=EDRsource)
                     session.merge(error_input)
                     session.commit()
@@ -435,28 +416,13 @@ def main(persist):
 
                 isisSerial = getISISid(infile)
 
-                if session.query(DataFiles).filter(
-                        DataFiles.isisid == isisSerial).first() is None:
-                    target_Qobj = session.query(Targets).filter(
-                        Targets.targetname == str(
-                            label['IsisCube']['Instrument']['TargetName'])
-                        .upper()).first()
-
-                    instrument_Qobj = session.query(Instruments).filter(
-                        Instruments.instrument == str(label['IsisCube']['Instrument']['InstrumentId']),
-                        Instruments.spacecraft == str(label['IsisCube']['Instrument']['SpacecraftName'])
-                    ).first()
-
-                    if target_Qobj is None or instrument_Qobj is None:
-                        exit()
-
-                    error_input = DataFiles(isisid=isisSerial,
-                                                        productid=label['IsisCube']['Archive']['ProductId'],
-                                                        source=EDRsource,
-                                                        instrumentid=instrument_Qobj.instrumentid,
-                                                        targetid=target_Qobj.targetid)
-                    session.merge(error_input)
-                    session.commit()
+                error_input = DataFiles(isisid=isisSerial,
+                                        productid=label['IsisCube']['Archive']['ProductId'],
+                                        source=EDRsource,
+                                        instrumentid=instrument_Qobj.instrumentid,
+                                        targetid=target_Qobj.targetid)
+                session.merge(error_input)
+                session.commit()
 
                 try:
                     EQ2obj = session.query(DataFiles).filter(
