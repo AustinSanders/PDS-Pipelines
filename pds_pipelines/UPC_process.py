@@ -150,6 +150,18 @@ def main(persist):
         logger.error('Unable to connect to database: %s', e)
 
 
+    try:
+        # Connect to database - ignore engine information
+        pds_session, pds_engine = db_connect(pds_db)
+
+        # Connect to database - ignore engine information
+        session, upc_engine = db_connect(upc_db)
+    except Exception as e:
+        logger.error('Unable to connect to database: %s', e)
+
+
+    # ***************** Set up logging *****************
+
     PDSinfoDICT = json.load(open(pds_info, 'r'))
 
     # Redis Queue Objects
