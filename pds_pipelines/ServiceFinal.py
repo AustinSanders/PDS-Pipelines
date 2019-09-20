@@ -30,44 +30,33 @@ def renderError(errorhash):
         print(key)
 
 
-class Args(object):
-    def __init__(self):
-        pass
+def parse_args():
+    parser = argparse.ArgumentParser(description="Service Final")
 
-    def parse_args(self):
-        parser = argparse.ArgumentParser(description="DI Process")
+    parser.add_argument('--log', '-l', dest="log_level",
+                        choices=['DEBUG', 'INFO',
+                                'WARNING', 'ERROR', 'CRITICAL'],
+                        help="Set the log level.", default='INFO')
 
-        parser.add_argument('--log', '-l', dest="log_level",
-                            choices=['DEBUG', 'INFO',
-                                    'WARNING', 'ERROR', 'CRITICAL'],
-                            help="Set the log level.", default='INFO')
+    parser.add_argument('--namespace',
+                        '-n',
+                        dest='namespace',
+                        help="Queue namespace")
 
-        parser.add_argument('--namespace',
-                            '-n',
-                            dest='namespace',
-                            help="Queue namespace")
+    parser.add_argument('--key',
+                        '-k',
+                        dest='key',
+                        help='Job key')
 
-        parser.add_argument('--key',
-                            '-k',
-                            dest='key',
-                            help='Job key')
-
-        args = parser.parse_args()
-        self.log_level = args.log_level
-        self.namespace = args.namespace
-        self.key = args.key
+    args = parser.parse_args()
+    return args
 
 
-def main():
-
-    args = Args()
-    args.parse_args()
-    namespace = args.namespace
-    key = args.key
+def main(log_level, namespace, key):
 
 #***************** Setup Logging **************
     logger = logging.getLogger('ServiceFinal_' + key)
-    level = logging.getLevelName(args.log_level)
+    level = logging.getLevelName(log_level)
     logger.setLevel(level)
     logFileHandle = logging.FileHandler(pds_log+'Service.log')
 
@@ -299,4 +288,5 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    args = parse_args()
+    sys.exit(main(**vars(args)))

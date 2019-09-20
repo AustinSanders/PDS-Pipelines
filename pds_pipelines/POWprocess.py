@@ -20,31 +20,22 @@ from pds_pipelines.Loggy import Loggy
 from pds_pipelines.SubLoggy import SubLoggy
 
 
-class Args(object):
-    def __init__(self):
-        pass
+def parse_args():
+    parser = argparse.ArgumentParser(description='Processing for Projection on the Web')
+    parser.add_argument('--key',
+                        '-k',
+                        dest='key',
+                        help='Target key')
+    parser.add_argument('--namespace',
+                        '-n',
+                        dest='namespace',
+                        help='Target key')
 
-    def parse_args(self):
-        parser = argparse.ArgumentParser(description='Processing for Projection on the Web')
-        parser.add_argument('--key',
-                            '-k',
-                            dest='key',
-                            help='Target key')
-        parser.add_argument('--namespace',
-                            '-n',
-                            dest='namespace',
-                            help='Target key')
-        args = parser.parse_args()
-        self.key = args.key
-        self.namespace = args.namespace
+    args = parser.parse_args()
+    return args
 
 
-def main():
-    args = Args()
-    args.parse_args()
-    key = args.key
-    namespace = args.namespace
-
+def main(key, namespace=None):
     if namespace is None:
         namespace = default_namespace
 
@@ -60,9 +51,9 @@ def main():
     RQ_lock = RedisLock(lock_obj)
     RQ_lock.add({'POW':'1'})
 
-    if int(RQ_file.QueueSize()) == 0 and RQ_lock.available('POW'):
+    if int(RQ_file.QueueSize()) == 0:
         print("No Files Found in Redis Queue")
-    else:
+    elif RQ_lock.available('POW'):
         print(RQ_file.getQueueName())
         jobFile = RQ_file.Qfile2Qwork(RQ_file.getQueueName(),
                                       RQ_work.getQueueName())
@@ -348,4 +339,5 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    args = parse_args()
+    sys.exit(main(**vars(args)))

@@ -15,7 +15,8 @@ from pds_pipelines.Recipe import Recipe
 from pds_pipelines.Process import Process
 from pds_pipelines.MakeMap import MakeMap
 from pds_pipelines.HPCjob import HPCjob
-from pds_pipelines.config import recipe_base, pds_log, scratch, archive_base, default_namespace, slurm_log, cmd_dir, pds_info
+from pds_pipelines.RedisLock import RedisLock
+from pds_pipelines.config import recipe_base, pds_log, scratch, archive_base, default_namespace, slurm_log, cmd_dir, pds_info, lock_obj
 
 
 class jobXML(object):
@@ -69,7 +70,7 @@ class jobXML(object):
             except KeyError:
                 # Intentionally left blank.  Unspecified upc_reqs is valid -- there's just nothing to do for those elements
                 pass
-                
+
         # If multiple candidates still exist, then it is not possible to uniquely identify the clean name
         if len(candidates) > 1:
             raise(RuntimeError('Multiple candidates found for {} with no resolvable clean name'.format(file_name)))
@@ -80,7 +81,7 @@ class jobXML(object):
             raise(KeyError('No key found in PDSInfo dict for path {}'.format(file_name)))
 
 
-            
+
     def getProcess(self):
         """
         Returns
@@ -558,36 +559,25 @@ class jobXML(object):
         return listArray
 
 
-class Args(object):
+def parse_args():
+    parser = argparse.ArgumentParser(description='Service job manager')
+    parser.add_argument('--key',
+                        '-k',
+                        dest='key',
+                        help="Target key -- if blank, process first element in queue")
+    parser.add_argument('--namespace',
+                        '-n',
+                        dest='namespace',
+                        help="Queue namespace")
+    parser.add_argument('--norun',
+                        help="Set up queues and write out SBATCH script, but do not submit it to SLURM",
+                        action="store_true")
 
-    def __init__(self):
-        pass
+    args = parser.parse_args()
+    return args
 
-    def parse_args(self):
-        parser = argparse.ArgumentParser(description='Service job manager')
-        parser.add_argument('--key',
-                            '-k',
-                            dest='key',
-                            help="Target key -- if blank, process first element in queue")
-        parser.add_argument('--namespace',
-                            '-n',
-                            dest='namespace',
-                            help="Queue namespace")
-        parser.add_argument('--norun',
-                            help="Set up queues and write out SBATCH script, but do not submit it to SLURM",
-                            action="store_true")
 
-        args = parser.parse_args()
-        self.key = args.key
-        self.namespace = args.namespace
-        self.norun = args.norun
-
-def main():
-    args = Args()
-    args.parse_args()
-    key = args.key
-    namespace = args.namespace
-
+def main(key, norun, namespace=None):
     if namespace is None:
         namespace = default_namespace
 
@@ -600,7 +590,12 @@ def main():
         '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
     logger.addHandler(logFileHandle)
+    RQ_lock = RedisLock(lock_obj)
+    RQ_lock.add({'Services':'1'})
 
+    if not RQ_lock.available('Services'):
+        exit()
+        
     # Connect to database and access 'jobs' table
     DBQO = PDS_DBquery('JOBS')
     if key is None:
@@ -1022,7 +1017,7 @@ def main():
         logger.error('SBATCH File %s Not Found', SBfile)
 
 
-    if args.norun:
+    if norun:
         logger.info('No-run mode, will not submit HPC job.')
     else:
         try:
@@ -1034,4 +1029,5 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    args = parse_args()
+    sys.exit(main(**vars(args)))
