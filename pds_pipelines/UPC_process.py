@@ -150,16 +150,6 @@ def main(persist):
         logger.error('Unable to connect to database: %s', e)
 
 
-    try:
-        # Connect to database - ignore engine information
-        pds_session, pds_engine = db_connect(pds_db)
-
-        # Connect to database - ignore engine information
-        session, upc_engine = db_connect(upc_db)
-    except Exception as e:
-        logger.error('Unable to connect to database: %s', e)
-
-
     # ***************** Set up logging *****************
 
     PDSinfoDICT = json.load(open(pds_info, 'r'))
@@ -267,6 +257,16 @@ def main(persist):
                         processError = item
 
         pds_label = pvl.load(inputfile)
+
+        try:
+            # If there exists an array of values, then the first value is the
+            #  path to the IMG.
+            img_file = pds_label['^IMAGE'][0]
+            d_label = EDRsource
+        except TypeError:
+            img_file = EDRsource
+            d_label = None
+
         # get the target from the targets table.
         target_Qobj = session.query(Targets).filter(
             Targets.targetname == pds_label['TARGET_NAME'].upper()).first()
@@ -284,7 +284,7 @@ def main(persist):
         # Get the instrument from the instruments table.
         instrument_Qobj = session.query(Instruments).filter(
             Instruments.instrument == pds_label['INSTRUMENT_ID'],
-            Instruments.spacecraft == pds_label['SPACECRAFT_NAME'])
+            Instruments.spacecraft == pds_label['SPACECRAFT_NAME']).first()
 
         # If no matching instrument is found, create the entry in the database
         #  and access the new instance.
@@ -295,8 +295,9 @@ def main(persist):
             session.commit()
             instrument_Qobj = session.query(Instruments).filter(
                 Instruments.instrument == pds_label['INSTRUMENT_ID'],
-                Instruments.spacecraft == pds_label['SPACECRAFT_NAME'])
+                Instruments.spacecraft == pds_label['SPACECRAFT_NAME']).first()
 
+        print(f'instrument {str(instrument_Qobj)}')
         # keyword definitions
         keywordsOBJ = None
         if status == 'success':
@@ -318,18 +319,9 @@ def main(persist):
 
                 keywordsOBJ = UPCkeywords(caminfoOUT)
 
-            Qobj = session.query(DataFiles).filter(DataFiles.source==EDRsource).first()
-
-            label = pvl.load(inputfile)
-
-            try:
-                d_label = label['^IMAGE'][0]
-            except TypeError:
-                d_label = None
-
             input_datafile = DataFiles(isisid=keywordsOBJ.getKeyword('IsisId'),
                                                   productid=keywordsOBJ.getKeyword('ProductId'),
-                                                  source=EDRsource,
+                                                  source=img_file,
                                                   detached_label=d_label,
                                                   instrumentid=instrument_Qobj.instrumentid,
                                                   targetid=target_Qobj.targetid)
@@ -337,7 +329,7 @@ def main(persist):
             session.merge(input_datafile)
             session.commit()
 
-            Qobj = session.query(DataFiles).filter( DataFiles.source==EDRsource).first()
+            Qobj = session.query(DataFiles).filter( DataFiles.source==img_file).first()
             UPCid = Qobj.upcid
 
             # Create a dictionary with keys from the SearchTerms model
@@ -401,15 +393,15 @@ def main(persist):
 
             if '2isis' in processError or processError == 'thmproc':
                 if session.query(DataFiles).filter(
-                        DataFiles.source == EDRsource.decode(
+                        DataFiles.source == img_file.decode(
                             "utf-8")).first() is None:
 
-                    error_input = DataFiles(isisid='1', source=EDRsource)
+                    error_input = DataFiles(isisid='1', source=img_file)
                     session.merge(error_input)
                     session.commit()
 
                 EQ1obj = session.query(DataFiles).filter(
-                    DataFiles.source == EDRsource).first()
+                    DataFiles.source == img_file).first()
                 upc_id = EQ1obj.upcid
 
                 errorMSG = 'Error running {} on file {}'.format(
@@ -430,7 +422,7 @@ def main(persist):
 
                 error_input = DataFiles(isisid=isisSerial,
                                         productid=label['IsisCube']['Archive']['ProductId'],
-                                        source=EDRsource,
+                                        source=img_file,
                                         instrumentid=instrument_Qobj.instrumentid,
                                         targetid=target_Qobj.targetid)
                 session.merge(error_input)
@@ -469,7 +461,6 @@ def main(persist):
     pds_engine.dispose()
     upc_engine.dispose()
 
-    # Log the EDRsource is available, otherwise default to inputfile
     logger.info("UPC processing exited")
 
 if __name__ == "__main__":
