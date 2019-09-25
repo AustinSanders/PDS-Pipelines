@@ -117,12 +117,15 @@ def parse_args():
     parser = argparse.ArgumentParser(description='UPC Processing')
     parser.add_argument('--persist', '-p', dest="persist",
                         help="Keep intermediate .cub files.", action='store_true')
+    parser.add_argument('--log', '-l', dest="log_level",
+                        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+                        help="Set the log level.", default='INFO')
     parser.set_defaults(persist=False)
     args = parser.parse_args()
     return args
 
 
-def main(persist):
+def main(persist, log_level):
     try:
         slurm_job_id = os.environ['SLURM_ARRAY_JOB_ID']
         slurm_array_id = os.environ['SLURM_ARRAY_TASK_ID']
@@ -132,7 +135,8 @@ def main(persist):
     inputfile = ''
     context = {'job_id': slurm_job_id, 'array_id':slurm_array_id,'inputfile':inputfile}
     logger = logging.getLogger('UPC_Process')
-    logger.setLevel(logging.INFO)
+    level = logging.getLevelName(log_level)
+    logger.setLevel(level)
     logFileHandle = logging.FileHandler(pds_log + 'Process.log')
     formatter = logging.Formatter(
         '%(asctime)s - %(job_id)s - %(array_id)s - %(inputfile)s - %(name)s - %(levelname)s, %(message)s')
