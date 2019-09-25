@@ -9,6 +9,7 @@ import json
 from ast import literal_eval
 import pytz
 import pvl
+import argparse
 
 from pysis import isis
 from pysis.exceptions import ProcessError
@@ -20,13 +21,26 @@ from pds_pipelines.Recipe import Recipe
 from pds_pipelines.Process import Process
 from pds_pipelines.UPCkeywords import UPCkeywords
 from pds_pipelines.db import db_connect
-from pds_pipelines.models import upc_models, pds_models
-from pds_pipelines.models.upc_models import MetaTime, MetaGeometry, MetaString, MetaBoolean
-from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj
+from pds_pipelines.models import pds_models
+from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, DataFiles, JsonKeywords
+from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj, upc_error_queue, web_base
 
 from sqlalchemy import and_
 
 def getISISid(infile):
+    """ Use ISIS to get the serial number of a file.
+
+    Parameters
+    ----------
+    infile : str
+        A string file path for which the serial number will be calculated.
+
+
+    Returns
+    -------
+    str
+        The serial number of the input file.
+    """
     serial_num = getsn(from_=infile)
     # in later versions of getsn, serial_num is returned as bytes
     if isinstance(serial_num, bytes):
@@ -35,18 +49,8 @@ def getISISid(infile):
     return newisisSerial
 
 
-def find_keyword(obj, key):
-    if key in obj:
-        return obj[key]
-    for _, v in obj.items():
-        if isinstance(v, dict):
-            F_item = find_keyword(v, key)
-            if F_item is not None:
-                return F_item
-
 def db2py(key_type, value):
-    """ Responsible for coercing database syntax to Python
-        syntax (e.g. 'true' to True)
+    """ Coerce database syntax to Python syntax (e.g. 'true' to True)
 
     Parameters
     ----------
@@ -73,6 +77,25 @@ def db2py(key_type, value):
 
 
 def AddProcessDB(session, fid, outvalue):
+    """ Add a process run to the database.
+
+    Parameters
+    ----------
+    session : Session
+        The database session to which the process will be added.
+
+    fid : str
+        The file id.
+
+    outvalue : str
+        The return value / output of the process that will be added to the database.
+
+    Returns
+    -------
+    str :
+        "SUCCESS" on success, "ERROR" on failure
+
+    """
 
     # pdb.set_trace()
     date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
@@ -90,480 +113,350 @@ def AddProcessDB(session, fid, outvalue):
         return 'ERROR'
 
 
-def get_tid(keyword, session):
+def parse_args():
+    parser = argparse.ArgumentParser(description='UPC Processing')
+    parser.add_argument('--persist', '-p', dest="persist",
+                        help="Keep intermediate .cub files.", action='store_true')
+    parser.add_argument('--log', '-l', dest="log_level",
+                        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+                        help="Set the log level.", default='INFO')
+    parser.set_defaults(persist=False)
+    args = parser.parse_args()
+    return args
+
+
+def main(persist, log_level):
     try:
-        tid = session.query(upc_models.Keywords.typeid).filter(
-            upc_models.Keywords.typename == keyword).first()[0]
-        return tid
+        slurm_job_id = os.environ['SLURM_ARRAY_JOB_ID']
+        slurm_array_id = os.environ['SLURM_ARRAY_TASK_ID']
     except:
-        return None
-
-
-def main():
-    # Connect to database - ignore engine information
-    pds_session, pds_engine = db_connect(pds_db)
-
-    # Connect to database - ignore engine information
-    session, upc_engine = db_connect(upc_db)
-
-    # ***************** Set up logging *****************
+        slurm_job_id = ''
+        slurm_array_id = ''
+    inputfile = ''
+    context = {'job_id': slurm_job_id, 'array_id':slurm_array_id,'inputfile':inputfile}
     logger = logging.getLogger('UPC_Process')
-    logger.setLevel(logging.INFO)
+    level = logging.getLevelName(log_level)
+    logger.setLevel(level)
     logFileHandle = logging.FileHandler(pds_log + 'Process.log')
     formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
+        '%(asctime)s - %(job_id)s - %(array_id)s - %(inputfile)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
     logger.addHandler(logFileHandle)
+    logger = logging.LoggerAdapter(logger, context)
+
+    try:
+        # Connect to database - ignore engine information
+        pds_session, pds_engine = db_connect(pds_db)
+
+        # Connect to database - ignore engine information
+        session, upc_engine = db_connect(upc_db)
+    except Exception as e:
+        logger.error('Unable to connect to database: %s', e)
+
+
+    # ***************** Set up logging *****************
 
     PDSinfoDICT = json.load(open(pds_info, 'r'))
 
     # Redis Queue Objects
     RQ_main = RedisQueue('UPC_ReadyQueue')
     logger.info("UPC Processing Queue: %s", RQ_main.id_name)
+
+    RQ_error = RedisQueue(upc_error_queue)
     RQ_lock = RedisLock(lock_obj)
     # If the queue isn't registered, add it and set it to "running"
     RQ_lock.add({RQ_main.id_name: '1'})
 
-    proc_date_tid = get_tid('processdate', session)
-    err_type_tid = get_tid('errortype', session)
-    err_msg_tid = get_tid('errormessage', session)
-    err_flag_tid = get_tid('error', session)
-    isis_footprint_tid = get_tid('isisfootprint', session)
-    isis_centroid_tid = get_tid('isiscentroid', session)
-    start_time_tid = get_tid('starttime', session)
-    stop_time_tid = get_tid('stoptime', session)
-    checksum_tid = get_tid('checksum', session)
-
-    # while there are items in the redis queue
-    while int(RQ_main.QueueSize()) > 0 and RQ_lock.available(RQ_main.id_name):
+    # if there are items in the redis queue
+    if int(RQ_main.QueueSize()) > 0 and RQ_lock.available(RQ_main.id_name):
         # get a file from the queue
         item = literal_eval(RQ_main.QueueGet())
         inputfile = item[0]
         fid = item[1]
         archive = item[2]
-        if os.path.isfile(inputfile):
-            pass
-        else:
-            print("{} is not a file\n".format(inputfile))
-        if os.path.isfile(inputfile):
-            logger.info('Starting Process: %s', inputfile)
+        if not os.path.isfile(inputfile):
+            logger.warn("%s is not a file\n", inputfile)
+            pds_session.close()
+            session.close()
+            pds_engine.dispose()
+            upc_engine.dispose()
+            exit()
+        logger.info('Starting Process: %s', inputfile)
 
-            # @TODO refactor this logic.  We're using an object to find a path, returning it,
-            #  then passing it back to the object so that the object can use it.
-            recipeOBJ = Recipe()
-            recipe_json = recipeOBJ.getRecipeJSON(archive)
-            #recipe_json = recipeOBJ.getRecipeJSON(getMission(str(inputfile)))
-            recipeOBJ.AddJsonFile(recipe_json, 'upc')
+        # Update the logger context to include inputfile
+        context['inputfile'] = inputfile
 
-            infile = workarea + os.path.splitext(
-                str(os.path.basename(inputfile)))[0] + '.UPCinput.cub'
-            outfile = workarea + os.path.splitext(
-                str(os.path.basename(inputfile)))[0] + '.UPCoutput.cub'
-            caminfoOUT = workarea + os.path.splitext(
-                str(os.path.basename(inputfile)))[0] + '_caminfo.pvl'
-            EDRsource = inputfile.replace(
-                '/pds_san/PDS_Archive/',
-                'https://pdsimage.wr.ugs.gov/Missions/')
+        # @TODO refactor this logic.  We're using an object to find a path, returning it,
+        #  then passing it back to the object so that the object can use it.
+        recipeOBJ = Recipe()
+        recipe_json = recipeOBJ.getRecipeJSON(archive)
+        #recipe_json = recipeOBJ.getRecipeJSON(getMission(str(inputfile)))
+        recipeOBJ.AddJsonFile(recipe_json, 'upc')
 
-            status = 'success'
-            # Iterate through each process listed in the recipe
-            for item in recipeOBJ.getProcesses():
-                # If any of the processes failed, discontinue processing
-                if status.lower() == 'error':
-                    break
-                elif status.lower() == 'success':
-                    processOBJ = Process()
-                    processOBJ.ProcessFromRecipe(item, recipeOBJ.getRecipe())
-                    # Handle processing based on string description.
-                    if '2isis' in item:
-                        processOBJ.updateParameter('from_', inputfile)
-                        processOBJ.updateParameter('to', outfile)
-                    elif item == 'thmproc':
-                        processOBJ.updateParameter('from_', inputfile)
-                        processOBJ.updateParameter('to', outfile)
-                        thmproc_odd = str(workarea) + str(os.path.splitext(
-                            os.path.basename(inputfile))[0]) + '.UPCoutput.raw.odd.cub'
-                        thmproc_even = str(workarea) + str(
-                            os.path.splitext(os.path.basename(
-                                inputfile))[0]) + '.UPCoutput.raw.even.cub'
-                    elif item == 'handmos':
-                        processOBJ.updateParameter('from_', thmproc_even)
-                        processOBJ.updateParameter('mosaic', thmproc_odd)
-                    elif item == 'spiceinit':
-                        processOBJ.updateParameter('from_', infile)
-                    elif item == 'cubeatt':
-                        band_infile = infile + '+' + str(1)
-                        processOBJ.updateParameter('from_', band_infile)
-                        processOBJ.updateParameter('to', outfile)
-                    elif item == 'footprintinit':
-                        processOBJ.updateParameter('from_', infile)
-                    elif item == 'caminfo':
-                        processOBJ.updateParameter('from_', infile)
-                        processOBJ.updateParameter('to', caminfoOUT)
-                    else:
-                        processOBJ.updateParameter('from_', infile)
-                        processOBJ.updateParameter('to', outfile)
+        infile = os.path.splitext(inputfile)[0] + '.UPCinput.cub'
+        logger.debug("Beginning processing on %s\n", inputfile)
+        outfile = os.path.splitext(inputfile)[0] + '.UPCoutput.cub'
+        caminfoOUT= os.path.splitext(inputfile)[0] + '_caminfo.pvl'
+        EDRsource = inputfile.replace(workarea, web_base)
 
-                    pwd = os.getcwd()
-                    # iterate through functions listed in process obj
-                    for k, v in processOBJ.getProcess().items():
-                        # load a function into func
-                        func = getattr(isis, k)
-                        try:
-                            os.chdir(workarea)
-                            # execute function
-                            func(**v)
-                            os.chdir(pwd)
-                            if item == 'handmos':
-                                if os.path.isfile(thmproc_odd):
-                                    os.rename(thmproc_odd, infile)
-                            else:
-                                if os.path.isfile(outfile):
-                                    os.rename(outfile, infile)
-                            status = 'success'
-                            if '2isis' in item:
-                                label = pvl.load(infile)
-                                infile_bandlist = label['IsisCube']['BandBin'][PDSinfoDICT[archive]['bandbinQuery']]
-                                infile_centerlist = label['IsisCube']['BandBin']['Center']
-                            elif item == 'thmproc':
-                                pass
-                            elif item == 'handmos':
-                                label = pvl.load(infile)
-                                infile_bandlist = label['IsisCube']['BandBin'][PDSinfoDICT[archive]['bandbinQuery']]
-                                infile_centerlist = label['IsisCube']['BandBin']['Center']
-
-                        except ProcessError as e:
-                            print(e)
-                            status = 'error'
-                            processError = item
-
-            # keyword definitions
-            keywordsOBJ = None
-            if status.lower() == 'success':
-                try:
-                    keywordsOBJ = UPCkeywords(caminfoOUT)
-                except:
-                    with open(caminfoOUT, 'r') as f:
-                        filedata = f.read()
-
-                    filedata = filedata.replace(';', '-').replace('&', '-')
-                    filedata = re.sub(r'\-\s+', r'', filedata, flags=re.M)
-
-                    with open(caminfoOUT, 'w') as f:
-                        f.write(filedata)
-
-                    keywordsOBJ = UPCkeywords(caminfoOUT)
-                target_Qobj = session.query(upc_models.Targets).filter(
-                    upc_models.Targets.targetname == keywordsOBJ.getKeyword(
-                        'TargetName').upper()).first()
-
-                instrument_Qobj = session.query(upc_models.Instruments).filter(
-                    upc_models.Instruments.instrument == keywordsOBJ.getKeyword(
-                        'InstrumentId')).first()
-
-                if session.query(upc_models.DataFiles).filter(
-                        upc_models.DataFiles.isisid == keywordsOBJ.getKeyword(
-                            'IsisId')).first() is None:
-
-                    test_input = upc_models.DataFiles(
-                        isisid=keywordsOBJ.getKeyword('IsisId'),
-                        productid=keywordsOBJ.getKeyword('ProductId'),
-                        edr_source=EDRsource,
-                        edr_detached_label='',
-                        instrumentid=instrument_Qobj.instrumentid,
-                        targetid=target_Qobj.targetid)
-
-                    session.merge(test_input)
-                    session.commit()
-
-                Qobj = session.query(upc_models.DataFiles).filter(
-                    upc_models.DataFiles.isisid == keywordsOBJ.getKeyword('IsisId')).first()
-
-                UPCid = Qobj.upcid
-                print(UPCid)
-                # block to add band information to meta_bands
-                if isinstance(infile_bandlist, list):
-                    index = 0
-                    while index < len(infile_bandlist):
-                        B_DBinput = upc_models.MetaBands(
-                            upcid=UPCid, filter=str(
-                                infile_bandlist[index]), centerwave=infile_centerlist[index])
-                        session.merge(B_DBinput)
-                        index = index + 1
+        status = 'success'
+        # Iterate through each process listed in the recipe
+        for item in recipeOBJ.getProcesses():
+            # If any of the processes failed, discontinue processing
+            if status == 'error':
+                break
+            elif status == 'success':
+                processOBJ = Process()
+                processOBJ.ProcessFromRecipe(item, recipeOBJ.getRecipe())
+                # Handle processing based on string description.
+                if '2isis' in item:
+                    processOBJ.updateParameter('from_', inputfile)
+                    processOBJ.updateParameter('to', outfile)
+                elif item == 'thmproc':
+                    processOBJ.updateParameter('from_', inputfile)
+                    processOBJ.updateParameter('to', outfile)
+                    thmproc_odd = str(workarea) + str(os.path.splitext(
+                        os.path.basename(inputfile))[0]) + '.UPCoutput.raw.odd.cub'
+                    thmproc_even = str(workarea) + str(
+                        os.path.splitext(os.path.basename(
+                            inputfile))[0]) + '.UPCoutput.raw.even.cub'
+                elif item == 'handmos':
+                    processOBJ.updateParameter('from_', thmproc_even)
+                    processOBJ.updateParameter('mosaic', thmproc_odd)
+                elif item == 'spiceinit':
+                    processOBJ.updateParameter('from_', infile)
+                elif item == 'cubeatt':
+                    band_infile = infile + '+' + str(1)
+                    processOBJ.updateParameter('from_', band_infile)
+                    processOBJ.updateParameter('to', outfile)
+                elif item == 'footprintinit':
+                    processOBJ.updateParameter('from_', infile)
+                elif item == 'caminfo':
+                    processOBJ.updateParameter('from_', infile)
+                    processOBJ.updateParameter('to', caminfoOUT)
                 else:
+                    processOBJ.updateParameter('from_', infile)
+                    processOBJ.updateParameter('to', outfile)
+
+                pwd = os.getcwd()
+                # iterate through functions listed in process obj
+                for k, v in processOBJ.getProcess().items():
+                    # load a function into func
+                    func = getattr(isis, k)
                     try:
-                        # If infile_centerlist is in "Units" format, grab the value
-                        f_centerlist = float(infile_centerlist[0])
-                    except TypeError:
-                        f_centerlist = float(infile_centerlist)
-                    B_DBinput = upc_models.MetaBands(upcid=UPCid, filter=infile_bandlist, centerwave=f_centerlist)
-                    session.merge(B_DBinput)
-                session.commit()
+                        os.chdir(workarea)
+                        # execute function
+                        func(**v)
+                        os.chdir(pwd)
+                        if item == 'handmos':
+                            if os.path.isfile(thmproc_odd):
+                                os.rename(thmproc_odd, infile)
+                        else:
+                            if os.path.isfile(outfile):
+                                os.rename(outfile, infile)
 
-                # Block to add common keywords
-                testjson = json.load(
-                    open(keyword_def, 'r'))
-                for element_1 in testjson['instrument']['COMMON']:
-                    keyvalue = ""
-                    keytype = testjson['instrument']['COMMON'][element_1]['type']
-                    keyword = testjson['instrument']['COMMON'][element_1]['keyword']
-                    keyword_Qobj = session.query(upc_models.Keywords).filter(
-                        and_(upc_models.Keywords.typename == element_1,
-                             upc_models.Keywords.instrumentid == 1)).first()
+                    except ProcessError as e:
+                        logger.error("%s", e)
+                        status = 'error'
+                        processError = item
 
-                    if keyword_Qobj is None:
-                        continue
-                    else:
-                        keyvalue = keywordsOBJ.getKeyword(keyword)
-                    if keyvalue is None:
-                        continue
-                    keyvalue = db2py(keytype, keyvalue)
-                    try:
-                        DBinput = upc_models.create_table(keytype,
-                                                          upcid=UPCid,
-                                                          typeid=keyword_Qobj.typeid,
-                                                          value=keyvalue)
-                    except Exception as e:
-                        logger.warn("Unable to enter %s into table\n\n%s", keytype, e)
-                        continue
-                    session.merge(DBinput)
-                    try:
-                        session.flush()
-                    except:
-                        logger.warn("Unable to flush database connection")
-                session.commit()
+        pds_label = pvl.load(inputfile)
 
-                for element_1 in testjson['instrument'][archive]:
-                    keyvalue = ""
-                    keytype = testjson['instrument'][archive][element_1]['type']
-                    keyword = testjson['instrument'][archive][element_1]['keyword']
-                    keyword_Qobj = session.query(upc_models.Keywords).filter(
-                        and_(upc_models.Keywords.typename == element_1,
-                             upc_models.Keywords.instrumentid.in_(
-                                 (1, instrument_Qobj.instrumentid)))).first()
+        try:
+            # If there exists an array of values, then the first value is the
+            #  path to the IMG.
+            img_file = pds_label['^IMAGE'][0]
+            d_label = EDRsource
+        except TypeError:
+            img_file = EDRsource
+            d_label = None
 
-                    if keyword_Qobj is None:
-                        continue
-                    else:
-                        keyvalue = keywordsOBJ.getKeyword(keyword)
-                    if keyvalue is None:
-                        logger.debug("Keyword %s not found", keyword)
-                        continue
-                    keyvalue = db2py(keytype, keyvalue)
-                    try:
-                        DBinput = upc_models.create_table(keytype,
-                                                          upcid=UPCid,
-                                                          typeid=keyword_Qobj.typeid,
-                                                          value=keyvalue)
-                    except Exception as e:
-                        logger.warn("Unable to enter %s into database\n\n%s", keytype, e)
-                        continue
-                    session.merge(DBinput)
-                    try:
-                        session.flush()
-                    except:
-                        logger.warn("Unable to flush database connection")
-                session.commit()
+        # get the target from the targets table.
+        target_Qobj = session.query(Targets).filter(
+            Targets.targetname == pds_label['TARGET_NAME'].upper()).first()
 
-                # geometry stuff
-                G_centroid = 'point ({} {})'.format(
-                    str(keywordsOBJ.getKeyword('CentroidLongitude')),
-                    str(keywordsOBJ.getKeyword('CentroidLatitude')))
+        # If no matching table is found, create the entry in the database and
+        #  access the new instance.
+        if target_Qobj is None:
+            target_input = Targets(targetname=pds_label['TARGET_NAME'],
+                                   displayname=pds_label['TARGET_NAME'].title(),
+                                   system=pds_label['TARGET_NAME'])
+            session.merge(target_input)
+            session.commit()
+            target_Qobj = session.query(Targets).filter(Targets.targetname == pds_label['TARGET_NAME']).first()
 
-                G_keyword_Qobj = session.query(upc_models.Keywords.typeid).filter(
-                    upc_models.Keywords.typename == 'isiscentroid').first()
-                G_footprint_Qobj = session.query(upc_models.Keywords.typeid).filter(
-                    upc_models.Keywords.typename == 'isisfootprint').first()
-                G_footprint = keywordsOBJ.getKeyword('GisFootprint')
-                G_DBinput = upc_models.MetaGeometry(upcid=UPCid,
-                                                    typeid=G_keyword_Qobj,
-                                                    value=G_centroid)
-                session.merge(G_DBinput)
-                G_DBinput = upc_models.MetaGeometry(upcid=UPCid,
-                                                    typeid=G_footprint_Qobj,
-                                                    value=G_footprint)
-                session.merge(G_DBinput)
+        # Get the instrument from the instruments table.
+        instrument_Qobj = session.query(Instruments).filter(
+            Instruments.instrument == pds_label['INSTRUMENT_ID'],
+            Instruments.spacecraft == pds_label['SPACECRAFT_NAME']).first()
+
+        # If no matching instrument is found, create the entry in the database
+        #  and access the new instance.
+        if instrument_Qobj is None:
+            instrument_input = Instruments(instrument=pds_label['INSTRUMENT_ID'],
+                                           spacecraft=pds_label['SPACECRAFT_NAME'])
+            session.merge(instrument_input)
+            session.commit()
+            instrument_Qobj = session.query(Instruments).filter(
+                Instruments.instrument == pds_label['INSTRUMENT_ID'],
+                Instruments.spacecraft == pds_label['SPACECRAFT_NAME']).first()
+
+        print(f'instrument {str(instrument_Qobj)}')
+        # keyword definitions
+        keywordsOBJ = None
+        if status == 'success':
+            try:
+                keywordsOBJ = UPCkeywords(caminfoOUT)
+            except:
+                # Some labels are poorly formatted or include characters that
+                #  cannot be parsed with the PVL library.  This finds those
+                #  characters and replaces them so that we can properly parse
+                #  the PVL.
+                with open(caminfoOUT, 'r') as f:
+                    filedata = f.read()
+
+                filedata = filedata.replace(';', '-').replace('&', '-')
+                filedata = re.sub(r'\-\s+', r'', filedata, flags=re.M)
+
+                with open(caminfoOUT, 'w') as f:
+                    f.write(filedata)
+
+                keywordsOBJ = UPCkeywords(caminfoOUT)
+
+            input_datafile = DataFiles(isisid=keywordsOBJ.getKeyword('IsisId'),
+                                                  productid=keywordsOBJ.getKeyword('ProductId'),
+                                                  source=img_file,
+                                                  detached_label=d_label,
+                                                  instrumentid=instrument_Qobj.instrumentid,
+                                                  targetid=target_Qobj.targetid)
+
+            session.merge(input_datafile)
+            session.commit()
+
+            Qobj = session.query(DataFiles).filter( DataFiles.source==img_file).first()
+            UPCid = Qobj.upcid
+
+            # Create a dictionary with keys from the SearchTerms model
+            attributes = dict.fromkeys(SearchTerms.__table__.columns.keys(), None)
+
+            # For each key in the dictionary, get the related keyword from the keywords object
+            for key in attributes:
+                try:
+                    attributes[key] = keywordsOBJ.getKeyword(key)
+                except KeyError:
+                    attributes[key] = None
+                    logger.warn("Unable to find key '%s' in keywords object", key)
+
+            attributes['upctime'] = datetime.datetime.now(pytz.utc).strftime(
+                "%Y-%m-%d %H:%M:%S")
+
+            # Calculate checksum and store in JSON
+            f_hash = hashlib.md5()
+            with open(inputfile, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    f_hash.update(chunk)
+            checksum = f_hash.hexdigest()
+            keywordsOBJ.label['checksum'] = checksum
+
+            attributes['isisfootprint'] = keywordsOBJ.getKeyword('GisFootprint')
+            attributes['err_flag'] = False
+
+            attributes['targetid'] = target_Qobj.targetid
+            attributes['instrumentid'] = instrument_Qobj.instrumentid
+            db_input = SearchTerms(**attributes)
+            session.merge(db_input)
+
+            # dictionary -> str -> dictionary for jsonb workaround. Converts datetime to serializable format
+            json_keywords = json.dumps(keywordsOBJ.label, indent=4, sort_keys=True, default=str)
+            json_keywords = json.loads(json_keywords)
+            db_input = JsonKeywords(upcid=attributes['upcid'], jsonkeywords=json_keywords)
+            session.merge(db_input)
+
+            try:
                 session.flush()
-                session.commit()
+            except:
+                logger.warn("Unable to flush database connection")
+            session.commit()
 
-                f_hash = hashlib.md5()
-                with open(inputfile, "rb") as f:
-                    for chunk in iter(lambda: f.read(4096), b""):
-                        f_hash.update(chunk)
-                checksum = f_hash.hexdigest()
+            AddProcessDB(pds_session, fid, True)
 
-
-                DBinput = upc_models.MetaString(upcid=UPCid, typeid=checksum_tid, value=checksum)
-                session.merge(DBinput)
-                DBinput = upc_models.MetaBoolean(upcid=UPCid, typeid=err_flag_tid, value=False)
-                session.merge(DBinput)
-                session.commit()
-                AddProcessDB(pds_session, fid, True)
+            if not persist:
                 os.remove(infile)
                 os.remove(caminfoOUT)
 
-            elif status.lower() == 'error':
+        elif status == 'error':
+            try:
+                label = pvl.load(infile)
+            except Exception as e:
+                logger.error('%s', e)
+                exit()
+            err_dict = {}
+            upc_id = None
+            date = datetime.datetime.now(pytz.utc).strftime(
+                "%Y-%m-%d %H:%M:%S")
+
+            if '2isis' in processError or processError == 'thmproc':
+                if session.query(DataFiles).filter(
+                        DataFiles.source == img_file.decode(
+                            "utf-8")).first() is None:
+
+                    error_input = DataFiles(isisid='1', source=img_file)
+                    session.merge(error_input)
+                    session.commit()
+
+                EQ1obj = session.query(DataFiles).filter(
+                    DataFiles.source == img_file).first()
+                upc_id = EQ1obj.upcid
+
+                errorMSG = 'Error running {} on file {}'.format(
+                    processError, inputfile)
+
+                err_dict['processdate'] = date
+                err_dict['errortype'] = processError
+                err_dict['errormessage'] = errorMSG
+                err_dict['error'] = True
+            else:
                 try:
                     label = pvl.load(infile)
                 except Exception as e:
-                    logger.info('%s', e)
-                    continue
-                date = datetime.datetime.now(pytz.utc).strftime(
-                    "%Y-%m-%d %H:%M:%S")
+                    logger.error('%s', e)
+                    exit()
 
-                if '2isis' in processError or processError == 'thmproc':
-                    if session.query(upc_models.DataFiles).filter(
-                            upc_models.DataFiles.edr_source == EDRsource.decode(
-                                "utf-8")).first() is None:
+                isisSerial = getISISid(infile)
 
-                        target_Qobj = session.query(upc_models.Targets).filter(
-                            upc_models.Targets.targetname == str(
-                                label['IsisCube']['Instrument']['TargetName']).upper()).first()
+                error_input = DataFiles(isisid=isisSerial,
+                                        productid=label['IsisCube']['Archive']['ProductId'],
+                                        source=img_file,
+                                        instrumentid=instrument_Qobj.instrumentid,
+                                        targetid=target_Qobj.targetid)
+                session.merge(error_input)
+                session.commit()
 
-                        instrument_Qobj = session.query(upc_models.Instruments).filter(
-                            upc_models.Instruments.instrument == str(
-                                label['IsisCube']
-                                ['Instrument']
-                                ['InstrumentId'])).first()
-
-                        error1_input = upc_models.DataFiles(isisid='1',
-                                                            edr_source=EDRsource)
-                        session.merge(error1_input)
-                        session.commit()
-
-                    EQ1obj = session.query(upc_models.DataFiles).filter(
-                        upc_models.DataFiles.edr_source == EDRsource).first()
-                    UPCid = EQ1obj.upcid
-
+                try:
+                    EQ2obj = session.query(DataFiles).filter(
+                        DataFiles.isisid == isisSerial).first()
+                    upc_id = EQ2obj.upcid
                     errorMSG = 'Error running {} on file {}'.format(
                         processError, inputfile)
+                    err_dict['processdate'] = date
+                    err_dict['errortype'] = processError
+                    err_dict['file'] = inputfile
+                    err_dict['errormessage'] = errorMSG
+                    err_dict['error'] = True
+                    logger.warn('%s', errorMSG)
+                    RQ_error.QueueAdd((inputfile, processError))
+                except Exception as e:
+                    logger.warn('%s', e)
 
-                    DBinput = MetaTime(upcid=UPCid,
-                                       typeid=proc_date_tid,
-                                       value=date)
-                    session.merge(DBinput)
+            db_input = SearchTerms(upcid=upc_id, upctime=date, err_flag=True)
+            session.merge(db_input)
 
-                    DBinput = MetaString(upcid=UPCid,
-                                         typeid=err_type_tid,
-                                         value=processError)
-                    session.merge(DBinput)
+            db_input = JsonKeywords(upcid=upc_id, jsonkeywords=err_dict)
+            session.merge(db_input)
+            session.commit()
 
-                    DBinput = MetaString(upcid=UPCid,
-                                         typeid=err_msg_tid,
-                                         value=errorMSG)
-                    session.merge(DBinput)
-
-                    DBinput = MetaBoolean(upcid=UPCid,
-                                          typeid=err_flag_tid,
-                                          value=True)
-                    session.merge(DBinput)
-
-                    DBinput = MetaGeometry(upcid=UPCid,
-                                           typeid=isis_footprint_tid,
-                                           value='POINT(361 0)')
-                    session.merge(DBinput)
-
-                    DBinput = MetaGeometry(upcid=UPCid,
-                                           typeid=isis_centroid_tid,
-                                           value='POINT(361 0)')
-                    session.merge(DBinput)
-
-                    session.commit()
-                else:
-                    try:
-                        label = pvl.load(infile)
-                    except Exception as e:
-                        logger.warn('%s', e)
-                        continue
-
-                    isisSerial = getISISid(infile)
-
-                    if session.query(upc_models.DataFiles).filter(
-                            upc_models.DataFiles.isisid == isisSerial).first() is None:
-                        target_Qobj = session.query(upc_models.Targets).filter(
-                            upc_models.Targets.targetname == str(
-                                label['IsisCube']['Instrument']['TargetName'])
-                            .upper()).first()
-                        instrument_Qobj = session.query(upc_models.Instruments).filter(
-                            upc_models.Instruments.instrument == str(
-                                label['IsisCube']
-                                ['Instrument']
-                                ['InstrumentId'])).first()
-
-                        if target_Qobj is None or instrument_Qobj is None:
-                            continue
-
-                        error2_input = upc_models.DataFiles(isisid=isisSerial, productid=label['IsisCube']['Archive']['ProductId'], edr_source=EDRsource, instrumentid=instrument_Qobj.instrumentid, targetid=target_Qobj.targetid)
-                    session.merge(error2_input)
-                    session.commit()
-
-                    try:
-                        EQ2obj = session.query(upc_models.DataFiles).filter(
-                            upc_models.DataFiles.isisid == isisSerial).first()
-                        UPCid = EQ2obj.upcid
-                        errorMSG = 'Error running {} on file {}'.format(
-                            processError, inputfile)
-
-                        DBinput = MetaTime(upcid=UPCid,
-                                           typeid=proc_date_tid,
-                                           value=date)
-                        session.merge(DBinput)
-
-                        DBinput = MetaString(upcid=UPCid,
-                                             typeid=err_type_tid,
-                                             value=processError)
-                        session.merge(DBinput)
-
-                        DBinput = MetaString(upcid=UPCid,
-                                             typeid=err_msg_tid,
-                                             value=errorMSG)
-                        session.merge(DBinput)
-
-                        DBinput = MetaBoolean(upcid=UPCid,
-                                              typeid=err_flag_tid,
-                                              value=True)
-                        session.merge(DBinput)
-
-                        DBinput = MetaGeometry(upcid=UPCid,
-                                               typeid=isis_footprint_tid,
-                                               value='POINT(361 0)')
-                        session.merge(DBinput)
-
-                        DBinput = MetaGeometry(upcid=UPCid,
-                                               typeid=isis_centroid_tid,
-                                               value='POINT(361 0)')
-                        session.merge(DBinput)
-                    except:
-                        pass
-
-                    try:
-                        v = label['IsisCube']['Instrument']['StartTime']
-                    except KeyError:
-                        v = None
-                    except:
-                        continue
-
-                    try:
-                        DBinput = MetaTime(upcid=UPCid,
-                                           typeid=start_time_tid,
-                                           value=v)
-                        session.merge(DBinput)
-                    except:
-                        continue
-
-                    try:
-                        v = label['IsisCube']['Instrument']['StopTime']
-                    except KeyError:
-                        v = None
-                    DBinput = MetaTime(upcid=UPCid,
-                                       typeid=stop_time_tid,
-                                       value=v)
-                    session.merge(DBinput)
-
-                    session.commit()
-
-                AddProcessDB(pds_session, fid, False)
-                os.remove(infile)
+            AddProcessDB(pds_session, fid, False)
+            os.remove(infile)
 
     # Disconnect from db sessions
     pds_session.close()
@@ -571,7 +464,9 @@ def main():
     # Disconnect from the engines
     pds_engine.dispose()
     upc_engine.dispose()
-    logger.info("UPC processing exited successfully")
+
+    logger.info("UPC processing exited")
 
 if __name__ == "__main__":
-    sys.exit(main())
+    args = parse_args()
+    sys.exit(main(**vars(args)))

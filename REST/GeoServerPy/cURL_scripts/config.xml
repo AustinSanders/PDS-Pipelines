@@ -1,0 +1,13 @@
+
+<!-- This configuration is only needed if you are going to be using the BASH 'database.sh' file  -->
+<dataStore>
+  <name>name_of_store</name>
+  <connectionParameters>
+    <host>hostname</host>
+    <port>port</port>
+    <database>db_name</database>
+    <user>username</user>
+    <passwd>password</passwd>
+    <dbtype>db_type</dbtype>
+  </connectionParameters>
+</dataStore>

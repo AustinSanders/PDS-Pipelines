@@ -4,10 +4,14 @@ import sys
 import logging
 import argparse
 import json
+import pathlib
+import glob
+from os.path import getsize, dirname, splitext
+from shutil import copy2, disk_usage
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files
 from pds_pipelines.RedisQueue import RedisQueue
-from pds_pipelines.config import pds_log, pds_info, pds_db
+from pds_pipelines.config import pds_log, pds_info, pds_db, workarea, disk_usage_ratio
 
 
 def parse_args():
@@ -55,6 +59,7 @@ def main(archive, volume, search, log_level):
         exit()
 
     RQ = RedisQueue('UPC_ReadyQueue')
+    error_queue = RedisQueue('UPC_ErrorQueue')
 
     logger.info("UPC queue: %s", RQ.id_name)
 
@@ -73,13 +78,38 @@ def main(archive, volume, search, log_level):
     else:
         qOBJ = session.query(Files).filter(Files.archiveid == archiveID,
                                            Files.upc_required == 't')
+    if args.query_filter:
+        qf = '%' + args.query_filter + '%'
+        qOBJ = qOBJ.filter(Files.filename.like(qf))
+
+    path = PDSinfoDICT[args.archive]['path']
     if qOBJ:
         addcount = 0
+        size = 0
         for element in qOBJ:
-            fname = PDSinfoDICT[archive]['path'] + element.filename
+            fname = path + element.filename
+            size += getsize(fname)
+
+        if size >= (disk_usage_ratio * size_free ):
+            logger.error("Unable to process %s: size %d exceeds %d",
+                         args.volume, size, (size_free * disk_usage_ratio))
+            exit()
+
+        for element in qOBJ:
+            fname = path + element.filename
             fid = element.fileid
-            RQ.QueueAdd((fname, fid, archive))
-            addcount = addcount + 1
+            try:
+                dest_path = dirname(fname)
+                dest_path = dest_path.replace(path, workarea)
+                pathlib.Path(dest_path).mkdir(parents=True, exist_ok=True)
+                for f in glob.glob(splitext(fname)[0] + r'.*'):
+                    copy2(f, dest_path)
+                RQ.QueueAdd((workarea+element.filename, fid, args.archive))
+                addcount = addcount + 1
+            except Exception as e:
+                error_queue.QueueAdd(f'Unable to copy / queue {fname}: {e}')
+                logger.error('Unable to copy / queue %s: %s', fname, e)
+
 
         logger.info('Files Added to UPC Queue: %s', addcount)
 

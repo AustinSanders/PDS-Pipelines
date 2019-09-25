@@ -139,6 +139,7 @@ def main(log_level, namespace, key):
                  datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + "\n")
 
     logOBJ.write("     ISIS VERSION:   " + isis_version)
+
     if infoHash.getStatus() == 'ERROR':
         logOBJ.write("     JOB STATUS:      " +
                      infoHash.getStatus() + " See Details Below\n")
