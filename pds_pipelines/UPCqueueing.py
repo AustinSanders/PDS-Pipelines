@@ -90,7 +90,7 @@ def main(archive, volume, search, log_level):
             fname = path + element.filename
             size += getsize(fname)
 
-        size_free = disk_usage(workarea)[2]
+        size_free = disk_usage(workarea).free
         if size >= (disk_usage_ratio * size_free ):
             logger.error("Unable to process %s: size %d exceeds %d",
                          args.volume, size, (size_free * disk_usage_ratio))
