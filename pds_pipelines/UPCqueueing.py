@@ -78,8 +78,8 @@ def main(archive, volume, search, log_level):
     else:
         qOBJ = session.query(Files).filter(Files.archiveid == archiveID,
                                            Files.upc_required == 't')
-    if args.query_filter:
-        qf = '%' + args.query_filter + '%'
+    if search:
+        qf = '%' + search + '%'
         qOBJ = qOBJ.filter(Files.filename.like(qf))
 
     path = PDSinfoDICT[args.archive]['path']
@@ -90,6 +90,7 @@ def main(archive, volume, search, log_level):
             fname = path + element.filename
             size += getsize(fname)
 
+        size_free = disk_usage(workarea)[2]
         if size >= (disk_usage_ratio * size_free ):
             logger.error("Unable to process %s: size %d exceeds %d",
                          args.volume, size, (size_free * disk_usage_ratio))
