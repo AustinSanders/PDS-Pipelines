@@ -13,7 +13,7 @@ import argparse
 
 from pysis import isis
 from pysis.exceptions import ProcessError
-from pysis.isis import getsn
+from pysis.isis import getsn, getkey
 
 from pds_pipelines.RedisLock import RedisLock
 from pds_pipelines.RedisQueue import RedisQueue
@@ -26,6 +26,32 @@ from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, D
 from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj, upc_error_queue, web_base
 
 from sqlalchemy import and_
+
+def getPDSid(infile):
+    """ Use ISIS to get the PDS Product ID of a cube.
+
+        Using ISIS `getkey` is preferred over extracting the Product ID 
+        using the PVL library because of an edge case where PVL will
+        erroneously convert Product IDs from string to floating point. 
+
+    Parameters
+    ----------
+    infile : str
+        A string file path from which the Product ID will be extracted.
+
+
+    Returns
+    -------
+    str
+        The PDS Product ID.
+    """
+    prod_id = getkey(from_=infile, keyword="Product_Id", grp="Archive")
+    # in later versions of ISIS, key values are returned as bytes
+    if isinstance(prod_id, bytes):
+        prod_id = prod_id.decode()
+    prod_id = prod_id.replace('\n', '')
+    return prod_id
+
 
 def getISISid(infile):
     """ Use ISIS to get the serial number of a file.
@@ -322,9 +348,10 @@ def main(persist, log_level):
                     f.write(filedata)
 
                 keywordsOBJ = UPCkeywords(caminfoOUT)
+                PDSid = getPDSid(caminfoOUT)
 
             input_datafile = DataFiles(isisid=keywordsOBJ.getKeyword('IsisId'),
-                                                  productid=keywordsOBJ.getKeyword('ProductId'),
+                                                  productid=PDSid,
                                                   source=img_file,
                                                   detached_label=d_label,
                                                   instrumentid=instrument_Qobj.instrumentid,
@@ -423,9 +450,10 @@ def main(persist, log_level):
                     exit()
 
                 isisSerial = getISISid(infile)
+                PDSid = getPDSid(infile)
 
                 error_input = DataFiles(isisid=isisSerial,
-                                        productid=label['IsisCube']['Archive']['ProductId'],
+                                        productid=PDSid,
                                         source=img_file,
                                         instrumentid=instrument_Qobj.instrumentid,
                                         targetid=target_Qobj.targetid)
