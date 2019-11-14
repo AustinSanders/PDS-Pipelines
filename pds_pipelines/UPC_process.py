@@ -327,7 +327,6 @@ def main(persist, log_level):
                 Instruments.instrument == pds_label['INSTRUMENT_ID'],
                 Instruments.spacecraft == pds_label['SPACECRAFT_NAME']).first()
 
-        print(f'instrument {str(instrument_Qobj)}')
         # keyword definitions
         keywordsOBJ = None
         if status == 'success':
@@ -348,10 +347,9 @@ def main(persist, log_level):
                     f.write(filedata)
 
                 keywordsOBJ = UPCkeywords(caminfoOUT)
-                PDSid = getPDSid(caminfoOUT)
 
             input_datafile = DataFiles(isisid=keywordsOBJ.getKeyword('IsisId'),
-                                                  productid=PDSid,
+                                                  productid=getPDSid(caminfoOUT),
                                                   source=img_file,
                                                   detached_label=d_label,
                                                   instrumentid=instrument_Qobj.instrumentid,
