@@ -23,7 +23,7 @@ from pds_pipelines.UPCkeywords import UPCkeywords
 from pds_pipelines.db import db_connect
 from pds_pipelines.models import pds_models
 from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, DataFiles, JsonKeywords
-from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj, upc_error_queue, web_base
+from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj, upc_error_queue, web_base, archive_base
 
 from sqlalchemy import and_
 
@@ -221,9 +221,14 @@ def main(persist, log_level):
 
         infile = os.path.splitext(inputfile)[0] + '.UPCinput.cub'
         logger.debug("Beginning processing on %s\n", inputfile)
+
         outfile = os.path.splitext(inputfile)[0] + '.UPCoutput.cub'
         caminfoOUT= os.path.splitext(inputfile)[0] + '_caminfo.pvl'
-        EDRsource = inputfile.replace(workarea, web_base)
+
+        # Build URL for EDRsource based on archive path from PDSinfo.json
+        archivepath = PDSinfoDICT[archive]['path']
+        origfile = inputfile.replace(workarea,archivepath)
+        EDRsource = origfile.replace(archive_base, web_base)
 
         status = 'success'
         # Iterate through each process listed in the recipe
