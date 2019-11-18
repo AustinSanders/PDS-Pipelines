@@ -302,35 +302,50 @@ def main(persist, log_level):
             img_file = EDRsource
             d_label = None
 
+
         # get the target from the targets table.
+        target_name = pds_label['TARGET_NAME']
         target_Qobj = session.query(Targets).filter(
-            Targets.targetname == pds_label['TARGET_NAME'].upper()).first()
+            Targets.targetname == target_name.upper()).first()
 
         # If no matching table is found, create the entry in the database and
         #  access the new instance.
         if target_Qobj is None:
-            target_input = Targets(targetname=pds_label['TARGET_NAME'],
-                                   displayname=pds_label['TARGET_NAME'].title(),
-                                   system=pds_label['TARGET_NAME'])
+            target_input = Targets(targetname=target_name,
+                                   displayname=target_name.title(),
+                                   system=target_name)
             session.merge(target_input)
             session.commit()
-            target_Qobj = session.query(Targets).filter(Targets.targetname == pds_label['TARGET_NAME']).first()
+            target_Qobj = session.query(Targets).filter(Targets.targetname == target_name).first()
 
+        instrument_name = pds_label['INSTRUMENT_NAME']
+        
+        # PDS3 does not require a keyword to hold spacecraft name,
+        #  and PDS3 defines several (often interchangeable) keywords to
+        #  hold spacecraft name, so each of them in preferred order and grab the first match.
+        # If no match is found, leave as None
+        for sc in ['SPACECRAFT_NAME','INSTRUMENT_HOST_NAME','MISSION_NAME','SPACECRAFT_ID','INSTRUMENT_HOST_ID']:
+            try:
+                spacecraft_name = pds_label[sc]
+                break
+            except KeyError:
+                spacecraft_name = None
+                
         # Get the instrument from the instruments table.
         instrument_Qobj = session.query(Instruments).filter(
-            Instruments.instrument == pds_label['INSTRUMENT_ID'],
-            Instruments.spacecraft == pds_label['SPACECRAFT_NAME']).first()
+            Instruments.instrument == instrument_name,
+            Instruments.spacecraft == spacecraft_name).first()
 
         # If no matching instrument is found, create the entry in the database
         #  and access the new instance.
         if instrument_Qobj is None:
-            instrument_input = Instruments(instrument=pds_label['INSTRUMENT_ID'],
-                                           spacecraft=pds_label['SPACECRAFT_NAME'])
+            instrument_input = Instruments(instrument=instrument_name,
+                                           spacecraft=spacecraft_name)
             session.merge(instrument_input)
             session.commit()
             instrument_Qobj = session.query(Instruments).filter(
-                Instruments.instrument == pds_label['INSTRUMENT_ID'],
-                Instruments.spacecraft == pds_label['SPACECRAFT_NAME']).first()
+                Instruments.instrument == instrument_name,
+                Instruments.spacecraft == spacecraft_name).first()
 
         # keyword definitions
         keywordsOBJ = None
