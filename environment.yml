@@ -1,12 +1,14 @@
 name: PDS-Pipelines
 dependencies:
-    - python=2
+    - python=3
+    - psycopg2
     - lxml
     - pytz
-    - redis
     - sqlalchemy
     - geoalchemy2
+    - pvl
+    - pysis
+    - redis
     - pip
     - pip:
-        - pvl
-        - pysis
+        - redis>=2.0.0,<3.0.0
