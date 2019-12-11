@@ -30,9 +30,9 @@ from sqlalchemy import and_
 def getPDSid(infile):
     """ Use ISIS to get the PDS Product ID of a cube.
 
-        Using ISIS `getkey` is preferred over extracting the Product ID 
+        Using ISIS `getkey` is preferred over extracting the Product ID
         using the PVL library because of an edge case where PVL will
-        erroneously convert Product IDs from string to floating point. 
+        erroneously convert Product IDs from string to floating point.
 
     Parameters
     ----------
@@ -296,7 +296,8 @@ def main(persist, log_level):
         try:
             # If there exists an array of values, then the first value is the
             #  path to the IMG.
-            img_file = pds_label['^IMAGE'][0]
+            original_image_ext = os.path.splitext(pds_label['^IMAGE'][0])[-1]
+            img_file = os.path.splitext(EDRsource)[0] + original_image_ext.lower()
             d_label = EDRsource
         except TypeError:
             img_file = EDRsource
@@ -319,7 +320,7 @@ def main(persist, log_level):
             target_Qobj = session.query(Targets).filter(Targets.targetname == target_name).first()
 
         instrument_name = pds_label['INSTRUMENT_NAME']
-        
+
         # PDS3 does not require a keyword to hold spacecraft name,
         #  and PDS3 defines several (often interchangeable) keywords to
         #  hold spacecraft name, so each of them in preferred order and grab the first match.
@@ -330,7 +331,7 @@ def main(persist, log_level):
                 break
             except KeyError:
                 spacecraft_name = None
-                
+
         # Get the instrument from the instruments table.
         instrument_Qobj = session.query(Instruments).filter(
             Instruments.instrument == instrument_name,
@@ -368,18 +369,29 @@ def main(persist, log_level):
 
                 keywordsOBJ = UPCkeywords(caminfoOUT)
 
-            input_datafile = DataFiles(isisid=keywordsOBJ.getKeyword('IsisId'),
-                                                  productid=getPDSid(caminfoOUT),
-                                                  source=img_file,
-                                                  detached_label=d_label,
-                                                  instrumentid=instrument_Qobj.instrumentid,
-                                                  targetid=target_Qobj.targetid)
+            datafile_Qobj = session.query(DataFiles).filter(
+                DataFiles.source == img_file).first()
+            if datafile_Qobj is None:
+                input_datafile = DataFiles(isisid=keywordsOBJ.getKeyword('IsisId'),
+                                                      productid=getPDSid(caminfoOUT),
+                                                      source=img_file,
+                                                      detached_label=d_label,
+                                                      instrumentid=instrument_Qobj.instrumentid,
+                                                      targetid=target_Qobj.targetid)
 
-            session.merge(input_datafile)
-            session.commit()
+                session.merge(input_datafile)
+                session.commit()
+                datafile_Qobj = session.query(DataFiles).filter(
+                    DataFiles.source == img_file).first()
+            else:
+                session.query(DataFiles).\
+                    filter(DataFiles.source == EDRsource).\
+                    update({'isisid': keywordsOBJ.getKeyword('IsisId'),
+                            'productid': getPDSid(caminfoOUT),
+                            'instrumentid': instrument_Qobj.instrumentid,
+                            'targetid': target_Qobj.targetid})
 
-            Qobj = session.query(DataFiles).filter( DataFiles.source==img_file).first()
-            UPCid = Qobj.upcid
+            UPCid = datafile_Qobj.upcid
 
             # Create a dictionary with keys from the SearchTerms model
             attributes = dict.fromkeys(SearchTerms.__table__.columns.keys(), None)
@@ -391,6 +403,8 @@ def main(persist, log_level):
                 except KeyError:
                     attributes[key] = None
                     logger.warn("Unable to find key '%s' in keywords object", key)
+
+            attributes['upcid'] = UPCid
 
             attributes['upctime'] = datetime.datetime.now(pytz.utc).strftime(
                 "%Y-%m-%d %H:%M:%S")
@@ -408,13 +422,14 @@ def main(persist, log_level):
 
             attributes['targetid'] = target_Qobj.targetid
             attributes['instrumentid'] = instrument_Qobj.instrumentid
-            db_input = SearchTerms(**attributes)
-            session.merge(db_input)
+
+            search_term_db_input = SearchTerms(**attributes)
+            session.merge(search_term_db_input)
 
             # dictionary -> str -> dictionary for jsonb workaround. Converts datetime to serializable format
             json_keywords = json.dumps(keywordsOBJ.label, indent=4, sort_keys=True, default=str)
             json_keywords = json.loads(json_keywords)
-            db_input = JsonKeywords(upcid=attributes['upcid'], jsonkeywords=json_keywords)
+            db_input = JsonKeywords(upcid=UPCid, jsonkeywords=json_keywords)
             session.merge(db_input)
 
             try:
