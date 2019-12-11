@@ -1,6 +1,6 @@
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy import (Column, Integer, Float,
-                        Time, String, Boolean, PrimaryKeyConstraint, ForeignKey, CHAR)
+                        Time, String, Boolean, PrimaryKeyConstraint, ForeignKey, CHAR, DateTime)
 from sqlalchemy.dialects.postgresql import JSONB
 from geoalchemy2 import Geometry
 
@@ -87,8 +87,8 @@ class NewStats(Base):
 class SearchTerms(Base):
     __tablename__ = 'search_terms'
     upcid = Column(Integer, primary_key=True)
-    upctime = Column(Time)
-    starttime = Column(Time)
+    upctime = Column(DateTime)
+    starttime = Column(DateTime)
     solarlongitude = Column(Float)
     meangroundresolution = Column(Float)
     minimumemission = Column(Float)
@@ -112,7 +112,7 @@ class JsonKeywords(Base):
     __tablename__ = "json_keywords"
     upcid = Column(Integer, primary_key=True)
     jsonkeywords = Column(JSONB)
-    
+
 
 class_map = {
     'datafiles': DataFiles,
