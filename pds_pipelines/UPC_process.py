@@ -151,7 +151,10 @@ def parse_args():
     return args
 
 
-def main(persist, log_level):
+def main(user_args):
+    persist = user_args.persist
+    log_level = user_args.log_level
+
     try:
         slurm_job_id = os.environ['SLURM_ARRAY_JOB_ID']
         slurm_array_id = os.environ['SLURM_ARRAY_TASK_ID']
@@ -529,5 +532,4 @@ def main(persist, log_level):
     logger.info("UPC processing exited")
 
 if __name__ == "__main__":
-    args = parse_args()
-    sys.exit(main(**vars(args)))
+    sys.exit(main(parse_args()))

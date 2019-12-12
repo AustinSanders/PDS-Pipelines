@@ -125,7 +125,9 @@ def parse_args(self):
     return args
 
 
-def main(log_level):
+def main(user_args):
+    log_level = user_args.log_level
+
     logger = logging.getLogger('Browse_Process')
     level = logging.getLevelName(log_level)
     logger.setLevel(level)
@@ -251,5 +253,4 @@ def main(log_level):
     pds_engine.dispose()
 
 if __name__ == "__main__":
-    args = parse_args()
-    sys.exit(main(**vars(args)))
+    sys.exit(main(parse_args()))

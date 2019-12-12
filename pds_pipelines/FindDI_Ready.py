@@ -94,7 +94,11 @@ def volume_expired(session, archiveID, volume, testing_date=None):
     return expired
 
 
-def main(archive, volume, log_level):
+def main(user_args):
+    archive = user_args.archive
+    volume = user_args.volume
+    log_level = user_args.log_level
+
     PDSinfoDICT = json.load(open(pds_info, 'r'))
     try:
         archiveID = PDSinfoDICT[archive]['archiveid']
@@ -159,5 +163,4 @@ def main(archive, volume, log_level):
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    sys.exit(main(**vars(args)))
+    sys.exit(main(parse_args()))
