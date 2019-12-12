@@ -34,6 +34,9 @@ def parse_args():
 
 
 def main(key, namespace=None):
+    key = user_args.key
+    namespace = user_args.namespace
+
     if namespace is None:
         namespace = default_namespace
 
@@ -242,5 +245,4 @@ def main(key, namespace=None):
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    sys.exit(main(**vars(args)))
+    sys.exit(main(parse_args()))

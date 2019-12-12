@@ -577,7 +577,11 @@ def parse_args():
     return args
 
 
-def main(key, norun, namespace=None):
+def main(user_args):
+    key = user_args.key
+    norun = user_args.norun
+    namespace = user_args.namespace
+
     if namespace is None:
         namespace = default_namespace
 
@@ -1029,5 +1033,4 @@ def main(key, norun, namespace=None):
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    sys.exit(main(**vars(args)))
+    sys.exit(main(parse_args()))

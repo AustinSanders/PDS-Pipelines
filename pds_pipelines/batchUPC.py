@@ -22,7 +22,9 @@ def parse_args():
     return args
 
 
-def main(log_level):
+def main(user_args):
+    log_level = user_args.log_level
+
     PDS_info = json.load(open(pds_info, 'r'))
     reddis_queue = RedisQueue('UPC_ReadyQueue')
     logger = logging.getLogger('UPC_Queueing')
@@ -76,5 +78,4 @@ def main(log_level):
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    main(**vars(args))
+    main(parse_args())

@@ -31,7 +31,12 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def main(archive, volume, search, log_level):
+def main(user_args):
+    archive = user_args.archive
+    volume = user_args.volume
+    search = user_args.search
+    log_level = user_args.log_level
+
     logger = logging.getLogger('Browse_Queueing.' + archive)
     level = logging.getLevelName(log_level)
     logger.setLevel(level)
@@ -75,5 +80,4 @@ def main(archive, volume, search, log_level):
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    sys.exit(main(**vars(args)))
+    sys.exit(main(parse_args()))

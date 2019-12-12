@@ -27,7 +27,9 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def main(log_level):
+def main(user_args):
+    log_level = user_args.log_level
+
     PDSinfoDICT = json.load(open(pds_info, 'r'))
 
     # Set up logging
@@ -104,5 +106,4 @@ def main(log_level):
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    sys.exit(main(**vars(args)))
+    sys.exit(main(parse_args()))

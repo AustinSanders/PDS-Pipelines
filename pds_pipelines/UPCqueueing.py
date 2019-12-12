@@ -36,7 +36,12 @@ def parse_args():
     return args
 
 
-def main(archive, volume, search, log_level):
+def main(user_args):
+    archive = user_args.archive
+    volume = user_args.volume
+    search = user_args.search
+    log_level = user_args.log_level
+
     logger = logging.getLogger('UPC_Queueing.' + archive)
     level = logging.getLevelName(log_level)
     logger.setLevel(level)
@@ -82,7 +87,7 @@ def main(archive, volume, search, log_level):
         qf = '%' + search + '%'
         qOBJ = qOBJ.filter(Files.filename.like(qf))
 
-    path = PDSinfoDICT[args.archive]['path']
+    path = PDSinfoDICT[archive]['path']
     if qOBJ:
         addcount = 0
         size = 0
@@ -93,7 +98,7 @@ def main(archive, volume, search, log_level):
         size_free = disk_usage(workarea).free
         if size >= (disk_usage_ratio * size_free ):
             logger.error("Unable to process %s: size %d exceeds %d",
-                         args.volume, size, (size_free * disk_usage_ratio))
+                         volume, size, (size_free * disk_usage_ratio))
             exit()
 
         for element in qOBJ:
@@ -105,7 +110,7 @@ def main(archive, volume, search, log_level):
                 pathlib.Path(dest_path).mkdir(parents=True, exist_ok=True)
                 for f in glob.glob(splitext(fname)[0] + r'.*'):
                     copy2(f, dest_path)
-                RQ.QueueAdd((workarea+element.filename, fid, args.archive))
+                RQ.QueueAdd((workarea+element.filename, fid, archive))
                 addcount = addcount + 1
             except Exception as e:
                 error_queue.QueueAdd(f'Unable to copy / queue {fname}: {e}')
@@ -118,5 +123,4 @@ def main(archive, volume, search, log_level):
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    sys.exit(main(**vars(args)))
+    sys.exit(main(parse_args()))

@@ -22,7 +22,9 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def main(log_level):
+def main(user_args):
+    log_level = user_args.log_level
+
     RQ = RedisQueue('LinkQueue')
 
     logger = logging.getLogger('LINK_Process')
@@ -104,5 +106,4 @@ def load_pvl(pvl_file_path):
 
 
 if __name__ == '__main__':
-    args = parse_args()
-    main(**vars(args))
+    main(parse_args())

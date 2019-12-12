@@ -34,7 +34,13 @@ def parse_args():
     return args
 
 
-def main(archive, volume, log_level, search, ingest):
+def main(user_args):
+    archive = user_args.archive
+    volume = user_args.volume
+    search = user_args.search
+    log_level = user_args.log_level
+    ingest = user_args.ingest
+
     RQ_ingest = RedisQueue('Ingest_ReadyQueue')
     RQ_linking = RedisQueue('LinkQueue')
 
@@ -101,5 +107,4 @@ def main(archive, volume, log_level, search, ingest):
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    sys.exit(main(**vars(args)))
+    sys.exit(main(parse_args()))

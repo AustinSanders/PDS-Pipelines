@@ -27,7 +27,10 @@ def parse_args():
     return args
 
 
-def main(log_level, namespace=None):
+def main(user_args):
+    log_level = user_args.log_level
+    namespace = user_args.namespace
+
     if namespace is None:
         namespace = default_namespace
 
@@ -84,5 +87,4 @@ def main(log_level, namespace=None):
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    sys.exit(main(**vars(args)))
+    sys.exit(main(parse_args()))
