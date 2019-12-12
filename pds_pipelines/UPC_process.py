@@ -406,7 +406,7 @@ def main(persist, log_level):
 
             attributes['upcid'] = UPCid
 
-            attributes['upctime'] = datetime.datetime.now(pytz.utc).strftime(
+            attributes['processdate'] = datetime.datetime.now(pytz.utc).strftime(
                 "%Y-%m-%d %H:%M:%S")
 
             # Calculate checksum and store in JSON
@@ -509,7 +509,7 @@ def main(persist, log_level):
                 except Exception as e:
                     logger.warn('%s', e)
 
-            db_input = SearchTerms(upcid=upc_id, upctime=date, err_flag=True)
+            db_input = SearchTerms(upcid=upc_id, processdate=date, err_flag=True)
             session.merge(db_input)
 
             db_input = JsonKeywords(upcid=upc_id, jsonkeywords=err_dict)

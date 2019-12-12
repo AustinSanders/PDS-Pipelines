@@ -31,9 +31,9 @@ def main():
 
             p = Polygon([ul, ll, lr, ur, ul])
 
-            upc_time = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
-            db_input.append(upc_models.SearchTerms(upctime=upc_time,
-                                            starttime=upc_time,
+            date_processed = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
+            db_input.append(upc_models.SearchTerms(processdate=date_processed,
+                                            starttime=date_processed,
                                             solarlongitude=sol_lon[i],
                                             meangroundresolution=mgr[i],
                                             minimumemission=emission_angle[i]-2,
