@@ -87,7 +87,7 @@ class NewStats(Base):
 class SearchTerms(Base):
     __tablename__ = 'search_terms'
     upcid = Column(Integer, primary_key=True)
-    upctime = Column(DateTime)
+    processdate = Column(DateTime)
     starttime = Column(DateTime)
     solarlongitude = Column(Float)
     meangroundresolution = Column(Float)
