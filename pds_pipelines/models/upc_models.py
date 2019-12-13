@@ -2,11 +2,27 @@ from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy import (Column, Integer, Float,
                         Time, String, Boolean, PrimaryKeyConstraint, ForeignKey, CHAR, DateTime)
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import relationship
 from geoalchemy2 import Geometry
 
 import datetime
 
 Base = declarative_base()
+
+class BaseMixin(object):
+    @classmethod
+    def create(cls, session, **kw):
+        obj = cls(**kw)
+        session.add(obj)
+        session.commit()
+        return obj
+
+    @staticmethod
+    def bulkadd(iterable):
+        session = Session()
+        session.add_all(iterable)
+        session.commit()
+        session.close()
 
 
 def create_table(keytype, *args, **kwargs):
@@ -29,7 +45,7 @@ def create_table(keytype, *args, **kwargs):
         print('Keytype {} not found\n'.format(keytype))
 
 
-class DataFiles(Base):
+class DataFiles(BaseMixin, Base):
     __tablename__ = 'datafiles'
     upcid = Column(Integer, primary_key=True, autoincrement = True)
     isisid = Column(String(256))
@@ -39,9 +55,10 @@ class DataFiles(Base):
     instrumentid = Column(Integer, ForeignKey("instruments.instrumentid"))
     targetid = Column(Integer, ForeignKey("targets.targetid"))
     level = Column(CHAR(1))
+    search_term = relationship('SearchTerms', backref="datafiles", uselist=False)
 
 
-class Instruments(Base):
+class Instruments(BaseMixin, Base):
     __tablename__ = 'instruments'
     instrumentid = Column(Integer, primary_key=True, autoincrement = True)
     instrument = Column(String(256), nullable=False)
@@ -52,7 +69,7 @@ class Instruments(Base):
     #product_type = Column(String(8))
 
 
-class Targets(Base):
+class Targets(BaseMixin, Base):
     __tablename__ = 'targets'
     targetid = Column(Integer, primary_key = True, autoincrement = True)
     naifid = Column(Integer)
@@ -66,7 +83,7 @@ class Targets(Base):
     #iau_mean_radius = Column(Float)
 
 
-class NewStats(Base):
+class NewStats(BaseMixin, Base):
     __tablename__ = 'new_stats'
     instrumentid = Column(Integer, primary_key=True)
     targetid = Column(Integer, primary_key=True)
@@ -84,7 +101,7 @@ class NewStats(Base):
     errors = Column(Integer)
 
 
-class SearchTerms(Base):
+class SearchTerms(BaseMixin, Base):
     __tablename__ = 'search_terms'
     upcid = Column(Integer, primary_key=True)
     processdate = Column(DateTime)
@@ -102,13 +119,12 @@ class SearchTerms(Base):
     phaseangle = Column(Float)
     targetid = Column(Integer, ForeignKey("targets.targetid"))
     instrumentid = Column(Integer, ForeignKey("instruments.instrumentid"))
-    missionid = Column(Integer)
-    pdsproductid = Column(Integer)
+    pdsproductid = Column(String(256), ForeignKey("datafiles.productid"))
     err_flag = Column(Boolean)
     isisfootprint = Column(Geometry())
 
 
-class JsonKeywords(Base):
+class JsonKeywords(BaseMixin, Base):
     __tablename__ = "json_keywords"
     upcid = Column(Integer, primary_key=True)
     jsonkeywords = Column(JSONB)
