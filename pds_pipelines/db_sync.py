@@ -52,7 +52,15 @@ def parse_args():
     return args
 
 
-def main(date, instrument, spacecraft, database, target, loglevel, statistics):
+def main(user_args):
+    date = user_args.date
+    instrument = user_args.instrument
+    spacecraft = user_args.spacecraft
+    database = user_args.database
+    target = user_args.target
+    loglevel = user_args.loglevel
+    statistics = user_args.statistics
+
     logging.basicConfig(level=loglevel)
     source_session, _ = db_connect(upc_db)
 
@@ -383,6 +391,5 @@ def sync_upc_id(source_session, dest_sessions, upc_id, meta_types):
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    main(**vars(args))
+    main(parse_args())
 

@@ -1,3 +1,6 @@
+channels:
+  - conda-forge
+
 name: PDS-Pipelines
 dependencies:
     - python=3

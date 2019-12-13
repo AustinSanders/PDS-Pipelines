@@ -32,7 +32,9 @@ def parse_args():
     return args
 
 
-def main(log_level, override):
+def main(user_args):
+    log_level = user_args.log_level
+    override = user_args.override
 
     logger = logging.getLogger('Ingest_Process')
     level = logging.getLevelName(log_level)
@@ -172,5 +174,4 @@ def main(log_level, override):
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    sys.exit(main(**vars(args)))
+    sys.exit(main(parse_args()))

@@ -36,7 +36,12 @@ def parse_args():
     return args
 
 
-def main(archive, volume, jobarray, log_level):
+def main(user_args):
+    archive = user_args.archive
+    volume = user_args.volume
+    jobarray = user_args.jobarray
+    log_level = user_args.log_level
+
     RQ = RedisQueue('DI_ReadyQueue')
 
     PDSinfoDICT = json.load(open(pds_info, 'r'))
@@ -109,5 +114,4 @@ def main(archive, volume, jobarray, log_level):
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    sys.exit(main(**vars(args)))
+    sys.exit(main(parse_args()))
