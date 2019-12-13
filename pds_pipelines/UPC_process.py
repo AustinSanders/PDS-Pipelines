@@ -22,7 +22,7 @@ from pds_pipelines.Process import Process
 from pds_pipelines.UPCkeywords import UPCkeywords
 from pds_pipelines.db import db_connect
 from pds_pipelines.models import pds_models
-from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, DataFiles, JsonKeywords
+from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, DataFiles, JsonKeywords, BaseMixin
 from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj, upc_error_queue, web_base, archive_base
 
 from sqlalchemy import and_
@@ -138,6 +138,37 @@ def AddProcessDB(session, fid, outvalue):
     except:
         return 'ERROR'
 
+def get_target_id(target_name):
+    session, _ = db_connect(upc_db)
+    target_qobj = session.query(Targets).filter(
+        Targets.targetname == target_name.upper()).first()
+
+    # If no matching table is found, create the entry in the database and
+    #  access the new instance.
+    if target_qobj is None:
+        target_qobj = Targets.create(session, targetname=target_name,
+                                              displayname=target_name.title(),
+                                              system=target_name)
+    target_id = target_qobj.targetid
+    session.close()
+    return target_id
+
+def get_instrument_id(instrument_name, spacecraft_name):
+    session, _ = db_connect(upc_db)
+    # Get the instrument from the instruments table.
+    instrument_qobj = session.query(Instruments).filter(
+        Instruments.instrument == instrument_name,
+        Instruments.spacecraft == spacecraft_name).first()
+
+    # If no matching instrument is found, create the entry in the database
+    #  and access the new instance.
+    if instrument_qobj is None:
+        instrument_qobj = Instruments.create(session, instrument=instrument_name,
+                                                      spacecraft=spacecraft_name)
+    instrument_id = instrument_qobj.instrumentid
+    session.close()
+    return instrument_id
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='UPC Processing')
@@ -163,22 +194,12 @@ def main(persist, log_level):
     logger = logging.getLogger('UPC_Process')
     level = logging.getLevelName(log_level)
     logger.setLevel(level)
-    logFileHandle = logging.FileHandler(pds_log + 'Process.log')
+    log_file_handle = logging.FileHandler(pds_log + 'Process.log')
     formatter = logging.Formatter(
         '%(asctime)s - %(job_id)s - %(array_id)s - %(inputfile)s - %(name)s - %(levelname)s, %(message)s')
-    logFileHandle.setFormatter(formatter)
-    logger.addHandler(logFileHandle)
+    log_file_handle.setFormatter(formatter)
+    logger.addHandler(log_file_handle)
     logger = logging.LoggerAdapter(logger, context)
-
-    try:
-        # Connect to database - ignore engine information
-        pds_session, pds_engine = db_connect(pds_db)
-
-        # Connect to database - ignore engine information
-        session, upc_engine = db_connect(upc_db)
-    except Exception as e:
-        logger.error('Unable to connect to database: %s', e)
-
 
     # ***************** Set up logging *****************
 
@@ -202,10 +223,6 @@ def main(persist, log_level):
         archive = item[2]
         if not os.path.isfile(inputfile):
             logger.warn("%s is not a file\n", inputfile)
-            pds_session.close()
-            session.close()
-            pds_engine.dispose()
-            upc_engine.dispose()
             exit()
         logger.info('Starting Process: %s', inputfile)
 
@@ -225,10 +242,10 @@ def main(persist, log_level):
         outfile = os.path.splitext(inputfile)[0] + '.UPCoutput.cub'
         caminfoOUT= os.path.splitext(inputfile)[0] + '_caminfo.pvl'
 
-        # Build URL for EDRsource based on archive path from PDSinfo.json
-        archivepath = PDSinfoDICT[archive]['path']
-        origfile = inputfile.replace(workarea,archivepath)
-        EDRsource = origfile.replace(archive_base, web_base)
+        # Build URL for edr_source based on archive path from PDSinfo.json
+        archive_path = PDSinfoDICT[archive]['path']
+        orig_file = inputfile.replace(workarea, archive_path)
+        edr_source = orig_file.replace(archive_base, web_base)
 
         status = 'success'
         # Iterate through each process listed in the recipe
@@ -290,37 +307,16 @@ def main(persist, log_level):
                         logger.error("%s", e)
                         status = 'error'
                         processError = item
+                        break
 
         pds_label = pvl.load(inputfile)
 
-        try:
-            # If there exists an array of values, then the first value is the
-            #  path to the IMG.
-            original_image_ext = os.path.splitext(pds_label['^IMAGE'][0])[-1]
-            img_file = os.path.splitext(EDRsource)[0] + original_image_ext.lower()
-            d_label = EDRsource
-        except TypeError:
-            img_file = EDRsource
-            d_label = None
-
-
-        # get the target from the targets table.
+        # Get the targetid from the targets table.
         target_name = pds_label['TARGET_NAME']
-        target_Qobj = session.query(Targets).filter(
-            Targets.targetname == target_name.upper()).first()
+        target_id = get_target_id(target_name)
 
-        # If no matching table is found, create the entry in the database and
-        #  access the new instance.
-        if target_Qobj is None:
-            target_input = Targets(targetname=target_name,
-                                   displayname=target_name.title(),
-                                   system=target_name)
-            session.merge(target_input)
-            session.commit()
-            target_Qobj = session.query(Targets).filter(Targets.targetname == target_name).first()
-
+        # Get the instrumentid from the instruments table.
         instrument_name = pds_label['INSTRUMENT_NAME']
-
         # PDS3 does not require a keyword to hold spacecraft name,
         #  and PDS3 defines several (often interchangeable) keywords to
         #  hold spacecraft name, so each of them in preferred order and grab the first match.
@@ -331,200 +327,163 @@ def main(persist, log_level):
                 break
             except KeyError:
                 spacecraft_name = None
+        instrument_id = get_instrument_id(instrument_name, spacecraft_name)
 
-        # Get the instrument from the instruments table.
-        instrument_Qobj = session.query(Instruments).filter(
-            Instruments.instrument == instrument_name,
-            Instruments.spacecraft == spacecraft_name).first()
+        ######## Generate DataFiles Record ########
+        try:
+            # If there exists an array of values, then the first value is the
+            #  path to the IMG.
+            original_image_ext = os.path.splitext(pds_label['^IMAGE'][0])[-1]
+            img_file = os.path.splitext(edr_source)[0] + original_image_ext.lower()
+            d_label = edr_source
+        except TypeError:
+            img_file = edr_source
+            d_label = None
 
-        # If no matching instrument is found, create the entry in the database
-        #  and access the new instance.
-        if instrument_Qobj is None:
-            instrument_input = Instruments(instrument=instrument_name,
-                                           spacecraft=spacecraft_name)
-            session.merge(instrument_input)
-            session.commit()
-            instrument_Qobj = session.query(Instruments).filter(
-                Instruments.instrument == instrument_name,
-                Instruments.spacecraft == spacecraft_name).first()
+        datafile_attributes = dict.fromkeys(DataFiles.__table__.columns.keys(), None)
 
-        # keyword definitions
-        keywordsOBJ = None
-        if status == 'success':
-            try:
-                keywordsOBJ = UPCkeywords(caminfoOUT)
-            except:
-                # Some labels are poorly formatted or include characters that
-                #  cannot be parsed with the PVL library.  This finds those
-                #  characters and replaces them so that we can properly parse
-                #  the PVL.
-                with open(caminfoOUT, 'r') as f:
-                    filedata = f.read()
+        datafile_attributes['source'] = img_file
+        datafile_attributes['detached_label'] = edr_source
 
-                filedata = filedata.replace(';', '-').replace('&', '-')
-                filedata = re.sub(r'\-\s+', r'', filedata, flags=re.M)
+        try:
+            isis_id = getISISid(infile)
+        except:
+            isis_id = '1'
 
-                with open(caminfoOUT, 'w') as f:
-                    f.write(filedata)
+        datafile_attributes['isisid'] = isis_id
 
-                keywordsOBJ = UPCkeywords(caminfoOUT)
+        try:
+            product_id = getPDSid(infile)
+        except:
+            product_id = None
 
-            datafile_Qobj = session.query(DataFiles).filter(
-                DataFiles.source == img_file).first()
-            if datafile_Qobj is None:
-                input_datafile = DataFiles(isisid=keywordsOBJ.getKeyword('IsisId'),
-                                                      productid=getPDSid(caminfoOUT),
-                                                      source=img_file,
-                                                      detached_label=d_label,
-                                                      instrumentid=instrument_Qobj.instrumentid,
-                                                      targetid=target_Qobj.targetid)
+        datafile_attributes['productid'] = product_id
+        datafile_attributes['instrumentid'] = instrument_id,
+        datafile_attributes['targetid'] = target_id
 
-                session.merge(input_datafile)
-                session.commit()
-                datafile_Qobj = session.query(DataFiles).filter(
-                    DataFiles.source == img_file).first()
-            else:
-                session.query(DataFiles).\
-                    filter(DataFiles.source == EDRsource).\
-                    update({'isisid': keywordsOBJ.getKeyword('IsisId'),
-                            'productid': getPDSid(caminfoOUT),
-                            'instrumentid': instrument_Qobj.instrumentid,
-                            'targetid': target_Qobj.targetid})
+        session, upc_engine = db_connect(upc_db)
+        datafile_qobj = session.query(DataFiles).filter(
+            DataFiles.source == img_file).first()
 
-            UPCid = datafile_Qobj.upcid
+        if datafile_qobj is None:
+            DataFiles.create(session, **datafile_attributes)
+        else:
+            datafile_attributes.pop('upcid')
+            session, upc_engine = db_connect(upc_db)
+            session.query(DataFiles).\
+                filter(DataFiles.source == img_file).\
+                update(datafile_attributes)
+        session.commit()
+        session.close()
 
-            # Create a dictionary with keys from the SearchTerms model
-            attributes = dict.fromkeys(SearchTerms.__table__.columns.keys(), None)
+        session, upc_engine = db_connect(upc_db)
+        upc_id = session.query(DataFiles).filter(
+            DataFiles.source == img_file).first().upcid
+        session.close()
 
+        ######## Generate SearchTerms Record ########
+        search_term_attributes = dict.fromkeys(SearchTerms.__table__.columns.keys(), None)
+        search_term_attributes['err_flag'] = True
+
+        try:
+            keywordsOBJ = UPCkeywords(caminfoOUT)
+        except:
+            keywordsOBJ = None
+
+        if keywordsOBJ:
             # For each key in the dictionary, get the related keyword from the keywords object
-            for key in attributes:
+            for key in search_term_attributes.keys():
                 try:
-                    attributes[key] = keywordsOBJ.getKeyword(key)
+                    search_term_attributes[key] = keywordsOBJ.getKeyword(key)
                 except KeyError:
-                    attributes[key] = None
+                    search_term_attributes[key] = None
                     logger.warn("Unable to find key '%s' in keywords object", key)
 
-            attributes['upcid'] = UPCid
+            search_term_attributes['isisfootprint'] = keywordsOBJ.getKeyword('GisFootprint')
+            search_term_attributes['err_flag'] = False
 
-            attributes['upctime'] = datetime.datetime.now(pytz.utc).strftime(
-                "%Y-%m-%d %H:%M:%S")
+        search_term_attributes['upcid'] = upc_id
 
-            # Calculate checksum and store in JSON
-            f_hash = hashlib.md5()
-            with open(inputfile, "rb") as f:
-                for chunk in iter(lambda: f.read(4096), b""):
-                    f_hash.update(chunk)
-            checksum = f_hash.hexdigest()
-            keywordsOBJ.label['checksum'] = checksum
+        try:
+            product_id = getPDSid(infile)
+        except:
+            product_id = None
 
-            attributes['isisfootprint'] = keywordsOBJ.getKeyword('GisFootprint')
-            attributes['err_flag'] = False
+        search_term_attributes['pdsproductid'] = product_id
 
-            attributes['targetid'] = target_Qobj.targetid
-            attributes['instrumentid'] = instrument_Qobj.instrumentid
+        search_term_attributes['upctime'] = datetime.datetime.now(pytz.utc).strftime(
+            "%Y-%m-%d %H:%M:%S")
 
-            search_term_db_input = SearchTerms(**attributes)
-            session.merge(search_term_db_input)
+        search_term_attributes['targetid'] = target_id
+        search_term_attributes['instrumentid'] = instrument_id
 
-            # dictionary -> str -> dictionary for jsonb workaround. Converts datetime to serializable format
+        session, upc_engine = db_connect(upc_db)
+        search_terms_qobj = session.query(SearchTerms).filter(
+            SearchTerms.upcid == upc_id).first()
+
+        if search_terms_qobj is None:
+            SearchTerms.create(session, **search_term_attributes)
+        else:
+            search_term_attributes.pop('upcid')
+            session, upc_engine = db_connect(upc_db)
+            session.query(SearchTerms).\
+                filter(SearchTerms.upcid == upc_id).\
+                update(search_term_attributes)
+        session.commit()
+        session.close()
+
+        ######## Generate JsonKeywords Record ########
+        json_keywords_attributes = dict.fromkeys(JsonKeywords.__table__.columns.keys(), None)
+
+        json_keywords_attributes['upcid'] = upc_id
+
+        try:
             json_keywords = json.dumps(keywordsOBJ.label, indent=4, sort_keys=True, default=str)
             json_keywords = json.loads(json_keywords)
-            db_input = JsonKeywords(upcid=UPCid, jsonkeywords=json_keywords)
-            session.merge(db_input)
-
-            try:
-                session.flush()
-            except:
-                logger.warn("Unable to flush database connection")
-            session.commit()
-
-            AddProcessDB(pds_session, fid, True)
-
-            if not persist:
-                os.remove(infile)
-                os.remove(caminfoOUT)
-
-        elif status == 'error':
-            try:
-                label = pvl.load(infile)
-            except Exception as e:
-                logger.error('%s', e)
-                exit()
+        except:
+            errorMSG = 'Error running {} on file {}'.format(processError, infile)
             err_dict = {}
-            upc_id = None
-            date = datetime.datetime.now(pytz.utc).strftime(
+            err_dict['processdate'] = datetime.datetime.now(pytz.utc).strftime(
                 "%Y-%m-%d %H:%M:%S")
+            err_dict['errortype'] = processError
+            err_dict['file'] = inputfile
+            err_dict['errormessage'] = errorMSG
+            err_dict['error'] = True
+            json_keywords = err_dict
 
-            if '2isis' in processError or processError == 'thmproc':
-                if session.query(DataFiles).filter(
-                        DataFiles.source == img_file.decode(
-                            "utf-8")).first() is None:
+        json_keywords_attributes['jsonkeywords'] = json_keywords
 
-                    error_input = DataFiles(isisid='1', source=img_file)
-                    session.merge(error_input)
-                    session.commit()
+        session, upc_engine = db_connect(upc_db)
+        json_keywords_qobj = session.query(JsonKeywords).filter(
+            JsonKeywords.upcid == upc_id).first()
 
-                EQ1obj = session.query(DataFiles).filter(
-                    DataFiles.source == img_file).first()
-                upc_id = EQ1obj.upcid
+        if json_keywords_qobj is None:
+            JsonKeywords.create(session, **json_keywords_attributes)
+        else:
+            json_keywords_attributes.pop('upcid')
+            session, upc_engine = db_connect(upc_db)
+            session.query(JsonKeywords).\
+                filter(JsonKeywords.upcid == upc_id).\
+                update(json_keywords_attributes)
+        session.commit()
+        session.close()
 
-                errorMSG = 'Error running {} on file {}'.format(
-                    processError, inputfile)
+        try:
+            session.flush()
+        except:
+            logger.warn("Unable to flush database connection")
 
-                err_dict['processdate'] = date
-                err_dict['errortype'] = processError
-                err_dict['errormessage'] = errorMSG
-                err_dict['error'] = True
-            else:
-                try:
-                    label = pvl.load(infile)
-                except Exception as e:
-                    logger.error('%s', e)
-                    exit()
+        pds_session, pds_engine = db_connect(pds_db)
+        AddProcessDB(pds_session, fid, True)
+        pds_session.close()
 
-                isisSerial = getISISid(infile)
-                PDSid = getPDSid(infile)
-
-                error_input = DataFiles(isisid=isisSerial,
-                                        productid=PDSid,
-                                        source=img_file,
-                                        instrumentid=instrument_Qobj.instrumentid,
-                                        targetid=target_Qobj.targetid)
-                session.merge(error_input)
-                session.commit()
-
-                try:
-                    EQ2obj = session.query(DataFiles).filter(
-                        DataFiles.isisid == isisSerial).first()
-                    upc_id = EQ2obj.upcid
-                    errorMSG = 'Error running {} on file {}'.format(
-                        processError, inputfile)
-                    err_dict['processdate'] = date
-                    err_dict['errortype'] = processError
-                    err_dict['file'] = inputfile
-                    err_dict['errormessage'] = errorMSG
-                    err_dict['error'] = True
-                    logger.warn('%s', errorMSG)
-                    RQ_error.QueueAdd((inputfile, processError))
-                except Exception as e:
-                    logger.warn('%s', e)
-
-            db_input = SearchTerms(upcid=upc_id, upctime=date, err_flag=True)
-            session.merge(db_input)
-
-            db_input = JsonKeywords(upcid=upc_id, jsonkeywords=err_dict)
-            session.merge(db_input)
-            session.commit()
-
-            AddProcessDB(pds_session, fid, False)
+        if not persist:
             os.remove(infile)
+            os.remove(caminfoOUT)
 
-    # Disconnect from db sessions
-    pds_session.close()
-    session.close()
-    # Disconnect from the engines
-    pds_engine.dispose()
-    upc_engine.dispose()
+        # Disconnect from the engines
+        pds_engine.dispose()
+        upc_engine.dispose()
 
     logger.info("UPC processing exited")
 
