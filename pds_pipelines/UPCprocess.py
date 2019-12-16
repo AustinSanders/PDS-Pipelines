@@ -430,7 +430,6 @@ def main(user_args):
             SearchTerms.create(session, **search_term_attributes)
         else:
             search_term_attributes.pop('upcid')
-            session, upc_engine = db_connect(upc_db)
             session.query(SearchTerms).\
                 filter(SearchTerms.upcid == upc_id).\
                 update(search_term_attributes)
@@ -466,7 +465,6 @@ def main(user_args):
             JsonKeywords.create(session, **json_keywords_attributes)
         else:
             json_keywords_attributes.pop('upcid')
-            session, upc_engine = db_connect(upc_db)
             session.query(JsonKeywords).\
                 filter(JsonKeywords.upcid == upc_id).\
                 update(json_keywords_attributes)
