@@ -24,9 +24,9 @@ queries = {
 
 def main():
     path = os.path.dirname(os.path.abspath(__file__)) + '/json/'
-
+    session, _ = db_connect(upc_db)
+    
     for key in queries:
-        session, _ = db_connect(upc_db)
         json_query = "with t AS ({}) SELECT json_agg(t) FROM t;".format(queries[key])
         output = session.execute(json_query)
         json_output = json.dumps([dict(line) for line in output])
