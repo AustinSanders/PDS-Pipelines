@@ -375,11 +375,10 @@ def main(user_args):
             DataFiles.create(session, **datafile_attributes)
         else:
             datafile_attributes.pop('upcid')
-            session, upc_engine = db_connect(upc_db)
             session.query(DataFiles).\
                 filter(DataFiles.source == img_file).\
                 update(datafile_attributes)
-        session.commit()
+            session.commit()
         session.close()
 
         session = upc_session_maker()
@@ -435,7 +434,7 @@ def main(user_args):
             session.query(SearchTerms).\
                 filter(SearchTerms.upcid == upc_id).\
                 update(search_term_attributes)
-        session.commit()
+            session.commit()
         session.close()
 
         ######## Generate JsonKeywords Record ########
@@ -471,7 +470,7 @@ def main(user_args):
             session.query(JsonKeywords).\
                 filter(JsonKeywords.upcid == upc_id).\
                 update(json_keywords_attributes)
-        session.commit()
+            session.commit()
         session.close()
 
         try:
