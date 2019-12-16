@@ -29,7 +29,7 @@ def main():
         session, _ = db_connect(upc_db)
         json_query = "with t AS ({}) SELECT json_agg(t) FROM t;".format(queries[key])
         output = session.execute(json_query)
-        json_output = json.dumps([dict(r) for r in output])
+        json_output = json.dumps([dict(line) for line in output])
 
         with open(path + key + ".json", "w") as json_file:
             json_file.write(json_output)
