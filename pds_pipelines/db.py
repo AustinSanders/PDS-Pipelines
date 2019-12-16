@@ -26,4 +26,4 @@ def db_connect(cred):
         print("Credentials not found for {}".format(cred))
     metadata = MetaData(bind=engine)
     Session = sessionmaker(bind=engine)
-    return Session, metadata
+    return Session, engine
