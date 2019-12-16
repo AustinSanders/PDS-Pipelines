@@ -138,8 +138,8 @@ def AddProcessDB(session, fid, outvalue):
     except:
         return 'ERROR'
 
-def get_target_id(target_name):
-    session, _ = db_connect(upc_db)
+def get_target_id(target_name, session_maker):
+    session = session_maker()
     target_qobj = session.query(Targets).filter(
         Targets.targetname == target_name.upper()).first()
 
@@ -153,8 +153,8 @@ def get_target_id(target_name):
     session.close()
     return target_id
 
-def get_instrument_id(instrument_name, spacecraft_name):
-    session, _ = db_connect(upc_db)
+def get_instrument_id(instrument_name, spacecraft_name, session_maker):
+    session = session_maker()
     # Get the instrument from the instruments table.
     instrument_qobj = session.query(Instruments).filter(
         Instruments.instrument == instrument_name,
@@ -183,6 +183,9 @@ def parse_args():
 
 
 def main(user_args):
+    upc_session_maker, upc_engine = db_connect(upc_db)
+    pds_session_maker, pds_engine = db_connect(pds_db)
+
     persist = user_args.persist
     log_level = user_args.log_level
 
@@ -316,7 +319,7 @@ def main(user_args):
 
         # Get the targetid from the targets table.
         target_name = pds_label['TARGET_NAME']
-        target_id = get_target_id(target_name)
+        target_id = get_target_id(target_name, upc_session_maker)
 
         # Get the instrumentid from the instruments table.
         instrument_name = pds_label['INSTRUMENT_NAME']
@@ -330,7 +333,7 @@ def main(user_args):
                 break
             except KeyError:
                 spacecraft_name = None
-        instrument_id = get_instrument_id(instrument_name, spacecraft_name)
+        instrument_id = get_instrument_id(instrument_name, spacecraft_name, upc_session_maker)
 
         ######## Generate DataFiles Record ########
         try:
@@ -364,7 +367,7 @@ def main(user_args):
         datafile_attributes['instrumentid'] = instrument_id,
         datafile_attributes['targetid'] = target_id
 
-        session, upc_engine = db_connect(upc_db)
+        session = upc_session_maker()
         datafile_qobj = session.query(DataFiles).filter(
             DataFiles.source == img_file).first()
 
@@ -379,7 +382,7 @@ def main(user_args):
         session.commit()
         session.close()
 
-        session, upc_engine = db_connect(upc_db)
+        session = upc_session_maker()
         upc_id = session.query(DataFiles).filter(
             DataFiles.source == img_file).first().upcid
         session.close()
@@ -414,13 +417,13 @@ def main(user_args):
 
         search_term_attributes['pdsproductid'] = product_id
 
-        search_term_attributes['upctime'] = datetime.datetime.now(pytz.utc).strftime(
+        search_term_attributes['processdate'] = datetime.datetime.now(pytz.utc).strftime(
             "%Y-%m-%d %H:%M:%S")
 
         search_term_attributes['targetid'] = target_id
         search_term_attributes['instrumentid'] = instrument_id
 
-        session, upc_engine = db_connect(upc_db)
+        session = upc_session_maker()
         search_terms_qobj = session.query(SearchTerms).filter(
             SearchTerms.upcid == upc_id).first()
 
@@ -456,7 +459,7 @@ def main(user_args):
 
         json_keywords_attributes['jsonkeywords'] = json_keywords
 
-        session, upc_engine = db_connect(upc_db)
+        session = upc_session_maker()
         json_keywords_qobj = session.query(JsonKeywords).filter(
             JsonKeywords.upcid == upc_id).first()
 
@@ -476,7 +479,7 @@ def main(user_args):
         except:
             logger.warn("Unable to flush database connection")
 
-        pds_session, pds_engine = db_connect(pds_db)
+        pds_session = pds_session_maker()
         AddProcessDB(pds_session, fid, True)
         pds_session.close()
 
