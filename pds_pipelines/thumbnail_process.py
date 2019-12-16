@@ -19,7 +19,7 @@ from pds_pipelines.Process import Process
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.upc_models import MetaString, DataFiles
 from pds_pipelines.models.pds_models import ProcessRuns
-from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db, lock_obj
+from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db, lock_obj, upc_error_queue
 from pds_pipelines.UPC_process import get_tid
 
 def getISISid(infile):
@@ -31,9 +31,6 @@ def getISISid(infile):
 
 
 def scaleFactor(line, sample, jsonfile):
-
-#    pdb.set_trace()
-
     infoDICT = json.load(open(jsonfile, 'r'))
 
     maxLine = int(infoDICT['reduced']['thumbnail']['maxlines'])
@@ -51,7 +48,7 @@ def scaleFactor(line, sample, jsonfile):
     else:
         scalefactor = sample/maxSample
         testline = int(line/scalefactor)
-         
+
         if testline < minLine:
             scalefactor = line/minLine
 
@@ -61,8 +58,6 @@ def scaleFactor(line, sample, jsonfile):
 
 
 def makedir(inputfile):
-#    pdb.set_trace()
-
     temppath = os.path.dirname(inputfile).lower()
     # @TODO change finalpath back to production path
     #finalpath = temppath.replace('/pds_san/pds_archive/', '/home/arsanders/PDS-Pipelines/products/thumb/')
@@ -78,7 +73,6 @@ def makedir(inputfile):
     return finalpath
 
 def DB_addURL(session, isisSerial, inputfile, tid):
-    # pdb.set_trace()
     newisisSerial = isisSerial.split(':')[0]
     likestr = '%' + newisisSerial + '%'
     Qobj = session.query(DataFiles).filter(DataFiles.isisid.like(likestr)).first()
@@ -101,7 +95,6 @@ def DB_addURL(session, isisSerial, inputfile, tid):
 
 
 def AddProcessDB(session, fid, outvalue):
-    # pdb.set_trace()
     date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
 
     processDB = ProcessRuns(fileid=fid,
@@ -119,17 +112,16 @@ def AddProcessDB(session, fid, outvalue):
 
 def main():
 
-#    pdb.set_trace()
-
-    # Set up logging 
+    # Set up logging
     logger = logging.getLogger('Thumbnail_Process')
     logger.setLevel(logging.INFO)
     logFileHandle = logging.FileHandler(pds_log + 'Process.log')
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
-    logger.addHandler(logFileHandle)    
+    logger.addHandler(logFileHandle)
 
     RQ_main = RedisQueue('Thumbnail_ReadyQueue')
+    RQ_error = RedisQueue(upc_error_queue)
     RQ_lock = RedisLock(lock_obj)
     RQ_lock.add({RQ_main.id_name: '1'})
 
@@ -148,7 +140,7 @@ def main():
         if os.path.isfile(inputfile):
             logger.info('Starting Process: %s', inputfile)
 
-            finalpath = makedir(inputfile)                  
+            finalpath = makedir(inputfile)
 
             recipeOBJ = Recipe()
             recip_json = recipeOBJ.getRecipeJSON(archive)
@@ -177,7 +169,7 @@ def main():
                             query_band_set = set(query_bands)
                         except:
                             query_band_set = set([query_bands])
-                        
+
                         # Iterate through 'bands' and grab the first value that is present in the
                         #  set defined by 'bandbinquery' -- if not present, default to 1
                         exband = next((band for band in bands if band in query_band_set), 1)
@@ -236,8 +228,9 @@ def main():
                 os.remove(infile)
                 logger.info('Thumbnail Process Success: %s', inputfile)
 
-                AddProcessDB(pds_session, fid, 't')  
+                AddProcessDB(pds_session, fid, 't')
         else:
+            RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during thumbnail processing')
             logger.error('File %s Not Found', inputfile)
 
     # Close all database connections
@@ -245,6 +238,7 @@ def main():
     upc_session.close()
     pds_engine.dispose()
     upc_engine.dispose()
-    
+
+
 if __name__ == "__main__":
     sys.exit(main())

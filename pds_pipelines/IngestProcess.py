@@ -12,7 +12,7 @@ from ast import literal_eval
 from pds_pipelines.RedisQueue import RedisQueue
 from pds_pipelines.RedisLock import RedisLock
 from pds_pipelines.db import db_connect
-from pds_pipelines.config import pds_info, pds_log, pds_db, archive_base, web_base, lock_obj
+from pds_pipelines.config import pds_info, pds_log, pds_db, archive_base, web_base, lock_obj, upc_error_queue
 from pds_pipelines.models.pds_models import Files
 
 
@@ -50,6 +50,7 @@ def main(user_args):
     PDSinfoDICT = json.load(open(pds_info, 'r'))
 
     RQ_main = RedisQueue('Ingest_ReadyQueue')
+    RQ_error = RedisQueue(upc_error_queue)
     RQ_lock = RedisLock(lock_obj)
     RQ_lock.add({RQ_main.id_name: '1'})
     RQ_work = RedisQueue('Ingest_WorkQueue')
@@ -76,6 +77,12 @@ def main(user_args):
         item = literal_eval(RQ_main.QueueGet())
         inputfile = item[0]
         archive = item[1]
+
+        if not os.path.isfile(inputfile):
+            RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during ingest processing')
+            logger.warn("%s is not a file\n", inputfile)
+            continue
+
         RQ_work.QueueAdd(inputfile)
 
         subfile = inputfile.replace(PDSinfoDICT[archive]['path'], '')
