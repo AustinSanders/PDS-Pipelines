@@ -20,7 +20,7 @@ from pds_pipelines.Process import Process
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.upc_models import MetaString, DataFiles
 from pds_pipelines.models.pds_models import ProcessRuns
-from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db, lock_obj
+from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db, lock_obj, upc_error_queue
 from pds_pipelines.UPC_process import get_tid
 
 def getISISid(infile):
@@ -137,6 +137,7 @@ def main(user_args):
     logger.addHandler(logFileHandle)
 
     RQ_main = RedisQueue('Browse_ReadyQueue')
+    RQ_error = RedisQueue(upc_error_queue)
     RQ_lock = RedisLock(lock_obj)
     RQ_lock.add({RQ_main.id_name: '1'})
 
@@ -245,6 +246,7 @@ def main(user_args):
                 logger.info('Browse Process Success: %s', inputfile)
                 AddProcessDB(pds_session, fid, 't')
         else:
+            RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during browse processing')
             logger.error('File %s Not Found', inputfile)
 
     upc_session.close()
