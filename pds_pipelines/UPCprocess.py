@@ -52,7 +52,6 @@ def getPDSid(infile):
     prod_id = prod_id.replace('\n', '')
     return prod_id
 
-
 def getISISid(infile):
     """ Use ISIS to get the serial number of a file.
 
@@ -73,34 +72,6 @@ def getISISid(infile):
         serial_num = serial_num.decode()
     newisisSerial = serial_num.replace('\n', '')
     return newisisSerial
-
-
-def db2py(key_type, value):
-    """ Coerce database syntax to Python syntax (e.g. 'true' to True)
-
-    Parameters
-    ----------
-    key_type : str
-        A string type description of the value.
-    value : obj
-        The value of the object being coerced to Python syntax
-
-    Returns
-    -------
-    out : obj
-        A Python-syntax value based on the keytype and value pair.
-    """
-
-    if key_type == "double":
-        if isinstance(value, pvl.Units):
-            # pvl.Units(value=x, units=y), we are only interested in value
-            value = value.value
-        return value
-    elif key_type == "boolean":
-        return (str(value).lower() == "true")
-    else:
-        return value
-
 
 def AddProcessDB(session, fid, outvalue):
     """ Add a process run to the database.
@@ -138,7 +109,9 @@ def AddProcessDB(session, fid, outvalue):
     except:
         return 'ERROR'
 
-def get_target_id(target_name, session_maker):
+def get_target_id(pds_label, session_maker):
+    target_name = pds_label['TARGET_NAME']
+
     session = session_maker()
     target_qobj = session.query(Targets).filter(
         Targets.targetname == target_name.upper()).first()
@@ -153,7 +126,19 @@ def get_target_id(target_name, session_maker):
     session.close()
     return target_id
 
-def get_instrument_id(instrument_name, spacecraft_name, session_maker):
+def get_instrument_id(pds_label, session_maker):
+    instrument_name = pds_label['INSTRUMENT_NAME']
+    # PDS3 does not require a keyword to hold spacecraft name,
+    #  and PDS3 defines several (often interchangeable) keywords to
+    #  hold spacecraft name, so each of them in preferred order and grab the first match.
+    # If no match is found, leave as None
+    for sc in ['SPACECRAFT_NAME','INSTRUMENT_HOST_NAME','MISSION_NAME','SPACECRAFT_ID','INSTRUMENT_HOST_ID']:
+        try:
+            spacecraft_name = pds_label[sc]
+            break
+        except KeyError:
+            spacecraft_name = None
+
     session = session_maker()
     # Get the instrument from the instruments table.
     instrument_qobj = session.query(Instruments).filter(
@@ -169,6 +154,148 @@ def get_instrument_id(instrument_name, spacecraft_name, session_maker):
     session.close()
     return instrument_id
 
+def create_datafiles_record(pds_label, input_cube, session_maker):
+    try:
+        # If there exists an array of values, then the first value is the
+        #  path to the IMG.
+        original_image_ext = os.path.splitext(pds_label['^IMAGE'][0])[-1]
+        img_file = os.path.splitext(edr_source)[0] + original_image_ext.lower()
+        d_label = edr_source
+    except TypeError:
+        img_file = edr_source
+        d_label = None
+
+    datafile_attributes = dict.fromkeys(DataFiles.__table__.columns.keys(), None)
+
+    datafile_attributes['source'] = img_file
+    datafile_attributes['detached_label'] = d_label
+
+    try:
+        isis_id = getISISid(input_cube)
+    except:
+        isis_id = '1'
+
+    datafile_attributes['isisid'] = isis_id
+
+    try:
+        product_id = getPDSid(input_cube)
+    except:
+        product_id = None
+
+    datafile_attributes['productid'] = product_id
+    datafile_attributes['instrumentid'] = get_instrument_id(pds_label, session_maker),
+    datafile_attributes['targetid'] = target_id
+
+    session = session_maker()
+    datafile_qobj = session.query(DataFiles).filter(
+        DataFiles.source == img_file).first()
+
+    if datafile_qobj is None:
+        DataFiles.create(session, **datafile_attributes)
+    else:
+        datafile_attributes.pop('upcid')
+        session.query(DataFiles).\
+            filter(DataFiles.source == img_file).\
+            update(datafile_attributes)
+        session.commit()
+    session.close()
+
+    session = session_maker()
+    upc_id = session.query(DataFiles).filter(
+        DataFiles.source == img_file).first().upcid
+    session.close()
+
+    return upc_id
+
+def create_search_terms_record(cam_info_pvl, upc_id, input_cube, session_maker):
+    search_term_attributes = dict.fromkeys(SearchTerms.__table__.columns.keys(), None)
+    search_term_attributes['err_flag'] = True
+
+    try:
+        keywordsOBJ = UPCkeywords(cam_info_pvl)
+    except:
+        keywordsOBJ = None
+
+    if keywordsOBJ:
+        # For each key in the dictionary, get the related keyword from the keywords object
+        for key in search_term_attributes.keys():
+            try:
+                search_term_attributes[key] = keywordsOBJ.getKeyword(key)
+            except KeyError:
+                search_term_attributes[key] = None
+                logger.warn("Unable to find key '%s' in keywords object", key)
+
+        search_term_attributes['isisfootprint'] = keywordsOBJ.getKeyword('GisFootprint')
+        search_term_attributes['err_flag'] = False
+
+    search_term_attributes['upcid'] = upc_id
+
+    try:
+        product_id = getPDSid(input_cube)
+    except:
+        product_id = None
+
+    search_term_attributes['pdsproductid'] = product_id
+
+    search_term_attributes['processdate'] = datetime.datetime.now(pytz.utc).strftime(
+        "%Y-%m-%d %H:%M:%S")
+
+    search_term_attributes['targetid'] = get_target_id(cam_info_pvl, upc_session_maker)
+    search_term_attributes['instrumentid'] = get_instrument_id(cam_info_pvl, upc_session_maker)
+
+    session = session_maker()
+    search_terms_qobj = session.query(SearchTerms).filter(
+        SearchTerms.upcid == upc_id).first()
+
+    if search_terms_qobj is None:
+        SearchTerms.create(session, **search_term_attributes)
+    else:
+        search_term_attributes.pop('upcid')
+        session.query(SearchTerms).\
+            filter(SearchTerms.upcid == upc_id).\
+            update(search_term_attributes)
+        session.commit()
+    session.close()
+
+def create_json_keywords_record(cam_info_pvl, input_file, failing_command, session_maker):
+    try:
+        keywordsOBJ = UPCkeywords(cam_info_pvl)
+    except:
+        keywordsOBJ = None
+
+    json_keywords_attributes = dict.fromkeys(JsonKeywords.__table__.columns.keys(), None)
+
+    json_keywords_attributes['upcid'] = upc_id
+
+    try:
+        json_keywords = json.dumps(keywordsOBJ.label, indent=4, sort_keys=True, default=str)
+        json_keywords = json.loads(json_keywords)
+    except:
+        error_msg = 'Error running {} on file {}'.format(processError, input_file)
+        err_dict = {}
+        err_dict['processdate'] = datetime.datetime.now(pytz.utc).strftime(
+            "%Y-%m-%d %H:%M:%S")
+        err_dict['errortype'] = failing_command
+        err_dict['file'] = input_file
+        err_dict['errormessage'] = error_msg
+        err_dict['error'] = True
+        json_keywords = err_dict
+
+    json_keywords_attributes['jsonkeywords'] = json_keywords
+
+    session = session_maker()
+    json_keywords_qobj = session.query(JsonKeywords).filter(
+        JsonKeywords.upcid == upc_id).first()
+
+    if json_keywords_qobj is None:
+        JsonKeywords.create(session, **json_keywords_attributes)
+    else:
+        json_keywords_attributes.pop('upcid')
+        session.query(JsonKeywords).\
+            filter(JsonKeywords.upcid == upc_id).\
+            update(json_keywords_attributes)
+        session.commit()
+    session.close()
 
 def parse_args():
     parser = argparse.ArgumentParser(description='UPC Processing')
@@ -311,165 +438,19 @@ def main(user_args):
 
                     except ProcessError as e:
                         logger.error("%s", e)
-                        status = 'error'
-                        processError = item
+                        failing_command = item
                         break
 
         pds_label = pvl.load(inputfile)
 
-        # Get the targetid from the targets table.
-        target_name = pds_label['TARGET_NAME']
-        target_id = get_target_id(target_name, upc_session_maker)
-
-        # Get the instrumentid from the instruments table.
-        instrument_name = pds_label['INSTRUMENT_NAME']
-        # PDS3 does not require a keyword to hold spacecraft name,
-        #  and PDS3 defines several (often interchangeable) keywords to
-        #  hold spacecraft name, so each of them in preferred order and grab the first match.
-        # If no match is found, leave as None
-        for sc in ['SPACECRAFT_NAME','INSTRUMENT_HOST_NAME','MISSION_NAME','SPACECRAFT_ID','INSTRUMENT_HOST_ID']:
-            try:
-                spacecraft_name = pds_label[sc]
-                break
-            except KeyError:
-                spacecraft_name = None
-        instrument_id = get_instrument_id(instrument_name, spacecraft_name, upc_session_maker)
-
         ######## Generate DataFiles Record ########
-        try:
-            # If there exists an array of values, then the first value is the
-            #  path to the IMG.
-            original_image_ext = os.path.splitext(pds_label['^IMAGE'][0])[-1]
-            img_file = os.path.splitext(edr_source)[0] + original_image_ext.lower()
-            d_label = edr_source
-        except TypeError:
-            img_file = edr_source
-            d_label = None
-
-        datafile_attributes = dict.fromkeys(DataFiles.__table__.columns.keys(), None)
-
-        datafile_attributes['source'] = img_file
-        datafile_attributes['detached_label'] = edr_source
-
-        try:
-            isis_id = getISISid(infile)
-        except:
-            isis_id = '1'
-
-        datafile_attributes['isisid'] = isis_id
-
-        try:
-            product_id = getPDSid(infile)
-        except:
-            product_id = None
-
-        datafile_attributes['productid'] = product_id
-        datafile_attributes['instrumentid'] = instrument_id,
-        datafile_attributes['targetid'] = target_id
-
-        session = upc_session_maker()
-        datafile_qobj = session.query(DataFiles).filter(
-            DataFiles.source == img_file).first()
-
-        if datafile_qobj is None:
-            DataFiles.create(session, **datafile_attributes)
-        else:
-            datafile_attributes.pop('upcid')
-            session.query(DataFiles).\
-                filter(DataFiles.source == img_file).\
-                update(datafile_attributes)
-            session.commit()
-        session.close()
-
-        session = upc_session_maker()
-        upc_id = session.query(DataFiles).filter(
-            DataFiles.source == img_file).first().upcid
-        session.close()
+        upc_id = create_datafiles_record(pds_label, infile, upc_session_maker)
 
         ######## Generate SearchTerms Record ########
-        search_term_attributes = dict.fromkeys(SearchTerms.__table__.columns.keys(), None)
-        search_term_attributes['err_flag'] = True
-
-        try:
-            keywordsOBJ = UPCkeywords(caminfoOUT)
-        except:
-            keywordsOBJ = None
-
-        if keywordsOBJ:
-            # For each key in the dictionary, get the related keyword from the keywords object
-            for key in search_term_attributes.keys():
-                try:
-                    search_term_attributes[key] = keywordsOBJ.getKeyword(key)
-                except KeyError:
-                    search_term_attributes[key] = None
-                    logger.warn("Unable to find key '%s' in keywords object", key)
-
-            search_term_attributes['isisfootprint'] = keywordsOBJ.getKeyword('GisFootprint')
-            search_term_attributes['err_flag'] = False
-
-        search_term_attributes['upcid'] = upc_id
-
-        try:
-            product_id = getPDSid(infile)
-        except:
-            product_id = None
-
-        search_term_attributes['pdsproductid'] = product_id
-
-        search_term_attributes['processdate'] = datetime.datetime.now(pytz.utc).strftime(
-            "%Y-%m-%d %H:%M:%S")
-
-        search_term_attributes['targetid'] = target_id
-        search_term_attributes['instrumentid'] = instrument_id
-
-        session = upc_session_maker()
-        search_terms_qobj = session.query(SearchTerms).filter(
-            SearchTerms.upcid == upc_id).first()
-
-        if search_terms_qobj is None:
-            SearchTerms.create(session, **search_term_attributes)
-        else:
-            search_term_attributes.pop('upcid')
-            session.query(SearchTerms).\
-                filter(SearchTerms.upcid == upc_id).\
-                update(search_term_attributes)
-            session.commit()
-        session.close()
+        create_search_terms_record(caminfoOUT, upc_id, infile, upc_session_maker)
 
         ######## Generate JsonKeywords Record ########
-        json_keywords_attributes = dict.fromkeys(JsonKeywords.__table__.columns.keys(), None)
-
-        json_keywords_attributes['upcid'] = upc_id
-
-        try:
-            json_keywords = json.dumps(keywordsOBJ.label, indent=4, sort_keys=True, default=str)
-            json_keywords = json.loads(json_keywords)
-        except:
-            errorMSG = 'Error running {} on file {}'.format(processError, infile)
-            err_dict = {}
-            err_dict['processdate'] = datetime.datetime.now(pytz.utc).strftime(
-                "%Y-%m-%d %H:%M:%S")
-            err_dict['errortype'] = processError
-            err_dict['file'] = inputfile
-            err_dict['errormessage'] = errorMSG
-            err_dict['error'] = True
-            json_keywords = err_dict
-
-        json_keywords_attributes['jsonkeywords'] = json_keywords
-
-        session = upc_session_maker()
-        json_keywords_qobj = session.query(JsonKeywords).filter(
-            JsonKeywords.upcid == upc_id).first()
-
-        if json_keywords_qobj is None:
-            JsonKeywords.create(session, **json_keywords_attributes)
-        else:
-            json_keywords_attributes.pop('upcid')
-            session.query(JsonKeywords).\
-                filter(JsonKeywords.upcid == upc_id).\
-                update(json_keywords_attributes)
-            session.commit()
-        session.close()
+        create_json_keywords_record(caminfoOUT, upc_id, inputfile, failing_command, session_maker)
 
         try:
             session.flush()
