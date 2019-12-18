@@ -47,6 +47,17 @@ class Recipe(Process):
 
             self.recipe.append(processDict)
 
+    def addMissionJson(self, mission, proc):
+        """
+        Parameters
+        ----------
+        mission : str
+        proc : str
+
+        """
+        recipe_json = recipe_base + mission + '.json'
+        self.AddJsonFile(recipe_json, proc)
+
     def getRecipe(self):
         """
         Returns
@@ -55,22 +66,6 @@ class Recipe(Process):
             self.recipe
         """
         return self.recipe
-
-    def getRecipeJSON(self, mission):
-        """
-        Parameters
-        ----------
-        mission : str
-
-        Returns
-        -------
-        str
-            output
-        """
-
-        return recipe_base + mission + '.json'
-        #return recipe_dict[mission]
-
 
     def getProcesses(self):
         """
