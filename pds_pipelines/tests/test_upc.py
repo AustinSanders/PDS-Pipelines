@@ -133,7 +133,7 @@ def test_datafiles_insert(mocked_pds_id, mocked_isis_id, session, session_maker,
     assert upc_id == resp.upcid
 
 def extract_keyword(key):
-    if key is 'GisFootprint':
+    if key == 'GisFootprint':
         return Polygon([(153.80256122853893, -32.68515128444211), (153.80256122853893, -33.18515128444211), (153.30256122853893, -33.18515128444211), (153.30256122853893, -32.68515128444211), (153.80256122853893, -32.68515128444211)]).wkt
     return cam_info_dict[key]
 @patch('pds_pipelines.UPCkeywords.UPCkeywords.__init__', return_value = None)
@@ -167,7 +167,6 @@ def test_json_keywords_insert(mocked_init, session, session_maker, pds_label):
 
     resp = session.query(JsonKeywords).filter(JsonKeywords.upcid == upc_id).first()
     res_json = resp.jsonkeywords
-    print(res_json)
     assert res_json['^IMAGE'][0] == pds_label['^IMAGE'][0]
     assert res_json['TARGET_NAME'] == pds_label['TARGET_NAME']
     assert res_json['INSTRUMENT_NAME'] == pds_label['INSTRUMENT_NAME']

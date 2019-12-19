@@ -4,7 +4,7 @@ credentials = {'test': {'user': 'postgres',
                         'pass': '',
                         'host': 'localhost',
                         'port': '5432',
-                        'db': 'upc'}
+                        'db': 'travis_ci_test'}
                }
 
 # Redis path(?) info
