@@ -103,19 +103,34 @@ def test_json_keywords_exists(tables):
     assert model.JsonKeywords.__tablename__ in tables
 
 def test_target_insert(session, session_maker, pds_label):
-    pds_label = PVLModule({'TARGET_NAME': 'TEST TARGET'})
     target_id = get_target_id(pds_label, session_maker)
-    resp = session.query(model.Targets).filter(model.Targets.targetid==target_id).first()
+    resp = session.query(model.Targets).filter(model.Targets.targetid==target_id).one()
     target_name = resp.targetname
     assert pds_label['TARGET_NAME'] == target_name
 
+def test_bad_target_insert(session, session_maker):
+    target_id = get_target_id(PVLModule(), session_maker)
+    assert target_id == None
+    with pytest.raises(sqlalchemy.orm.exc.NoResultFound):
+        session.query(model.Targets).filter(model.Targets.targetid==target_id).one()
+
 def test_instrument_insert(session, session_maker, pds_label):
-    pds_label = PVLModule({'SPACECRAFT_NAME': 'TEST CRAFT',
-                           'INSTRUMENT_NAME': 'TEST INSTRUMENT'})
     instrument_id = get_instrument_id(pds_label, session_maker)
-    resp = session.query(model.Instruments).filter(model.Instruments.instrumentid == instrument_id).first()
+    resp = session.query(model.Instruments).filter(model.Instruments.instrumentid == instrument_id).one()
     instrument_name = resp.instrument
     assert pds_label['INSTRUMENT_NAME'] == instrument_name
+
+def test_bad_instrumentname_instrument_insert(session, session_maker):
+    instrument_id = get_instrument_id(PVLModule(), session_maker)
+    assert instrument_id == None
+    with pytest.raises(sqlalchemy.orm.exc.NoResultFound):
+        session.query(model.Instruments).filter(model.Instruments.instrumentid == instrument_id).one()
+
+def test_bad_spacecraftname_instrument_insert(session, session_maker):
+    instrument_id = get_instrument_id(PVLModule({'INSTRUMENT_NAME': 'TEST INSTRUMENT'}), session_maker)
+    assert instrument_id == None
+    with pytest.raises(sqlalchemy.orm.exc.NoResultFound):
+        session.query(model.Instruments).filter(model.Instruments.instrumentid == instrument_id).one()
 
 @patch('pds_pipelines.UPCprocess.getISISid', return_value = 'ISISSERIAL')
 @patch('pds_pipelines.UPCprocess.getPDSid', return_value = 'PRODUCTID')

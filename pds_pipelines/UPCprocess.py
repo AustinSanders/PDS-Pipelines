@@ -126,9 +126,13 @@ def get_target_id(label, session_maker):
     Returns
     -------
     target_id : int
-        The defined target_id from the database
+        The defined target_id from the database. If this is 0 a target name
+        could not be pulled from the label
     """
-    target_name = label['TARGET_NAME']
+    try:
+        target_name = label['TARGET_NAME']
+    except KeyError as e:
+        return None
 
     session = session_maker()
     target_qobj = session.query(Targets).filter(
@@ -162,9 +166,13 @@ def get_instrument_id(label, session_maker):
     Returns
     -------
     instrument_id : int
-        The defined instrument_id from the database
+        The defined instrument_id from the database. If this is 0 a instrument
+        name could not be pulled from the label
     """
-    instrument_name = label['INSTRUMENT_NAME']
+    try:
+        instrument_name = label['INSTRUMENT_NAME']
+    except KeyError as e:
+        return None
     # PDS3 does not require a keyword to hold spacecraft name,
     #  and PDS3 defines several (often interchangeable) keywords to
     #  hold spacecraft name, so each of them in preferred order and grab the first match.
@@ -175,6 +183,9 @@ def get_instrument_id(label, session_maker):
             break
         except KeyError:
             spacecraft_name = None
+
+    if not spacecraft_name:
+        return None
 
     session = session_maker()
     # Get the instrument from the instruments table.
@@ -246,7 +257,7 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
         product_id = None
 
     datafile_attributes['productid'] = product_id
-    datafile_attributes['instrumentid'] = get_instrument_id(label, session_maker),
+    datafile_attributes['instrumentid'] = get_instrument_id(label, session_maker)
     datafile_attributes['targetid'] = get_target_id(label, session_maker)
 
     session = session_maker()
