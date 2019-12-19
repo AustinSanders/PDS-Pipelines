@@ -76,8 +76,8 @@ class Instruments(BaseMixin, Base):
     mission = Column(String(256))
     spacecraft = Column(String(256))
     description = Column(String(256))
-    search_terms = relationship('search_terms', backref="instruments", uselist=False)
-    datafiles = relationship('datafiles', backref="instruments", uselist=False)
+    search_terms = relationship('SearchTerms', backref="instruments", uselist=False)
+    datafiles = relationship('DataFiles', backref="instruments", uselist=False)
     #product_type = Column(String(8))
 
 
@@ -92,8 +92,8 @@ class Targets(BaseMixin, Base):
     baxisradius = Column(Float)
     caxisradius = Column(Float)
     description = Column(String(1024))
-    search_term = relationship('search_terms', backref="targets", uselist=False)
-    datafiles = relationship('datafiles', backref="targets", uselist=False)
+    search_term = relationship('SearchTerms', backref="targets", uselist=False)
+    datafiles = relationship('DataFiles', backref="targets", uselist=False)
     #iau_mean_radius = Column(Float)
 
 
