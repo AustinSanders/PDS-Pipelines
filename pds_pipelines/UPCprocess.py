@@ -42,7 +42,7 @@ def getPDSid(infile):
 
     Returns
     -------
-    str
+    prod_id : str
         The PDS Product ID.
     """
     prod_id = getkey(from_=infile, keyword="Product_Id", grp="Archive")
@@ -63,7 +63,7 @@ def getISISid(infile):
 
     Returns
     -------
-    str
+    newisisSerial : str
         The serial number of the input file.
     """
     serial_num = getsn(from_=infile)
@@ -89,7 +89,7 @@ def AddProcessDB(session, fid, outvalue):
 
     Returns
     -------
-    str :
+    : str
         "SUCCESS" on success, "ERROR" on failure
 
     """
@@ -109,8 +109,26 @@ def AddProcessDB(session, fid, outvalue):
     except:
         return 'ERROR'
 
-def get_target_id(pds_label, session_maker):
-    target_name = pds_label['TARGET_NAME']
+def get_target_id(label, session_maker):
+    """
+    Fetches the target_id from the database. If a target_id is not found try
+    to extract it from a given PDS label and add the target to the database
+
+    Parameters
+    ----------
+    pds_label : Object
+        Any type of pds object that can be indexed
+
+    session_maker : sessionmaker
+        sqlalchemy sessionmaker object for connection to and querying the
+        database
+
+    Returns
+    -------
+    target_id : int
+        The defined target_id from the database
+    """
+    target_name = label['TARGET_NAME']
 
     session = session_maker()
     target_qobj = session.query(Targets).filter(
@@ -126,15 +144,34 @@ def get_target_id(pds_label, session_maker):
     session.close()
     return target_id
 
-def get_instrument_id(pds_label, session_maker):
-    instrument_name = pds_label['INSTRUMENT_NAME']
+def get_instrument_id(label, session_maker):
+    """
+    Fetches the instrument_id from the database. If a instrument_id is not
+    found, try to extract it from a given PDS label and add the instrument to
+    the database
+
+    Parameters
+    ----------
+    label : Object
+        Any type of pds object that can be indexed
+
+    session_maker : sessionmaker
+        sqlalchemy sessionmaker object for connection to and querying the
+        database
+
+    Returns
+    -------
+    instrument_id : int
+        The defined instrument_id from the database
+    """
+    instrument_name = label['INSTRUMENT_NAME']
     # PDS3 does not require a keyword to hold spacecraft name,
     #  and PDS3 defines several (often interchangeable) keywords to
     #  hold spacecraft name, so each of them in preferred order and grab the first match.
     # If no match is found, leave as None
     for sc in ['SPACECRAFT_NAME','INSTRUMENT_HOST_NAME','MISSION_NAME','SPACECRAFT_ID','INSTRUMENT_HOST_ID']:
         try:
-            spacecraft_name = pds_label[sc]
+            spacecraft_name = label[sc]
             break
         except KeyError:
             spacecraft_name = None
@@ -154,11 +191,35 @@ def get_instrument_id(pds_label, session_maker):
     session.close()
     return instrument_id
 
-def create_datafiles_record(pds_label, edr_source, input_cube, session_maker):
+def create_datafiles_record(label, edr_source, input_cube, session_maker):
+    """
+    Creates a new DataFiles record through values from a given label and adds
+    the new record to the database
+
+    Parameters
+    ----------
+    label : Object
+        Any type of pds object that can be indexed
+
+    edr_source : str
+        Path to the original label source
+
+    input_cube : str
+        Path to the cube generated from the data source
+
+    session_maker : sessionmaker
+        sqlalchemy sessionmaker object for connection to and querying the
+        database
+
+    Returns
+    -------
+    upc_id : int
+        The defined upc_id from the database
+    """
     try:
         # If there exists an array of values, then the first value is the
         #  path to the IMG.
-        original_image_ext = os.path.splitext(pds_label['^IMAGE'][0])[-1]
+        original_image_ext = os.path.splitext(label['^IMAGE'][0])[-1]
         img_file = os.path.splitext(edr_source)[0] + original_image_ext.lower()
         d_label = edr_source
     except TypeError:
@@ -170,21 +231,23 @@ def create_datafiles_record(pds_label, edr_source, input_cube, session_maker):
     datafile_attributes['source'] = img_file
     datafile_attributes['detached_label'] = d_label
 
+    # Attemp to get the ISIS serial from the cube
     try:
         isis_id = getISISid(input_cube)
     except:
-        isis_id = '1'
+        isis_id = None
 
     datafile_attributes['isisid'] = isis_id
 
+    # Attemp to get the product id from the cube
     try:
         product_id = getPDSid(input_cube)
     except:
         product_id = None
 
     datafile_attributes['productid'] = product_id
-    datafile_attributes['instrumentid'] = get_instrument_id(pds_label, session_maker),
-    datafile_attributes['targetid'] = get_target_id(pds_label, session_maker)
+    datafile_attributes['instrumentid'] = get_instrument_id(label, session_maker),
+    datafile_attributes['targetid'] = get_target_id(label, session_maker)
 
     session = session_maker()
     datafile_qobj = session.query(DataFiles).filter(
@@ -208,6 +271,26 @@ def create_datafiles_record(pds_label, edr_source, input_cube, session_maker):
     return upc_id
 
 def create_search_terms_record(cam_info_pvl, upc_id, input_cube, session_maker):
+    """
+    Creates a new SearchTerms record through values from a given caminfo file
+    and adds the new record to the database
+
+    Parameters
+    ----------
+    cam_info_pvl : str
+        Path to the caminfo output from the ISIS program caminfo
+
+    upc_id : int
+        upc id from the DataFiles record
+
+    input_cube : str
+        Path to the cube generated from the data source
+
+    session_maker : sessionmaker
+        sqlalchemy sessionmaker object for connection to and querying the
+        database
+
+    """
     search_term_attributes = dict.fromkeys(SearchTerms.__table__.columns.keys(), None)
     search_term_attributes['err_flag'] = True
 
@@ -258,6 +341,29 @@ def create_search_terms_record(cam_info_pvl, upc_id, input_cube, session_maker):
     session.close()
 
 def create_json_keywords_record(cam_info_pvl, upc_id, input_file, failing_command, session_maker):
+    """
+    Creates a new SearchTerms record through values from a given caminfo file
+    and adds the new record to the database
+
+    Parameters
+    ----------
+    cam_info_pvl : str
+        Path to the caminfo output from the ISIS program caminfo
+
+    upc_id : int
+        upc id from the DataFiles record
+
+    input_file : str
+        Path to the original data file being processed
+
+    failing_command : str
+        String presentation of the failing processing command
+
+    session_maker : sessionmaker
+        sqlalchemy sessionmaker object for connection to and querying the
+        database
+
+    """
     try:
         keywordsOBJ = UPCkeywords(cam_info_pvl)
     except Exception as e:
