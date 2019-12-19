@@ -94,22 +94,3 @@ class Recipe(Process):
         process : str
         """
         self.recipe.append(process)
-
-    def TestgetStep(self, file):
-        """
-        Parameters
-        ----------
-        file : str
-
-        Returns
-        -------
-        list
-            stepList
-        """
-        stepList = []
-        testjson = json.loads(open(file).read(), object_pairs_hook=OrderedDict)
-
-        for IP in testjson['recipe']:
-            stepList.append(IP)
-
-        return stepList

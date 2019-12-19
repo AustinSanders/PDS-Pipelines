@@ -16,12 +16,6 @@ class UPC_DB(object):
         self.datafiles = upc_models.DataFiles
         self.targets = upc_models.Targets
 
-    def testIsisId(self, isisid):
-
-        qOBJ = self.session.query(self.datafiles).filter(
-            self.datafiles.isisid == isisid).first()
-        return qOBJ.isisid
-
     def getUPCid(self, isisid):
 
         qOBJ = self.session.query(self.datafiles).filter(
