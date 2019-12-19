@@ -356,6 +356,7 @@ def main(user_args):
         fid = item[1]
         archive = item[2]
         if not os.path.isfile(inputfile):
+            RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during UPC processing')
             logger.warn("%s is not a file\n", inputfile)
             exit()
         logger.info('Starting Process: %s', inputfile)

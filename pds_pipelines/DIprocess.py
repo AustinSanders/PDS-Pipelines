@@ -12,7 +12,7 @@ import pytz
 from ast import literal_eval
 from pds_pipelines.RedisQueue import RedisQueue
 from pds_pipelines.RedisLock import RedisLock
-from pds_pipelines.config import pds_db, pds_log, pds_info, lock_obj
+from pds_pipelines.config import pds_db, pds_log, pds_info, lock_obj, upc_error_queue
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files
 
@@ -52,6 +52,7 @@ def main(user_args):
         return 1
 
     RQ = RedisQueue('DI_ReadyQueue')
+    RQ_error = RedisQueue(upc_error_queue)
     RQ_lock = RedisLock(lock_obj)
     RQ_lock.add({RQ.id_name: '1'})
     index = 0
@@ -62,7 +63,7 @@ def main(user_args):
         item = literal_eval(RQ.QueueGet())
         inputfile = item[0]
         archive = item[1]
-        logger.debug("%s - %s", inputfile, archive) 
+        logger.debug("%s - %s", inputfile, archive)
         try:
             Qelement = session.query(Files).filter(
                 Files.filename == inputfile).one()
@@ -91,6 +92,7 @@ def main(user_args):
                 logger.info('Session Commit for 50 Records: Success')
                 index = 0
         else:
+            RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during DI processing')
             logger.warn('File %s Not Found', cpfile)
     try:
         session.commit()
