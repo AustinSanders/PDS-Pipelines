@@ -3,7 +3,7 @@ from pds_pipelines.config import credentials as c
 from sqlalchemy import MetaData, Table
 from sqlalchemy.orm import mapper, sessionmaker
 
-def db_connect(cred):
+def db_connect(cred = 'test'):
     """
     Parameters
     ----------
@@ -14,6 +14,8 @@ def db_connect(cred):
     session
     engine
     """
+    Session = None
+    engine = None
     try:
         engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(c[cred]['user'],
                                                                     c[cred]['pass'],
@@ -22,8 +24,6 @@ def db_connect(cred):
                                                                     c[cred]['db']))
     except KeyError:
         print("Credentials not found for {}".format(cred))
-    else:
-        metadata = MetaData(bind=engine)
-        Session = sessionmaker(bind=engine)
-        session = Session()
-        return session, engine
+    metadata = MetaData(bind=engine)
+    Session = sessionmaker(bind=engine)
+    return Session, engine
