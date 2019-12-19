@@ -3,7 +3,7 @@ from pds_pipelines.config import credentials as c
 from sqlalchemy import MetaData, Table
 from sqlalchemy.orm import mapper, sessionmaker
 
-def db_connect(cred):
+def db_connect(cred = 'test'):
     """
     Parameters
     ----------
