@@ -77,7 +77,7 @@ class Instruments(BaseMixin, Base):
     mission = Column(String(256))
     spacecraft = Column(String(256))
     description = Column(String(256))
-    search_term = relationship('SearchTerms', backref="instruments", uselist=False)
+    search_term = relationship(SearchTerms, backref="instruments", uselist=False)
     #product_type = Column(String(8))
 
 
@@ -92,7 +92,7 @@ class Targets(BaseMixin, Base):
     baxisradius = Column(Float)
     caxisradius = Column(Float)
     description = Column(String(1024))
-    search_term = relationship('SearchTerms', backref="targets", uselist=False)
+    search_term = relationship(SearchTerms, backref="targets", uselist=False)
     #iau_mean_radius = Column(Float)
 
 
