@@ -119,7 +119,7 @@ class NewStats(BaseMixin, Base):
 
 class SearchTerms(BaseMixin, Base):
     __tablename__ = 'search_terms'
-    upcid = Column(Integer, primary_key=True, ForeignKey('datafiles.upcid'))
+    upcid = Column(Integer, ForeignKey('datafiles.upcid'), primary_key=True)
     processdate = Column(DateTime)
     starttime = Column(DateTime)
     solarlongitude = Column(Float)
@@ -142,7 +142,7 @@ class SearchTerms(BaseMixin, Base):
 
 class JsonKeywords(BaseMixin, Base):
     __tablename__ = "json_keywords"
-    upcid = Column(Integer, primary_key=True, ForeignKey('datafiles.upcid'))
+    upcid = Column(Integer, ForeignKey('datafiles.upcid'), primary_key=True)
     jsonkeywords = Column(JSONB)
 
 class_map = {
