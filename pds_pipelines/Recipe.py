@@ -33,6 +33,7 @@ class Recipe(Process):
         Parameters
         ----------
         file : str
+        proc : str
         """
 
         # @TODO use 'with' statement for file read
