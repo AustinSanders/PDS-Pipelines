@@ -130,8 +130,8 @@ class SearchTerms(BaseMixin, Base):
     minimumphase = Column(Float)
     maximumphase = Column(Float)
     phaseangle = Column(Float)
-    targetid = Column(Integer, ForeignKey("targets.targetid"))
-    instrumentid = Column(Integer, ForeignKey("instruments.instrumentid"))
+    targetid = Column(Integer, ForeignKey('targets.targetid'))
+    instrumentid = Column(Integer, ForeignKey('instruments.instrumentid'))
     pdsproductid = Column(String(256))
     err_flag = Column(Boolean)
     isisfootprint = Column(Geometry())
@@ -143,12 +143,12 @@ class JsonKeywords(BaseMixin, Base):
     jsonkeywords = Column(JSONB)
 
 
-class_map = {
-    'datafiles': DataFiles,
-    'instruments': Instruments,
-    'targets' : Targets,
-    'search_terms': SearchTerms
-}
+# class_map = {
+#     'datafiles': DataFiles,
+#     'instruments': Instruments,
+#     'targets' : Targets,
+#     'search_terms': SearchTerms
+# }
 
 if isinstance(Session, sqlalchemy.orm.sessionmaker):
 
