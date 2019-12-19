@@ -66,7 +66,6 @@ class DataFiles(BaseMixin, Base):
     instrumentid = Column(Integer, ForeignKey("instruments.instrumentid"))
     targetid = Column(Integer, ForeignKey("targets.targetid"))
     level = Column(CHAR(1))
-    search_term = relationship('SearchTerms', backref="datafiles", uselist=False)
 
 
 class Instruments(BaseMixin, Base):
@@ -77,7 +76,8 @@ class Instruments(BaseMixin, Base):
     mission = Column(String(256))
     spacecraft = Column(String(256))
     description = Column(String(256))
-    search_term = relationship('search_terms', backref="instruments", uselist=False)
+    search_terms = relationship('search_terms', backref="instruments", uselist=False)
+    datafiles = relationship('datafiles', backref="instruments", uselist=False)
     #product_type = Column(String(8))
 
 
@@ -93,6 +93,7 @@ class Targets(BaseMixin, Base):
     caxisradius = Column(Float)
     description = Column(String(1024))
     search_term = relationship('search_terms', backref="targets", uselist=False)
+    datafiles = relationship('datafiles', backref="targets", uselist=False)
     #iau_mean_radius = Column(Float)
 
 
