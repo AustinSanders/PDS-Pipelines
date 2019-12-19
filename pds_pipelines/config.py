@@ -1,9 +1,9 @@
 import os
 # Database credentials
 credentials = {'test': {'user': 'upcmgr',
-                        'pass': '1234',
+                        'pass': '',
                         'host': 'localhost',
-                        'port': '9010',
+                        'port': '5432',
                         'db': 'upc'}
                }
 
