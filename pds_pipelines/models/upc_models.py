@@ -135,7 +135,7 @@ class SearchTerms(BaseMixin, Base):
     phaseangle = Column(Float)
     targetid = Column(Integer, ForeignKey('targets.targetid'))
     instrumentid = Column(Integer, ForeignKey('instruments.instrumentid'))
-    pdsproductid = Column(String(256))
+    pdsproductid = Column(String(256), ForeignKey('datafiles.productid'))
     err_flag = Column(Boolean)
     isisfootprint = Column(Geometry())
 
