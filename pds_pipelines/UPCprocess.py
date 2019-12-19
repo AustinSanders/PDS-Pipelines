@@ -13,7 +13,7 @@ import argparse
 
 from pysis import isis
 from pysis.exceptions import ProcessError
-from pysis.isis import getsn, getkey
+from pysis.isis import *
 
 from pds_pipelines.RedisLock import RedisLock
 from pds_pipelines.RedisQueue import RedisQueue
@@ -154,7 +154,7 @@ def get_instrument_id(pds_label, session_maker):
     session.close()
     return instrument_id
 
-def create_datafiles_record(pds_label, input_cube, session_maker):
+def create_datafiles_record(pds_label, edr_source, input_cube, session_maker):
     try:
         # If there exists an array of values, then the first value is the
         #  path to the IMG.
@@ -184,7 +184,7 @@ def create_datafiles_record(pds_label, input_cube, session_maker):
 
     datafile_attributes['productid'] = product_id
     datafile_attributes['instrumentid'] = get_instrument_id(pds_label, session_maker),
-    datafile_attributes['targetid'] = target_id
+    datafile_attributes['targetid'] = get_target_id(pds_label, session_maker)
 
     session = session_maker()
     datafile_qobj = session.query(DataFiles).filter(
@@ -213,7 +213,8 @@ def create_search_terms_record(cam_info_pvl, upc_id, input_cube, session_maker):
 
     try:
         keywordsOBJ = UPCkeywords(cam_info_pvl)
-    except:
+    except Exception as e:
+        print(e)
         keywordsOBJ = None
 
     if keywordsOBJ:
@@ -223,7 +224,6 @@ def create_search_terms_record(cam_info_pvl, upc_id, input_cube, session_maker):
                 search_term_attributes[key] = keywordsOBJ.getKeyword(key)
             except KeyError:
                 search_term_attributes[key] = None
-                logger.warn("Unable to find key '%s' in keywords object", key)
 
         search_term_attributes['isisfootprint'] = keywordsOBJ.getKeyword('GisFootprint')
         search_term_attributes['err_flag'] = False
@@ -240,8 +240,8 @@ def create_search_terms_record(cam_info_pvl, upc_id, input_cube, session_maker):
     search_term_attributes['processdate'] = datetime.datetime.now(pytz.utc).strftime(
         "%Y-%m-%d %H:%M:%S")
 
-    search_term_attributes['targetid'] = get_target_id(cam_info_pvl, upc_session_maker)
-    search_term_attributes['instrumentid'] = get_instrument_id(cam_info_pvl, upc_session_maker)
+    search_term_attributes['targetid'] = get_target_id(cam_info_pvl, session_maker)
+    search_term_attributes['instrumentid'] = get_instrument_id(cam_info_pvl, session_maker)
 
     session = session_maker()
     search_terms_qobj = session.query(SearchTerms).filter(
@@ -257,10 +257,11 @@ def create_search_terms_record(cam_info_pvl, upc_id, input_cube, session_maker):
         session.commit()
     session.close()
 
-def create_json_keywords_record(cam_info_pvl, input_file, failing_command, session_maker):
+def create_json_keywords_record(cam_info_pvl, upc_id, input_file, failing_command, session_maker):
     try:
         keywordsOBJ = UPCkeywords(cam_info_pvl)
-    except:
+    except Exception as e:
+        print(e)
         keywordsOBJ = None
 
     json_keywords_attributes = dict.fromkeys(JsonKeywords.__table__.columns.keys(), None)
@@ -270,14 +271,14 @@ def create_json_keywords_record(cam_info_pvl, input_file, failing_command, sessi
     try:
         json_keywords = json.dumps(keywordsOBJ.label, indent=4, sort_keys=True, default=str)
         json_keywords = json.loads(json_keywords)
-    except:
-        error_msg = 'Error running {} on file {}'.format(processError, input_file)
+    except Exception as e:
+        print(e)
         err_dict = {}
         err_dict['processdate'] = datetime.datetime.now(pytz.utc).strftime(
             "%Y-%m-%d %H:%M:%S")
         err_dict['errortype'] = failing_command
         err_dict['file'] = input_file
-        err_dict['errormessage'] = error_msg
+        err_dict['errormessage'] = f'Error running {failing_command} on file {input_file}'
         err_dict['error'] = True
         json_keywords = err_dict
 
@@ -444,7 +445,7 @@ def main(user_args):
         pds_label = pvl.load(inputfile)
 
         ######## Generate DataFiles Record ########
-        upc_id = create_datafiles_record(pds_label, infile, upc_session_maker)
+        upc_id = create_datafiles_record(pds_label, edr_source, infile, upc_session_maker)
 
         ######## Generate SearchTerms Record ########
         create_search_terms_record(caminfoOUT, upc_id, infile, upc_session_maker)

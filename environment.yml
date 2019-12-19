@@ -14,5 +14,6 @@ dependencies:
     - redis
     - pip
     - pytest
+    - mock
     - pip:
         - redis>=2.0.0,<3.0.0
