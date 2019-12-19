@@ -1,5 +1,5 @@
 from pds_pipelines.db import db_connect
-from pds_pipelines.config import upc_db
+from pds_pipelines.config import upc_db, view_path
 import os
 import json
 
@@ -22,8 +22,22 @@ queries = {
         """
 }
 
-def main():
-    path = os.path.dirname(os.path.abspath(__file__)) + '/json/'
+def parse_args():
+    parser = argparse.ArgumentParser(description='Create view JSONs.')
+
+    parser.add_argument('--path', '-p', dest="path", required=False,
+                        help="Enter path - where to write the JSONs.")
+    
+    args = parser.parse_args()
+    return args
+
+
+def main(user_args):
+    if user_args.path:
+        path = user_args.path
+    else:
+        path = view_path
+
     session, _ = db_connect(upc_db)
     
     for key in queries:
@@ -35,4 +49,4 @@ def main():
             json_file.write(json_output)
 
 if __name__ == "__main__":
-    main()
+    main(parse_args())
