@@ -65,6 +65,8 @@ class DataFiles(BaseMixin, Base):
     detached_label = Column(String(1024))
     instrumentid = Column(Integer, ForeignKey("instruments.instrumentid"))
     targetid = Column(Integer, ForeignKey("targets.targetid"))
+    search_terms = relationship('SearchTerms', backref="DataFiles", uselist=False)
+    json_keyword = relationship('JsonKeywords', backref="DataFiles", uselist=False)
     level = Column(CHAR(1))
 
 
@@ -117,7 +119,7 @@ class NewStats(BaseMixin, Base):
 
 class SearchTerms(BaseMixin, Base):
     __tablename__ = 'search_terms'
-    upcid = Column(Integer, primary_key=True)
+    upcid = Column(Integer, primary_key=True, ForeignKey('datafiles.upcid'))
     processdate = Column(DateTime)
     starttime = Column(DateTime)
     solarlongitude = Column(Float)
@@ -140,16 +142,15 @@ class SearchTerms(BaseMixin, Base):
 
 class JsonKeywords(BaseMixin, Base):
     __tablename__ = "json_keywords"
-    upcid = Column(Integer, primary_key=True)
+    upcid = Column(Integer, primary_key=True, ForeignKey('datafiles.upcid'))
     jsonkeywords = Column(JSONB)
 
-
-# class_map = {
-#     'datafiles': DataFiles,
-#     'instruments': Instruments,
-#     'targets' : Targets,
-#     'search_terms': SearchTerms
-# }
+class_map = {
+    'datafiles': DataFiles,
+    'instruments': Instruments,
+    'targets' : Targets,
+    'search_terms': SearchTerms
+}
 
 if isinstance(Session, sqlalchemy.orm.sessionmaker):
 
