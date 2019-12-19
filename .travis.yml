@@ -17,7 +17,6 @@ matrix:
 # Setup a postgresql instance w/postgis
 services:
   - postgresql
-  - redis-server
 addons:
   postgresql: 9.6
   apt:

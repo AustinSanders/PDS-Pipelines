@@ -1,6 +1,6 @@
 import os
 # Database credentials
-credentials = {'test': {'user': 'upcmgr',
+credentials = {'test': {'user': 'postgres',
                         'pass': '',
                         'host': 'localhost',
                         'port': '5432',
