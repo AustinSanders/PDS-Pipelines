@@ -142,6 +142,8 @@ def extract_keyword(key):
 def test_search_terms_insert(mocked_product_id, mocked_keyword, mocked_init, session, session_maker, pds_label):
     upc_id = cam_info_dict['upcid']
 
+    model.DataFiles.create(**{'upcid': upc_id})
+
     create_search_terms_record(pds_label, upc_id, '/Path/to/my/cube.cub', session_maker)
     resp = session.query(SearchTerms).filter(SearchTerms.upcid == upc_id).first()
 
@@ -160,6 +162,8 @@ def test_search_terms_insert(mocked_product_id, mocked_keyword, mocked_init, ses
 @patch('pds_pipelines.UPCkeywords.UPCkeywords.__init__', return_value = None)
 def test_json_keywords_insert(mocked_init, session, session_maker, pds_label):
     upc_id = cam_info_dict['upcid']
+
+    model.DataFiles.create(**{'upcid': upc_id})
 
     with patch('pds_pipelines.UPCkeywords.UPCkeywords.label', new_callable=PropertyMock) as mocked_label:
         mocked_label.return_value = pds_label
