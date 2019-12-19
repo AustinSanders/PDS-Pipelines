@@ -233,12 +233,8 @@ def main(user_args):
         # Update the logger context to include inputfile
         context['inputfile'] = inputfile
 
-        # @TODO refactor this logic.  We're using an object to find a path, returning it,
-        #  then passing it back to the object so that the object can use it.
         recipeOBJ = Recipe()
-        recipe_json = recipeOBJ.getRecipeJSON(archive)
-        #recipe_json = recipeOBJ.getRecipeJSON(getMission(str(inputfile)))
-        recipeOBJ.AddJsonFile(recipe_json, 'upc')
+        recipeOBJ.addMissionJson(archive, 'upc')
 
         infile = os.path.splitext(inputfile)[0] + '.UPCinput.cub'
         logger.debug("Beginning processing on %s\n", inputfile)
