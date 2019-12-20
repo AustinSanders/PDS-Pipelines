@@ -28,6 +28,8 @@ def lower_keys(x):
 
 class UPCkeywords(object):
 
+    label = None
+
     def __init__(self, pvlfile):
         try:
             label = lower_keys(pvl.load(pvlfile, strict=False))
@@ -46,7 +48,7 @@ class UPCkeywords(object):
                 f.write(filedata)
 
             label = lower_keys(pvl.load(pvlfile, strict=False))
-            
+
         self.label = label
 
 
