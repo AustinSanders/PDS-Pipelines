@@ -39,7 +39,8 @@ def main(user_args):
     logger.info("UPC Queue: %s", reddis_queue.id_name)
 
     try:
-        session, _ = db_connect(pds_db)
+        Session, _ = db_connect(pds_db)
+        session = Session()
     except Exception as e:
         logger.error("%s", e)
         return 1

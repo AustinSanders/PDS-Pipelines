@@ -57,7 +57,8 @@ def main(user_args):
     else:
         path = view_path
 
-    session, _ = db_connect(upc_db)
+    Session, _ = db_connect(upc_db)
+    session = Session()
 
     for key in queries:
         json_query = "with t AS ({}) SELECT json_agg(t) FROM t;".format(queries[key])

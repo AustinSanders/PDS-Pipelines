@@ -25,7 +25,7 @@ def parse_args():
 
 def main(user_args):
     log_level = user_args.log_level
-    
+
     logger = logging.getLogger('DI_Queueing')
     level = logging.getLevelName(log_level)
     logger.setLevel(level)
@@ -41,7 +41,8 @@ def main(user_args):
     logger.info("DI Queue: %s", reddis_queue.id_name)
 
     try:
-        session, _ = db_connect(pds_db)
+        Session, _ = db_connect(pds_db)
+        session = Session()
     except Exception as e:
         logger.error("%s", e)
         return 1

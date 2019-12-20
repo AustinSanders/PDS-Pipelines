@@ -54,7 +54,8 @@ def main(user_args):
     logger.info("Browse Queue: %s", RQ.id_name)
 
     try:
-        session, _ = db_connect(pds_db)
+        Session, _ = db_connect(pds_db)
+        session = Session()
         logger.info('Database Connection Success')
     except:
         logger.error('Database Connection Error')

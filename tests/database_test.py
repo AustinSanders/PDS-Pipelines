@@ -7,7 +7,8 @@ import datetime
 import pytz
 
 def main():
-    session, engine = db_connect(upc_db)
+    Session, engine = db_connect(upc_db)
+    session = Session()
     size = int(1e7) - int(1e6)
     chunk = int(1e6)
 
@@ -54,8 +55,8 @@ def main():
         session.bulk_save_objects(db_input)
         session.commit()
 
-                    
-        
+
+
 
 if __name__ == '__main__':
     main()
