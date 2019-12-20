@@ -123,10 +123,11 @@
         "path": "/pds_san/PDS_Archive/Mars_Reconnaissance_Orbiter/HiRISE/"
     },
     "mro_marci": {
-        "archiveid": "17",
+        "archiveid": "127",
         "path": "/pds_san/PDS_Archive/Mars_Reconnaissance_Orbiter/MARCI/",
         "mission": "MARCI",
-	"bandbinQuery": "FilterName"
+	"bandbinQuery": "FilterName",
+        "upc_reqs": ["/data/", ".IMG"]
     },
     "phoenix": {
         "archiveid": "9",
