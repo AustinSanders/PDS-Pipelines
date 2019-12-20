@@ -105,7 +105,11 @@ def main(user_args):
             fileURL = inputfile.replace(archive_base, web_base)
 
             # If all upc requirements are in 'inputfile,' flag for upc
-            upcflag = all(x in inputfile for x in PDSinfoDICT[archive]['upc_reqs'])
+            try:
+                upcflag = all(x in inputfile for x in PDSinfoDICT[archive]['upc_reqs'])
+            except KeyError:
+                upcflag = False
+
             filesize = os.path.getsize(inputfile)
 
             try:
