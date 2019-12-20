@@ -37,6 +37,7 @@ def parse_args():
 
 
 def main(user_args):
+
     archive = user_args.archive
     volume = user_args.volume
     search = user_args.search
@@ -69,12 +70,13 @@ def main(user_args):
     logger.info("UPC queue: %s", RQ.id_name)
 
     try:
-        session, _ = db_connect(pds_db)
+        upc_session_maker, _ = db_connect(pds_db)
         logger.info('Database Connection Success')
     except Exception as e:
         logger.error('Database Connection Error\n\n%s', e)
         return 1
 
+    session = upc_session_maker()
     if volume:
         volstr = '%' + volume + '%'
         qOBJ = session.query(Files).filter(Files.archiveid == archiveID,
@@ -118,6 +120,8 @@ def main(user_args):
 
 
         logger.info('Files Added to UPC Queue: %s', addcount)
+        
+    session.close()
 
     logger.info("UPC Processing successfully completed")
 

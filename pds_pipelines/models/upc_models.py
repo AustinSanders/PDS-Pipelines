@@ -1,4 +1,7 @@
+import sqlalchemy
+
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
+from sqlalchemy_utils import database_exists, create_database
 from sqlalchemy import (Column, Integer, Float,
                         Time, String, Boolean, PrimaryKeyConstraint, ForeignKey, CHAR, DateTime)
 from sqlalchemy.dialects.postgresql import JSONB
@@ -6,6 +9,14 @@ from sqlalchemy.orm import relationship
 from geoalchemy2 import Geometry
 
 import datetime
+
+from pds_pipelines.db import db_connect
+
+try:
+    Session, engine = db_connect()
+except:
+    Session = None
+    engine = None
 
 Base = declarative_base()
 
@@ -54,8 +65,9 @@ class DataFiles(BaseMixin, Base):
     detached_label = Column(String(1024))
     instrumentid = Column(Integer, ForeignKey("instruments.instrumentid"))
     targetid = Column(Integer, ForeignKey("targets.targetid"))
+    search_terms = relationship('SearchTerms', backref="DataFiles", uselist=False)
+    json_keyword = relationship('JsonKeywords', backref="DataFiles", uselist=False)
     level = Column(CHAR(1))
-    search_term = relationship('SearchTerms', backref="datafiles", uselist=False)
 
 
 class Instruments(BaseMixin, Base):
@@ -66,6 +78,8 @@ class Instruments(BaseMixin, Base):
     mission = Column(String(256))
     spacecraft = Column(String(256))
     description = Column(String(256))
+    search_terms = relationship('SearchTerms', backref="instruments", uselist=False)
+    datafiles = relationship('DataFiles', backref="instruments", uselist=False)
     #product_type = Column(String(8))
 
 
@@ -80,6 +94,8 @@ class Targets(BaseMixin, Base):
     baxisradius = Column(Float)
     caxisradius = Column(Float)
     description = Column(String(1024))
+    search_term = relationship('SearchTerms', backref="targets", uselist=False)
+    datafiles = relationship('DataFiles', backref="targets", uselist=False)
     #iau_mean_radius = Column(Float)
 
 
@@ -103,7 +119,7 @@ class NewStats(BaseMixin, Base):
 
 class SearchTerms(BaseMixin, Base):
     __tablename__ = 'search_terms'
-    upcid = Column(Integer, primary_key=True)
+    upcid = Column(Integer, ForeignKey('datafiles.upcid'), primary_key=True)
     processdate = Column(DateTime)
     starttime = Column(DateTime)
     solarlongitude = Column(Float)
@@ -117,21 +133,34 @@ class SearchTerms(BaseMixin, Base):
     minimumphase = Column(Float)
     maximumphase = Column(Float)
     phaseangle = Column(Float)
-    targetid = Column(Integer, ForeignKey("targets.targetid"))
-    instrumentid = Column(Integer, ForeignKey("instruments.instrumentid"))
-    pdsproductid = Column(String(256), ForeignKey("datafiles.productid"))
+    targetid = Column(Integer, ForeignKey('targets.targetid'))
+    instrumentid = Column(Integer, ForeignKey('instruments.instrumentid'))
+    pdsproductid = Column(String(256))
     err_flag = Column(Boolean)
     isisfootprint = Column(Geometry())
 
 
 class JsonKeywords(BaseMixin, Base):
     __tablename__ = "json_keywords"
-    upcid = Column(Integer, primary_key=True)
+    upcid = Column(Integer, ForeignKey('datafiles.upcid'), primary_key=True)
     jsonkeywords = Column(JSONB)
-
 
 class_map = {
     'datafiles': DataFiles,
     'instruments': Instruments,
-    'targets' : Targets
+    'targets' : Targets,
+    'search_terms': SearchTerms
 }
+
+if isinstance(Session, sqlalchemy.orm.sessionmaker):
+
+    # Create the database
+    if not database_exists(engine.url):
+        create_database(engine.url, template='template_postgis')  # This is a hardcode to the local template
+
+    Base.metadata.bind = engine
+    # If the table does not exist, this will create it. This is used in case a
+    # user has manually dropped a table so that the project is not wrecked.
+    Base.metadata.create_all(tables=[DataFiles.__table__,
+                                     Instruments.__table__, Targets.__table__, SearchTerms.__table__,
+                                     JsonKeywords.__table__])
