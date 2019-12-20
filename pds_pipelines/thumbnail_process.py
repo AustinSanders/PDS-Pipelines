@@ -143,8 +143,8 @@ def main():
             finalpath = makedir(inputfile)
 
             recipeOBJ = Recipe()
-            recip_json = recipeOBJ.getRecipeJSON(archive)
-            recipeOBJ.AddJsonFile(recip_json, 'reduced')
+            recipeOBJ.addMissionJson(archive, 'reduced')
+            
             infile = workarea + os.path.splitext(os.path.basename(inputfile))[0] + '.Tinput.cub'
             outfile = workarea + os.path.splitext(os.path.basename(inputfile))[0] + '.Toutput.cub'
             status = 'success'
