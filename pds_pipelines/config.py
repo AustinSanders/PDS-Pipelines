@@ -1,10 +1,15 @@
 import os
 # Database credentials
-credentials = {'test': {'user': 'postgres',
-                        'pass': '',
-                        'host': 'localhost',
-                        'port': '5432',
-                        'db': 'upc_test'}
+credentials = {'upc_test': {'user': 'postgres',
+                            'pass': '',
+                            'host': 'localhost',
+                            'port': '5432',
+                            'db': 'upc_test'},
+               'di_test': {'user': 'postgres',
+                           'pass': '',
+                           'host': 'localhost',
+                           'port': '5432',
+                           'db': 'di_test'}
                }
 
 # Redis path(?) info
@@ -34,8 +39,8 @@ keyword_def = '/home/acpaquette/repos/PDS-Pipelines/recipe/Keyword_Definition.js
 workarea = '/home/acpaquette/repos/PDS-Pipelines/workarea/'
 default_namespace = 'adampaquette_queue'
 
-pds_db = 'pdsdi'
-upc_db = 'upcprd'
+pds_db = 'di_test'
+upc_db = 'upc_test'
 
 scratch = '/scratch/pds_services/'
 
