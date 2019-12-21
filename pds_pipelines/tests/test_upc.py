@@ -17,16 +17,16 @@ from pds_pipelines import UPCprocess
 from pds_pipelines.UPCprocess import *
 
 from pds_pipelines.UPCprocess import create_datafiles_record, create_search_terms_record, create_json_keywords_record, get_target_id, getISISid
-from pds_pipelines.models import upc_models as model
+from pds_pipelines.models import upc_models as models
 
 @pytest.fixture
 def tables():
-    _, engine = db_connect('test')
+    _, engine = db_connect('upc_test')
     return engine.table_names()
 
 @pytest.fixture
 def session(tables, request):
-    Session, _ = db_connect('test')
+    Session, _ = db_connect('upc_test')
     session = Session()
 
     def cleanup():
@@ -53,7 +53,7 @@ def session(tables, request):
 
 @pytest.fixture
 def session_maker(tables, request):
-    Session, _ = db_connect('test')
+    Session, _ = db_connect('upc_test')
     return Session
 
 @pytest.fixture
@@ -88,23 +88,23 @@ cam_info_dict = {'upcid': 1,
                                            (153.80256122853893, -32.68515128444211)]).wkt}
 
 def test_datafiles_exists(tables):
-    assert model.DataFiles.__tablename__ in tables
+    assert models.DataFiles.__tablename__ in tables
 
 def test_instruments_exists(tables):
-    assert model.Instruments.__tablename__ in tables
+    assert models.Instruments.__tablename__ in tables
 
 def test_targets_exists(tables):
-    assert model.Targets.__tablename__ in tables
+    assert models.Targets.__tablename__ in tables
 
 def test_search_terms_exists(tables):
-    assert model.SearchTerms.__tablename__ in tables
+    assert models.SearchTerms.__tablename__ in tables
 
 def test_json_keywords_exists(tables):
-    assert model.JsonKeywords.__tablename__ in tables
+    assert models.JsonKeywords.__tablename__ in tables
 
 def test_target_insert(session, session_maker, pds_label):
     target_id = get_target_id(pds_label, session_maker)
-    resp = session.query(model.Targets).filter(model.Targets.targetid==target_id).one()
+    resp = session.query(models.Targets).filter(models.Targets.targetid==target_id).one()
     target_name = resp.targetname
     assert pds_label['TARGET_NAME'] == target_name
 
@@ -112,11 +112,11 @@ def test_bad_target_insert(session, session_maker):
     target_id = get_target_id(PVLModule(), session_maker)
     assert target_id == None
     with pytest.raises(sqlalchemy.orm.exc.NoResultFound):
-        session.query(model.Targets).filter(model.Targets.targetid==target_id).one()
+        session.query(models.Targets).filter(models.Targets.targetid==target_id).one()
 
 def test_instrument_insert(session, session_maker, pds_label):
     instrument_id = get_instrument_id(pds_label, session_maker)
-    resp = session.query(model.Instruments).filter(model.Instruments.instrumentid == instrument_id).one()
+    resp = session.query(models.Instruments).filter(models.Instruments.instrumentid == instrument_id).one()
     instrument_name = resp.instrument
     assert pds_label['INSTRUMENT_NAME'] == instrument_name
 
@@ -124,13 +124,13 @@ def test_bad_instrumentname_instrument_insert(session, session_maker):
     instrument_id = get_instrument_id(PVLModule(), session_maker)
     assert instrument_id == None
     with pytest.raises(sqlalchemy.orm.exc.NoResultFound):
-        session.query(model.Instruments).filter(model.Instruments.instrumentid == instrument_id).one()
+        session.query(models.Instruments).filter(models.Instruments.instrumentid == instrument_id).one()
 
 def test_bad_spacecraftname_instrument_insert(session, session_maker):
     instrument_id = get_instrument_id(PVLModule({'INSTRUMENT_NAME': 'TEST INSTRUMENT'}), session_maker)
     assert instrument_id == None
     with pytest.raises(sqlalchemy.orm.exc.NoResultFound):
-        session.query(model.Instruments).filter(model.Instruments.instrumentid == instrument_id).one()
+        session.query(models.Instruments).filter(models.Instruments.instrumentid == instrument_id).one()
 
 @patch('pds_pipelines.UPCprocess.getISISid', return_value = 'ISISSERIAL')
 @patch('pds_pipelines.UPCprocess.getPDSid', return_value = 'PRODUCTID')
@@ -144,7 +144,7 @@ def test_datafiles_insert(mocked_pds_id, mocked_isis_id, session, session_maker,
     mocked_isis_id.assert_called_with(input_cube)
     mocked_pds_id.assert_called_with(input_cube)
 
-    resp = session.query(model.DataFiles).filter(model.DataFiles.isisid=='ISISSERIAL').first()
+    resp = session.query(models.DataFiles).filter(models.DataFiles.isisid=='ISISSERIAL').first()
     assert upc_id == resp.upcid
 
 def extract_keyword(key):
@@ -157,7 +157,7 @@ def extract_keyword(key):
 def test_search_terms_insert(mocked_product_id, mocked_keyword, mocked_init, session, session_maker, pds_label):
     upc_id = cam_info_dict['upcid']
 
-    model.DataFiles.create(session, **{'upcid': upc_id})
+    models.DataFiles.create(session, **{'upcid': upc_id})
 
     create_search_terms_record(pds_label, upc_id, '/Path/to/my/cube.cub', session_maker)
     resp = session.query(SearchTerms).filter(SearchTerms.upcid == upc_id).first()
@@ -178,7 +178,7 @@ def test_search_terms_insert(mocked_product_id, mocked_keyword, mocked_init, ses
 def test_json_keywords_insert(mocked_init, session, session_maker, pds_label):
     upc_id = cam_info_dict['upcid']
 
-    model.DataFiles.create(session, **{'upcid': upc_id})
+    models.DataFiles.create(session, **{'upcid': upc_id})
 
     with patch('pds_pipelines.UPCkeywords.UPCkeywords.label', new_callable=PropertyMock) as mocked_label:
         mocked_label.return_value = pds_label
