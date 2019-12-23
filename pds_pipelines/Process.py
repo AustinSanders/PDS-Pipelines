@@ -16,6 +16,7 @@ class Process(object):
     def __init__(self):
 
         self.processName = ""
+        self.process = None
 
     def Process2JSON(self):
         """

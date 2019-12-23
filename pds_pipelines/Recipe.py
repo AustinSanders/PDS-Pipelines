@@ -101,24 +101,3 @@ class Recipe(Process):
             The name of the process pipeline.
         """
         self.recipe.append(process)
-
-    def TestgetStep(self, file):
-        """ 
-
-        Parameters
-        ----------
-        file : str 
-            The name of the JSON to load.
-
-        Returns
-        -------
-        list
-            stepList
-        """
-        stepList = []
-        testjson = json.loads(open(file).read(), object_pairs_hook=OrderedDict)
-
-        for IP in testjson['recipe']:
-            stepList.append(IP)
-
-        return stepList
