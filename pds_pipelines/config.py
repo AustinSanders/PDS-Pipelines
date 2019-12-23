@@ -1,15 +1,15 @@
 import os
 # Database credentials
 credentials = {'upc_test': {'user': 'postgres',
+                        'pass': '',
+                        'host': 'localhost',
+                        'port': '5432',
+                        'db': 'upc_test'},
+               'di_test': {'user': 'postgres',
                             'pass': '',
                             'host': 'localhost',
                             'port': '5432',
-                            'db': 'upc_test'},
-               'di_test': {'user': 'postgres',
-                           'pass': '',
-                           'host': 'localhost',
-                           'port': '5432',
-                           'db': 'di_test'}
+                            'db': 'di_test'}
                }
 
 # Redis path(?) info
