@@ -15,6 +15,8 @@ import pds_pipelines
 from pds_pipelines.db import db_connect
 from pds_pipelines import UPCprocess
 from pds_pipelines.UPCprocess import *
+from pds_pipelines.RedisLock import RedisLock
+from pds_pipelines.RedisQueue import RedisQueue
 
 from pds_pipelines.UPCprocess import create_datafiles_record, create_search_terms_record, create_json_keywords_record, get_target_id, getISISid
 from pds_pipelines.models import upc_models as model
@@ -190,3 +192,23 @@ def test_json_keywords_insert(mocked_init, session, session_maker, pds_label):
     assert res_json['TARGET_NAME'] == pds_label['TARGET_NAME']
     assert res_json['INSTRUMENT_NAME'] == pds_label['INSTRUMENT_NAME']
     assert res_json['SPACECRAFT_NAME'] == pds_label['SPACECRAFT_NAME']
+
+def test_redis_queue():
+    # Redis Queue Objects
+    RQ_main = RedisQueue('UPC_ReadyQueue')
+    logger.info("UPC Processing Queue: %s", RQ_main.id_name)
+
+    RQ_error = RedisQueue(upc_error_queue)
+    RQ_lock = RedisLock(lock_obj)
+    # If the queue isn't registered, add it and set it to "running"
+    RQ_lock.add({RQ_main.id_name: '1'})
+    RQ_main.QueueAdd("/Path/to/my/file.img", "1", "ARCHIVE")
+
+    if int(RQ_main.QueueSize()) > 0 and RQ_lock.available(RQ_main.id_name):
+        # get a file from the queue
+        item = literal_eval(RQ_main.QueueGet())
+        inputfile = item[0]
+        fid = item[1]
+        archive = item[2]
+    print(inputfile, fid, archive)
+    assert False
