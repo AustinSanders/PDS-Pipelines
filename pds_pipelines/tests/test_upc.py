@@ -11,12 +11,21 @@ import numpy as np
 from unittest.mock import patch, PropertyMock
 from unittest import mock
 
+import pysis
+from pysis import isis
+from pysis.exceptions import ProcessError
+
+# Stub in the getsn function for testing
+def getsn(from_):
+    return b'ISISSERIAL'
+pysis.isis.getsn = getsn
+
 import pds_pipelines
 from pds_pipelines.db import db_connect
 from pds_pipelines import UPCprocess
 from pds_pipelines.UPCprocess import *
 
-from pds_pipelines.UPCprocess import create_datafiles_record, create_search_terms_record, create_json_keywords_record, get_target_id, getISISid
+from pds_pipelines.UPCprocess import create_datafiles_record, create_search_terms_record, create_json_keywords_record, get_target_id, getISISid, process_isis, generate_isis_processes
 from pds_pipelines.models import upc_models as model
 
 @pytest.fixture
@@ -189,3 +198,36 @@ def test_json_keywords_insert(mocked_init, session, session_maker, pds_label):
     assert res_json['TARGET_NAME'] == pds_label['TARGET_NAME']
     assert res_json['INSTRUMENT_NAME'] == pds_label['INSTRUMENT_NAME']
     assert res_json['SPACECRAFT_NAME'] == pds_label['SPACECRAFT_NAME']
+
+def test_generate_isis_processes():
+    archive = "galileo_ssi_edr"
+    RQ_main = RedisQueue('UPC_ReadyQueue')
+    RQ_error = RedisQueue('UPC_ErrorQueue')
+    RQ_main.QueueAdd(("./pds_pipelines/tests/data/5600r.lbl", "1", archive))
+    context = {'job_id': 1, 'array_id':1, 'inputfile': ''}
+
+    logger = logging.getLogger('UPC_Process')
+
+    # TODO Factor using the Recipe object out of this test
+    recipeOBJ = Recipe()
+    recipeOBJ.addMissionJson(archive, 'upc')
+
+    processes, inputfile, caminfoOUT, edr_source = generate_isis_processes(RQ_main, RQ_error, logger, context, './pds_pipelines/tests/data', 'https://pdsimage.wr.usgs.gov/Missions')
+
+    original_recipe = recipeOBJ.getRecipe()[0]
+
+    for process in processes:
+        for k ,v in process.getProcess().items():
+            assert original_recipe[k].keys() == v.keys()
+
+# def test_process_isis():
+#     RQ_main = RedisQueue('UPC_ReadyQueue')
+#     RQ_error = RedisQueue('UPC_ErrorQueue')
+#     RQ_main.QueueAdd(("./pds_pipelines/tests/data/5600r.lbl", "1", "galileo_ssi_edr"))
+#     context = {'job_id': 1, 'array_id':1, 'inputfile': ''}
+#
+#     logger = logging.getLogger('UPC_Process')
+#
+#     failing_command = process_isis(processes)
+#     print(inputfile, caminfoOUT, edr_source, failing_command)
+#     assert False
