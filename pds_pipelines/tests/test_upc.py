@@ -166,7 +166,6 @@ def test_search_terms_insert(mocked_product_id, mocked_keyword, mocked_init, ses
 
     for key in cam_info_dict.keys():
         resp_attribute = resp.__getattribute__(key)
-        print(resp_attribute)
         if isinstance(resp_attribute, datetime.date):
             resp_attribute = resp_attribute.strftime("%Y-%m-%d %H:%M")
         if isinstance(resp_attribute, WKBElement):
@@ -201,7 +200,7 @@ def test_redis_queue():
     RQ_lock = RedisLock(lock_obj)
     # If the queue isn't registered, add it and set it to "running"
     RQ_lock.add({RQ_main.id_name: '1'})
-    RQ_main.QueueAdd("/Path/to/my/file.img", "1", "ARCHIVE")
+    RQ_main.QueueAdd(("/Path/to/my/file.img", "1", "ARCHIVE"))
 
     if int(RQ_main.QueueSize()) > 0 and RQ_lock.available(RQ_main.id_name):
         # get a file from the queue
