@@ -1,3 +1,5 @@
+from ast import literal_eval
+
 from pds_pipelines.RedisLock import RedisLock
 from pds_pipelines.RedisQueue import RedisQueue
 
