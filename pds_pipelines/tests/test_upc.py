@@ -196,7 +196,6 @@ def test_json_keywords_insert(mocked_init, session, session_maker, pds_label):
 def test_redis_queue():
     # Redis Queue Objects
     RQ_main = RedisQueue('UPC_ReadyQueue')
-    logger.info("UPC Processing Queue: %s", RQ_main.id_name)
 
     RQ_error = RedisQueue(upc_error_queue)
     RQ_lock = RedisLock(lock_obj)
