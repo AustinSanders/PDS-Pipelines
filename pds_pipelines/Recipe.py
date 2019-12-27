@@ -15,7 +15,7 @@ from pds_pipelines.config import recipe_base
 
 class Recipe(Process):
     """
-    
+
     Parameters
     ----------
     Process
@@ -30,7 +30,8 @@ class Recipe(Process):
         self.recipe = []
 
     def AddJsonFile(self, file, proc):
-        """ Adds a recipe JSON dictionary to the recipe list.
+        """
+        Adds a recipe JSON dictionary to the recipe list.
 
         Parameters
         ----------
@@ -42,15 +43,15 @@ class Recipe(Process):
 
         # @TODO use 'with' statement for file read
         testjson = json.loads(open(file).read(), object_pairs_hook=OrderedDict)
+        processDict = {}
 
-        for IP in testjson[proc]['recipe']:
-            process = str(IP)
-            processDict = {}
+        for isis_process in testjson[proc]['recipe']:
+            process = str(isis_process)
             processDict[process] = OrderedDict()
             for k, v in testjson[proc]['recipe'][process].items():
                 processDict[process][str(k)] = str(v)
 
-            self.recipe.append(processDict)
+        self.recipe.append(processDict)
 
     def addMissionJson(self, mission, proc):
         """ Adds a recipe JSON for a specific mission.
@@ -77,7 +78,8 @@ class Recipe(Process):
         return self.recipe
 
     def getProcesses(self):
-        """ Returns list of process names.
+        """
+        Returns list of process names.
 
         Returns
         -------
