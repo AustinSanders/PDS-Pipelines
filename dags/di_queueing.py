@@ -34,7 +34,8 @@ def queue_items(ds, **kwargs):
                 rq.QueueAdd(f.filename)
     return 0
 
-session, _ = db_connect('pdsdi_dev')
+Session, _ = db_connect('pdsdi_dev')
+session = Session()
 rq = RedisQueue('DI_ReadyQueue')
 
 

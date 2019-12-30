@@ -11,7 +11,7 @@ import pds_pipelines.config as cfg
 
 def remove(path, keys, id2task, session):
     """ Removes a job from the supplied path based on its key.
-    
+
     Parameters
     ----------
     path : String
@@ -68,7 +68,8 @@ def map_type_ids(session):
 
 def main():
     path = cfg.pow_map2_base
-    session, _ = db_connect('clusterjob_prd')
+    Session, _ = db_connect('clusterjob_prd')
+    session = Session()
     id2task = map_type_ids(session)
     try:
         n_days = sys.argv[1]

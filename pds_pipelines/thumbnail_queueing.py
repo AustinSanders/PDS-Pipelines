@@ -55,18 +55,19 @@ def main():
     RQ = RedisQueue('Thumbnail_ReadyQueue')
 
     try:
-        session, _ = db_connect(pds_db)
+        Session, _ = db_connect(pds_db)
+        session = Session()
         logger.info('Database Connection Success')
     except:
         logger.error('Database Connection Error')
-    
+
     if args.volume:
         volstr = '%' + args.volume + '%'
-        qOBJ = session.query(Files).filter(Files.archiveid == archiveID, 
-                                                Files.filename.like(volstr), 
+        qOBJ = session.query(Files).filter(Files.archiveid == archiveID,
+                                                Files.filename.like(volstr),
                                                 Files.upc_required == 't')
     else:
-        qOBJ = session.query(Files).filter(Files.archiveid == archiveID, 
+        qOBJ = session.query(Files).filter(Files.archiveid == archiveID,
                                              Files.upc_required == 't')
     if qOBJ:
         addcount = 0
