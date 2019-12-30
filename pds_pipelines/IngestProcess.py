@@ -114,24 +114,23 @@ def main(user_args):
             filesize = os.path.getsize(inputfile)
 
             try:
-                # If we found an existing file and want to overwrite the data
+                ingest_entry = Files()
+
                 if QOBJ is not None and override:
-                    ingest_entry = QOBJ
-                # If the file was not found, create a new entry
-                else:
-                    ingest_entry = Files()
-                    ingest_entry.archiveid = PDSinfoDICT[archive]['archiveid']
-                    ingest_entry.filename = subfile
-                    ingest_entry.entry_date = date
-                    ingest_entry.checksum = filechecksum
-                    ingest_entry.upc_required = upcflag
-                    ingest_entry.validation_required = True
-                    ingest_entry.header_only = False
-                    ingest_entry.release_date = date
-                    ingest_entry.file_url = fileURL
-                    ingest_entry.file_size = filesize
-                    ingest_entry.di_pass = True
-                    ingest_entry.di_date = date
+                    ingest_entry.fileid = QOBJ.fileid
+
+                ingest_entry.archiveid = PDSinfoDICT[archive]['archiveid']
+                ingest_entry.filename = subfile
+                ingest_entry.entry_date = date
+                ingest_entry.checksum = filechecksum
+                ingest_entry.upc_required = upcflag
+                ingest_entry.validation_required = True
+                ingest_entry.header_only = False
+                ingest_entry.release_date = date
+                ingest_entry.file_url = fileURL
+                ingest_entry.file_size = filesize
+                ingest_entry.di_pass = True
+                ingest_entry.di_date = date
 
                 session.merge(ingest_entry)
                 session.flush()
