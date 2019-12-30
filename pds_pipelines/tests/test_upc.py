@@ -11,6 +11,14 @@ import numpy as np
 from unittest.mock import patch, PropertyMock
 from unittest import mock
 
+import pysis
+from pysis import isis
+
+# Stub in the getsn function for testing
+def getsn(from_):
+    return b'ISISSERIAL'
+pysis.isis.getsn = getsn
+
 import pds_pipelines
 from pds_pipelines.db import db_connect
 from pds_pipelines import UPCprocess
@@ -86,6 +94,20 @@ cam_info_dict = {'upcid': 1,
                                            (153.30256122853893, -33.18515128444211),
                                            (153.30256122853893, -32.68515128444211),
                                            (153.80256122853893, -32.68515128444211)]).wkt}
+
+@pytest.mark.parametrize('get_key_return', [('PRODUCTID'), (b'PRODUCTID')])
+@patch('pds_pipelines.UPCkeywords.UPCkeywords.__init__', return_value = None)
+def test_get_pds_id(mocked_init, get_key_return, pds_label):
+    with patch('pds_pipelines.UPCkeywords.UPCkeywords.getKeyword', return_value=get_key_return) as mocked_getkey:
+        prod_id = getPDSid(pds_label)
+    assert isinstance(prod_id, str)
+    assert prod_id == 'PRODUCTID'
+
+def test_get_isis_id():
+    cube_path = '/Path/to/my/cube.cub'
+    serial = getISISid(cube_path)
+    assert serial == 'ISISSERIAL'
+    assert isinstance(serial, str)
 
 def test_datafiles_exists(tables):
     assert model.DataFiles.__tablename__ in tables
