@@ -143,8 +143,10 @@ def main(user_args):
 
     PDSinfoDICT = json.load(open(pds_info, 'r'))
 
-    pds_session, pds_engine = db_connect(pds_db)
-    upc_session, upc_engine = db_connect(upc_db)
+    pds_session_maker, pds_engine = db_connect(pds_db)
+    pds_session = pds_session_maker()
+    upc_session_maker, upc_engine = db_connect(upc_db)
+    upc_session = upc_session_maker()
 
     tid = get_tid('fullimageurl', upc_session)
 
@@ -159,7 +161,7 @@ def main(user_args):
 
             recipeOBJ = Recipe()
             recipeOBJ.addMissionJson(archive, 'reduced')
-            
+
             infile = workarea + os.path.splitext(os.path.basename(inputfile))[0] + '.Binput.cub'
             outfile = workarea + os.path.splitext(os.path.basename(inputfile))[0] + '.Boutput.cub'
             status = 'success'

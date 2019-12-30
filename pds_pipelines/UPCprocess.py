@@ -308,7 +308,6 @@ def create_search_terms_record(cam_info_pvl, upc_id, input_cube, session_maker):
     try:
         keywordsOBJ = UPCkeywords(cam_info_pvl)
     except Exception as e:
-        print(e)
         keywordsOBJ = None
 
     if keywordsOBJ:
@@ -378,7 +377,6 @@ def create_json_keywords_record(cam_info_pvl, upc_id, input_file, failing_comman
     try:
         keywordsOBJ = UPCkeywords(cam_info_pvl)
     except Exception as e:
-        print(e)
         keywordsOBJ = None
 
     json_keywords_attributes = dict.fromkeys(JsonKeywords.__table__.columns.keys(), None)

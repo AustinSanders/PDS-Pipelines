@@ -127,7 +127,8 @@ def main(user_args):
 
     try:
         # Throws away 'engine' information
-        session, _ = db_connect(pds_db)
+        Session, _ = db_connect(pds_db)
+        session = Session()
         logger.info("%s", archive)
         logger.info("Database Connection Success")
     except Exception as e:

@@ -62,7 +62,8 @@ def main(user_args):
     statistics = user_args.statistics
 
     logging.basicConfig(level=loglevel)
-    source_session, _ = db_connect(upc_db)
+    source_session_maker, _ = db_connect(upc_db)
+    source_session = source_session_maker()
 
     upc_ids = get_upc_ids(source_session, date, instrument,
                           spacecraft, target)
@@ -77,7 +78,8 @@ def main(user_args):
     target_sessions = {}
 
     for target in targets:
-        session, _ = db_connect(target)
+        Session, _ = db_connect(target)
+        session = Session()
         target_sessions[target] = session
 
     instrument = get_instrument(source_session, instrument,
@@ -277,7 +279,7 @@ def get_instrument(session, instrument=None, spacecraft=None):
 
     returns:
     out : sqlalchemy query
-        The instruments associated with the instrument name or spacecraft. 
+        The instruments associated with the instrument name or spacecraft.
          If instrument and spacecraft are both None, this contains all instruments.
     """
 
@@ -360,7 +362,7 @@ def get_dest_session(target_id, dest_sessions):
 def sync_upc_id(source_session, dest_sessions, upc_id, meta_types):
     """
     Synchronize the DataFiles and keywords associated with the supplied upc id.
-    
+
     Parameters
     ----------
     source_session : sqlalchemy session
@@ -392,4 +394,3 @@ def sync_upc_id(source_session, dest_sessions, upc_id, meta_types):
 
 if __name__ == "__main__":
     main(parse_args())
-
