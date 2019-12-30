@@ -218,7 +218,7 @@ def test_generate_isis_processes():
     fid = item[1]
     archive = item[2]
 
-    processes, inputfile, caminfoOUT = generate_isis_processes(inputfile, archive, RQ_error, logger, context)
+    processes, inputfile, caminfoOUT, pwd = generate_isis_processes(inputfile, archive, RQ_error, logger, context)
 
     original_recipe = recipeOBJ.getRecipe()
 
