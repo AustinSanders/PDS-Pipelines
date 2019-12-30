@@ -11,12 +11,7 @@ from geoalchemy2 import Geometry
 import datetime
 
 from pds_pipelines.db import db_connect
-
-try:
-    Session, engine = db_connect()
-except:
-    Session = None
-    engine = None
+from pds_pipelines.config import upc_db
 
 Base = declarative_base()
 
@@ -152,6 +147,12 @@ class_map = {
     'search_terms': SearchTerms
 }
 
+try:
+    Session, engine = db_connect(upc_db)
+except:
+    Session = None
+    engine = None
+
 if isinstance(Session, sqlalchemy.orm.sessionmaker):
 
     # Create the database
@@ -162,5 +163,7 @@ if isinstance(Session, sqlalchemy.orm.sessionmaker):
     # If the table does not exist, this will create it. This is used in case a
     # user has manually dropped a table so that the project is not wrecked.
     Base.metadata.create_all(tables=[DataFiles.__table__,
-                                     Instruments.__table__, Targets.__table__, SearchTerms.__table__,
+                                     Instruments.__table__,
+                                     Targets.__table__,
+                                     SearchTerms.__table__,
                                      JsonKeywords.__table__])

@@ -70,7 +70,8 @@ def main(user_args):
         logger.info('Queueing %s Volume', volume)
 
     try:
-        session, _ = db_connect(pds_db)
+        Session, _ = db_connect(pds_db)
+        session = Session()
         logger.info('DataBase Connecton: Success')
     except:
         logger.error('DataBase Connection: Error')

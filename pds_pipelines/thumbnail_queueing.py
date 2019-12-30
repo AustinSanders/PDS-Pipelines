@@ -55,7 +55,8 @@ def main():
     RQ = RedisQueue('Thumbnail_ReadyQueue')
 
     try:
-        session, _ = db_connect(pds_db)
+        Session, _ = db_connect(pds_db)
+        session = Session()
         logger.info('Database Connection Success')
     except:
         logger.error('Database Connection Error')

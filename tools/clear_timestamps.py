@@ -17,7 +17,7 @@ class Args(object):
 
         args = parser.parse_args()
         self.key = args.key
-        
+
 
 def main():
     args = Args()
@@ -28,7 +28,8 @@ def main():
         print("No key specified.\nUsage:\t python clear_timestamps.py -k <job_key>")
         exit(1)
 
-    session, engine = db_connect('clusterjob_prd')
+    Session, engine = db_connect('clusterjob_prd')
+    session = Session()
     record = session.query(Processing).filter(Processing.key == key).first()
 
     record.queued = None

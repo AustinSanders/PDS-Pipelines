@@ -167,7 +167,8 @@ def repeat_dag(context, dag_run_obj):
 
 # @TODO find a way to make these separate tasks.  Difficult because they
 #  can't be pickled, therefore they can't be returned via a task.
-session, _ = db_connect('pdsdi_dev')
+Session, _ = db_connect('pdsdi_dev')
+session = Session()
 rq = RedisQueue('DI_ReadyQueue')
 
 

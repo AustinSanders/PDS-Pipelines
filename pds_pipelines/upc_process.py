@@ -13,7 +13,6 @@ import argparse
 
 from pysis import isis
 from pysis.exceptions import ProcessError
-from pysis.isis import *
 
 from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.redis_queue import RedisQueue
@@ -45,7 +44,8 @@ def getPDSid(infile):
     prod_id : str
         The PDS Product ID.
     """
-    prod_id = getkey(from_=infile, keyword="Product_Id", grp="Archive")
+    upc_keywords = UPCkeywords(infile)
+    prod_id = upc_keywords.getKeyword('productid')
     # in later versions of ISIS, key values are returned as bytes
     if isinstance(prod_id, bytes):
         prod_id = prod_id.decode()
@@ -66,7 +66,7 @@ def getISISid(infile):
     newisisSerial : str
         The serial number of the input file.
     """
-    serial_num = getsn(from_=infile)
+    serial_num = isis.getsn(from_=infile)
     # in later versions of getsn, serial_num is returned as bytes
     if isinstance(serial_num, bytes):
         serial_num = serial_num.decode()
@@ -308,7 +308,6 @@ def create_search_terms_record(cam_info_pvl, upc_id, input_cube, session_maker):
     try:
         keywordsOBJ = UPCkeywords(cam_info_pvl)
     except Exception as e:
-        print(e)
         keywordsOBJ = None
 
     if keywordsOBJ:
@@ -378,7 +377,6 @@ def create_json_keywords_record(cam_info_pvl, upc_id, input_file, failing_comman
     try:
         keywordsOBJ = UPCkeywords(cam_info_pvl)
     except Exception as e:
-        print(e)
         keywordsOBJ = None
 
     json_keywords_attributes = dict.fromkeys(JsonKeywords.__table__.columns.keys(), None)

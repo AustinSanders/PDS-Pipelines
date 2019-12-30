@@ -45,7 +45,8 @@ def main(user_args):
     logger.info('Starting DI Process')
 
     try:
-        session, engine = db_connect(pds_db)
+        Session, engine = db_connect(pds_db)
+        session = Session()
         logger.info('DataBase Connecton: Success')
     except Exception as e:
         logger.error('DataBase Connection Error: %s', str(e))

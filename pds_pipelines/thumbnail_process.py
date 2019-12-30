@@ -127,8 +127,10 @@ def main():
 
     PDSinfoDICT = json.load(open(pds_info, 'r'))
 
-    pds_session, pds_session = db_connect(pds_db)
-    upc_session, upc_session = db_connect(upc_db)
+    pds_session_maker, pds_session = db_connect(pds_db)
+    pds_session = pds_session_maker()
+    upc_session_maker, upc_session = db_connect(upc_db)
+    upc_session = upc_session_maker()
 
     tid = get_tid('thumbnailurl', upc_session)
 
