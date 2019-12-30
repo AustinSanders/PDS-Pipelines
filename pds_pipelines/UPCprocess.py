@@ -560,7 +560,7 @@ def main(user_args):
         edr_source = orig_file.replace(archive_base, web_base)
 
         processes, infile, caminfoOUT, pwd = generate_isis_processes(inputfile, archive, RQ_error, logger, context)
-        failing_command = process_isis(processes, workarea, pwd. logger)
+        failing_command = process_isis(processes, workarea, pwd, logger)
 
         pds_label = pvl.load(inputfile)
 
