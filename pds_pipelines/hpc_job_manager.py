@@ -9,7 +9,7 @@ import pytz
 import argparse
 import logging
 
-from pds_pipelines.HPCjob import *
+from pds_pipelines.hpc_job import *
 
 import pdb
 from pds_pipelines.jobconfig import jobconfig, log_format
@@ -32,7 +32,7 @@ class Args:
         parser.add_argument('--process', '-p', dest="process", required=True,
                             choices = choices, help="Enter process - {}".format(choices))
 
-        parser.add_argument('--jobarray', '-j', dest="jobarray", type=int, 
+        parser.add_argument('--jobarray', '-j', dest="jobarray", type=int,
                             help="Enter string to set job array size")
 
         parser.add_argument('--norun',  action='store_true')

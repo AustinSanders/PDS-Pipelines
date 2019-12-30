@@ -15,11 +15,11 @@ from pysis import isis
 from pysis.exceptions import ProcessError
 from pysis.isis import *
 
-from pds_pipelines.RedisLock import RedisLock
-from pds_pipelines.RedisQueue import RedisQueue
-from pds_pipelines.Recipe import Recipe
-from pds_pipelines.Process import Process
-from pds_pipelines.UPCkeywords import UPCkeywords
+from pds_pipelines.redis_lock import RedisLock
+from pds_pipelines.redis_queue import RedisQueue
+from pds_pipelines.recipe import Recipe
+from pds_pipelines.process import Process
+from pds_pipelines.upc_keywords import UPCkeywords
 from pds_pipelines.db import db_connect
 from pds_pipelines.models import pds_models
 from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, DataFiles, JsonKeywords, BaseMixin

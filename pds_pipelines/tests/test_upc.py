@@ -13,10 +13,10 @@ from unittest import mock
 
 import pds_pipelines
 from pds_pipelines.db import db_connect
-from pds_pipelines import UPCprocess
-from pds_pipelines.UPCprocess import *
+from pds_pipelines import upc_process
+from pds_pipelines.upc_process import *
 
-from pds_pipelines.UPCprocess import create_datafiles_record, create_search_terms_record, create_json_keywords_record, get_target_id, getISISid
+from pds_pipelines.upc_process import create_datafiles_record, create_search_terms_record, create_json_keywords_record, get_target_id, getISISid
 from pds_pipelines.models import upc_models as model
 
 @pytest.fixture
@@ -132,8 +132,8 @@ def test_bad_spacecraftname_instrument_insert(session, session_maker):
     with pytest.raises(sqlalchemy.orm.exc.NoResultFound):
         session.query(model.Instruments).filter(model.Instruments.instrumentid == instrument_id).one()
 
-@patch('pds_pipelines.UPCprocess.getISISid', return_value = 'ISISSERIAL')
-@patch('pds_pipelines.UPCprocess.getPDSid', return_value = 'PRODUCTID')
+@patch('pds_pipelines.upc_process.getISISid', return_value = 'ISISSERIAL')
+@patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
 def test_datafiles_insert(mocked_pds_id, mocked_isis_id, session, session_maker, pds_label):
     pds_label = PVLModule({'^IMAGE': ('5600R.IMG', 12),
                            'SPACECRAFT_NAME': 'TEST CRAFT',
@@ -151,9 +151,9 @@ def extract_keyword(key):
     if key == 'GisFootprint':
         return Polygon([(153.80256122853893, -32.68515128444211), (153.80256122853893, -33.18515128444211), (153.30256122853893, -33.18515128444211), (153.30256122853893, -32.68515128444211), (153.80256122853893, -32.68515128444211)]).wkt
     return cam_info_dict[key]
-@patch('pds_pipelines.UPCkeywords.UPCkeywords.__init__', return_value = None)
-@patch('pds_pipelines.UPCkeywords.UPCkeywords.getKeyword', side_effect = extract_keyword)
-@patch('pds_pipelines.UPCprocess.getPDSid', return_value = 'PRODUCTID')
+@patch('pds_pipelines.upc_keywords.UPCkeywords.__init__', return_value = None)
+@patch('pds_pipelines.upc_keywords.UPCkeywords.getKeyword', side_effect = extract_keyword)
+@patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
 def test_search_terms_insert(mocked_product_id, mocked_keyword, mocked_init, session, session_maker, pds_label):
     upc_id = cam_info_dict['upcid']
 
@@ -174,13 +174,13 @@ def test_search_terms_insert(mocked_product_id, mocked_keyword, mocked_init, ses
             continue
         assert cam_info_dict[key] == resp_attribute
 
-@patch('pds_pipelines.UPCkeywords.UPCkeywords.__init__', return_value = None)
+@patch('pds_pipelines.upc_keywords.UPCkeywords.__init__', return_value = None)
 def test_json_keywords_insert(mocked_init, session, session_maker, pds_label):
     upc_id = cam_info_dict['upcid']
 
     model.DataFiles.create(session, **{'upcid': upc_id})
 
-    with patch('pds_pipelines.UPCkeywords.UPCkeywords.label', new_callable=PropertyMock) as mocked_label:
+    with patch('pds_pipelines.upc_keywords.UPCkeywords.label', new_callable=PropertyMock) as mocked_label:
         mocked_label.return_value = pds_label
         create_json_keywords_record(pds_label, upc_id, '/Path/to/my/cube.cub', 'No Failures', session_maker)
 

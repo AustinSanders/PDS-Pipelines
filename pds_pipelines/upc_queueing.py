@@ -10,7 +10,7 @@ from os.path import getsize, dirname, splitext
 from shutil import copy2, disk_usage
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files
-from pds_pipelines.RedisQueue import RedisQueue
+from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.config import pds_log, pds_info, pds_db, workarea, disk_usage_ratio
 
 
@@ -120,7 +120,7 @@ def main(user_args):
 
 
         logger.info('Files Added to UPC Queue: %s', addcount)
-        
+
     session.close()
 
     logger.info("UPC Processing successfully completed")

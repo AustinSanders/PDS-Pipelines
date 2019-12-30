@@ -3,13 +3,13 @@
 import json
 from collections import OrderedDict
 
-from SubLoggy import *
+from pds_process_logging import *
 
 
 class Loggy(object):
     """
     Writes to the logs file.
-    
+
     Attributes
     ---------
     Lfile : dict

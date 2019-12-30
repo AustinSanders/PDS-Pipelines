@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from pds_pipelines.RedisLock import RedisLock
+from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.config import lock_obj
 import argparse
 
@@ -63,7 +63,7 @@ def main():
             for key in redis_lock.get_all():
                 print("\t{}".format(key))
             return
-            
+
 
     func = getattr(redis_lock, action)
 

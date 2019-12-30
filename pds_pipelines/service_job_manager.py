@@ -8,14 +8,14 @@ import logging
 import argparse
 import json
 
-from pds_pipelines.PDS_DBquery import PDS_DBquery
-from pds_pipelines.RedisQueue import RedisQueue
-from pds_pipelines.RedisHash import RedisHash
-from pds_pipelines.Recipe import Recipe
-from pds_pipelines.Process import Process
-from pds_pipelines.MakeMap import MakeMap
-from pds_pipelines.HPCjob import HPCjob
-from pds_pipelines.RedisLock import RedisLock
+from pds_pipelines.pds_db_query import PDS_DBquery
+from pds_pipelines.redis_queue import RedisQueue
+from pds_pipelines.redis_hash import RedisHash
+from pds_pipelines.recipe import Recipe
+from pds_pipelines.process import Process
+from pds_pipelines.make_map import MakeMap
+from pds_pipelines.hpc_job import HPCjob
+from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.config import recipe_base, pds_log, scratch, archive_base, default_namespace, slurm_log, cmd_dir, pds_info, lock_obj
 
 
@@ -599,7 +599,7 @@ def main(user_args):
 
     if not RQ_lock.available('Services'):
         exit()
-        
+
     # Connect to database and access 'jobs' table
     DBQO = PDS_DBquery('JOBS')
     if key is None:
@@ -1003,9 +1003,9 @@ def main(user_args):
     # Whether or not we use the default namespace, this guarantees that the POW/MAP queues will match the namespace
     #  used in the job manager.
     if xmlOBJ.getProcess() == 'POW':
-        cmd = cmd_dir + "POWprocess.py -k {} -n {}".format(key, namespace)
+        cmd = cmd_dir + "pow_process.py -k {} -n {}".format(key, namespace)
     elif xmlOBJ.getProcess() == 'MAP2':
-        cmd = cmd_dir + "MAPprocess.py -k {} -n {}".format(key, namespace)
+        cmd = cmd_dir + "map_process.py -k {} -n {}".format(key, namespace)
 
     logger.info('HPC Command: %s', cmd)
     jobOBJ.setCommand(cmd)
