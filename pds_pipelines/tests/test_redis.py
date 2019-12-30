@@ -14,6 +14,7 @@ def test_redis_queue():
         inputfile = item[0]
         fid = item[1]
         archive = item[2]
+        
     assert inputfile == "/Path/to/my/file.img"
     assert fid == "1"
     assert archive == "ARCHIVE"

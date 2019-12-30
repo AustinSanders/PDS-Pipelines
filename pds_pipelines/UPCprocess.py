@@ -415,13 +415,7 @@ def create_json_keywords_record(cam_info_pvl, upc_id, input_file, failing_comman
         session.commit()
     session.close()
 
-def generate_isis_processes(RQ_main, RQ_error, logger, context, workarea, web_base):
-    # get a file from the queue
-    item = literal_eval(RQ_main.QueueGet())
-    inputfile = item[0]
-    fid = item[1]
-    archive = item[2]
-
+def generate_isis_processes(inputfile, archive, RQ_error, logger, context):
     if not os.path.isfile(inputfile):
         RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during UPC processing')
         logger.warn("%s is not a file\n", inputfile)
@@ -439,13 +433,7 @@ def generate_isis_processes(RQ_main, RQ_error, logger, context, workarea, web_ba
     logger.debug("Beginning processing on %s\n", inputfile)
 
     outfile = os.path.splitext(inputfile)[0] + '.UPCoutput.cub'
-    caminfoOUT= os.path.splitext(inputfile)[0] + '_caminfo.pvl'
-
-    # Build URL for edr_source based on archive path from PDSinfo.json
-    PDSinfoDICT = json.load(open(pds_info, 'r'))
-    archive_path = PDSinfoDICT[archive]['path']
-    orig_file = inputfile.replace(workarea, archive_path)
-    edr_source = orig_file.replace(archive_base, web_base)
+    caminfoOUT = os.path.splitext(inputfile)[0] + '_caminfo.pvl'
 
     processes = []
     # Iterate through each process listed in the recipe
@@ -486,7 +474,7 @@ def generate_isis_processes(RQ_main, RQ_error, logger, context, workarea, web_ba
         processes.append(processOBJ)
         pwd = os.getcwd()
 
-    return processes, inputfile, caminfoOUT, edr_source
+    return processes, infile, caminfoOUT
 
 def process_isis(processes):
     # iterate through functions listed in process obj
@@ -520,7 +508,6 @@ def parse_args():
     parser.set_defaults(persist=False)
     args = parser.parse_args()
     return args
-
 
 def main(user_args):
     upc_session_maker, upc_engine = db_connect(upc_db)
@@ -560,7 +547,19 @@ def main(user_args):
 
     # if there are items in the redis queue
     if int(RQ_main.QueueSize()) > 0 and RQ_lock.available(RQ_main.id_name):
-        processes, inputfile, caminfoOUT, edr_source = generate_isis_processes(RQ_main, RQ_error, logger, context, workarea, web_base)
+        # get a file from the queue
+        item = literal_eval(RQ_main.QueueGet())
+        inputfile = item[0]
+        fid = item[1]
+        archive = item[2]
+
+        # Build URL for edr_source based on archive path from PDSinfo.json
+        PDSinfoDICT = json.load(open(pds_info, 'r'))
+        archive_path = PDSinfoDICT[archive]['path']
+        orig_file = inputfile.replace(workarea, archive_path)
+        edr_source = orig_file.replace(archive_base, web_base)
+
+        processes, infile, caminfoOUT = generate_isis_processes(inputfile, archive, RQ_error, logger, context)
         failing_command = process_isis(processes)
 
         pds_label = pvl.load(inputfile)
@@ -572,7 +571,7 @@ def main(user_args):
         create_search_terms_record(caminfoOUT, upc_id, infile, upc_session_maker)
 
         ######## Generate JsonKeywords Record ########
-        create_json_keywords_record(caminfoOUT, upc_id, inputfile, failing_command, session_maker)
+        create_json_keywords_record(caminfoOUT, upc_id, inputfile, failing_command, upc_session_maker)
 
         try:
             session.flush()

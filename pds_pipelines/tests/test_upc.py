@@ -212,13 +212,19 @@ def test_generate_isis_processes():
     recipeOBJ = Recipe()
     recipeOBJ.addMissionJson(archive, 'upc')
 
-    processes, inputfile, caminfoOUT, edr_source = generate_isis_processes(RQ_main, RQ_error, logger, context, './pds_pipelines/tests/data', 'https://pdsimage.wr.usgs.gov/Missions')
+    # get a file from the queue
+    item = literal_eval(RQ_main.QueueGet())
+    inputfile = item[0]
+    fid = item[1]
+    archive = item[2]
 
-    original_recipe = recipeOBJ.getRecipe()[0]
+    processes, inputfile, caminfoOUT = generate_isis_processes(inputfile, archive, RQ_error, logger, context)
 
-    for process in processes:
-        for k ,v in process.getProcess().items():
-            assert original_recipe[k].keys() == v.keys()
+    original_recipe = recipeOBJ.getRecipe()
+
+    for i, process in enumerate(processes):
+        for k, v in process.getProcess().items():
+            assert original_recipe[i][k].keys() == v.keys()
 
 # def test_process_isis():
 #     RQ_main = RedisQueue('UPC_ReadyQueue')
