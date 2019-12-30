@@ -476,7 +476,7 @@ def generate_isis_processes(inputfile, archive, RQ_error, logger, context):
 
     return processes, infile, caminfoOUT, pwd
 
-def process_isis(processes, workarea, pwd):
+def process_isis(processes, workarea, pwd, logger):
     # iterate through functions listed in process obj
     failing_command = ''
     for process in processes:
@@ -560,7 +560,7 @@ def main(user_args):
         edr_source = orig_file.replace(archive_base, web_base)
 
         processes, infile, caminfoOUT, pwd = generate_isis_processes(inputfile, archive, RQ_error, logger, context)
-        failing_command = process_isis(processes, workarea, pwd)
+        failing_command = process_isis(processes, workarea, pwd. logger)
 
         pds_label = pvl.load(inputfile)
 
