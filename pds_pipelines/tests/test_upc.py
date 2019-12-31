@@ -213,26 +213,17 @@ def test_json_keywords_insert(mocked_init, session, session_maker, pds_label):
     assert res_json['SPACECRAFT_NAME'] == pds_label['SPACECRAFT_NAME']
 
 def test_generate_isis_processes():
-    archive = "galileo_ssi_edr"
-    RQ_main = RedisQueue('UPC_ReadyQueue')
-    RQ_error = RedisQueue('UPC_ErrorQueue')
-    RQ_main.QueueAdd(("./pds_pipelines/tests/data/5600r.lbl", "1", archive))
-    context = {'job_id': 1, 'array_id':1, 'inputfile': ''}
-
     logger = logging.getLogger('UPC_Process')
+
+    inputfile = "./pds_pipelines/tests/data/5600r.lbl"
+    fid = "1"
+    archive = "galileo_ssi_edr"
+
+    processes, inputfile, caminfoOUT, pwd = generate_isis_processes(inputfile, archive, logger)
 
     # TODO Factor using the Recipe object out of this test
     recipeOBJ = Recipe()
     recipeOBJ.addMissionJson(archive, 'upc')
-
-    # get a file from the queue
-    item = literal_eval(RQ_main.QueueGet())
-    inputfile = item[0]
-    fid = item[1]
-    archive = item[2]
-
-    processes, inputfile, caminfoOUT, pwd = generate_isis_processes(inputfile, archive, RQ_error, logger, context)
-
     original_recipe = recipeOBJ.getRecipe()
 
     for i, process in enumerate(processes):
