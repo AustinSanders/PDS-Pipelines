@@ -478,18 +478,18 @@ def process_isis(processes, workarea, pwd, logger):
     # iterate through functions listed in process obj
     failing_command = ''
     for process in processes:
-        for k, v in process.getProcess().items():
+        for command, keywargs in process.getProcess().items():
             # load a function into func
-            func = getattr(isis, k)
+            func = getattr(isis, command)
             try:
                 os.chdir(workarea)
                 # execute function
-                func(**v)
+                func(**keywargs)
                 os.chdir(pwd)
 
             except ProcessError as e:
                 logger.error("%s", e)
-                failing_command = k
+                failing_command = command
                 break
 
     return failing_command
