@@ -23,7 +23,7 @@ archive_base = '/pds_san/PDS_Archive/'
 link_dest = '/pds_san/PDS_Archive_Links/'
 
 # Recipe base path
-recipe_base = '/home/acpaquette/repos/PDS-Pipelines/recipe/new/'
+recipe_base = os.path.abspath('../recipe/new/')
 
 pds_info = '/home/acpaquette/repos/PDS-Pipelines/pds_pipelines/PDSinfo.json'
 
