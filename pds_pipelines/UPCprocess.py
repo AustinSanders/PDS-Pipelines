@@ -413,16 +413,8 @@ def create_json_keywords_record(cam_info_pvl, upc_id, input_file, failing_comman
         session.commit()
     session.close()
 
-def generate_isis_processes(inputfile, archive, RQ_error, logger, context):
-    if not os.path.isfile(inputfile):
-        RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during UPC processing')
-        logger.warn("%s is not a file\n", inputfile)
-        exit()
-
+def generate_isis_processes(inputfile, archive, logger):
     logger.info('Starting Process: %s', inputfile)
-
-    # Update the logger context to include inputfile
-    context['inputfile'] = inputfile
 
     recipeOBJ = Recipe()
     recipeOBJ.addMissionJson(archive, 'upc')
@@ -519,7 +511,7 @@ def main(user_args):
         slurm_job_id = ''
         slurm_array_id = ''
     inputfile = ''
-    context = {'job_id': slurm_job_id, 'array_id':slurm_array_id, 'inputfile':inputfile}
+    context = {'job_id': slurm_job_id, 'array_id':slurm_array_id, 'inputfile': inputfile}
     logger = logging.getLogger('UPC_Process')
     level = logging.getLevelName(log_level)
     logger.setLevel(level)
@@ -549,13 +541,21 @@ def main(user_args):
         fid = item[1]
         archive = item[2]
 
+        if not os.path.isfile(inputfile):
+            RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during UPC processing')
+            logger.warn("%s is not a file\n", inputfile)
+            exit()
+
         # Build URL for edr_source based on archive path from PDSinfo.json
         PDSinfoDICT = json.load(open(pds_info, 'r'))
         archive_path = PDSinfoDICT[archive]['path']
         orig_file = inputfile.replace(workarea, archive_path)
         edr_source = orig_file.replace(archive_base, web_base)
 
-        processes, infile, caminfoOUT, pwd = generate_isis_processes(inputfile, archive, RQ_error, logger, context)
+        # Update the logger context to include inputfile
+        context['inputfile'] = inputfile
+
+        processes, infile, caminfoOUT, pwd = generate_isis_processes(inputfile, archive, logger)
         failing_command = process_isis(processes, workarea, pwd, logger)
 
         pds_label = pvl.load(inputfile)
