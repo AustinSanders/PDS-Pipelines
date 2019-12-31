@@ -5,8 +5,8 @@ import json
 import logging
 import argparse
 import pytz
-from pds_pipelines.FindDI_Ready import archive_expired
-from pds_pipelines.RedisQueue import RedisQueue
+from pds_pipelines.find_di_ready import archive_expired
+from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.db import db_connect
 from pds_pipelines.config import pds_info, pds_db, pds_log
 

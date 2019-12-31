@@ -4,13 +4,13 @@ import sys
 import argparse
 import logging
 
-from pds_pipelines.RedisQueue import RedisQueue
-from pds_pipelines.HPCjob import HPCjob
+from pds_pipelines.redis_queue import RedisQueue
+from pds_pipelines.hpc_job import HPCjob
 from pds_pipelines.config import pds_log, slurm_log, cmd_dir, scratch, default_namespace
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="DI Process")
+    parser = argparse.ArgumentParser(description="Final Job Manager")
 
     parser.add_argument('--log', '-l', dest="log_level",
                         choices=['DEBUG', 'INFO',
@@ -34,7 +34,7 @@ def main(user_args):
     if namespace is None:
         namespace = default_namespace
 
-    logger = logging.getLogger('FinalJobber')
+    logger = logging.getLogger('final_job_manager')
     level = logging.getLevelName(log_level)
     logger.setLevel(level)
     logFileHandle = logging.FileHandler(pds_log+'Service.log')
@@ -64,7 +64,7 @@ def main(user_args):
         jobOBJ.setMemory('8192')
         jobOBJ.setPartition('pds')
 
-        cmd = "{}ServiceFinal.py -n {} -k {}".format(cmd_dir, namespace, FKey)
+        cmd = "{}service_final.py -n {} -k {}".format(cmd_dir, namespace, FKey)
         jobOBJ.setCommand(cmd)
         logger.info('HPC Command: %s', cmd)
 
