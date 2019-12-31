@@ -181,7 +181,7 @@ def test_search_terms_insert(mocked_product_id, mocked_keyword, mocked_init, ses
 
     models.DataFiles.create(session, **{'upcid': upc_id})
 
-    create_search_terms_record(pds_label, upc_id, '/Path/to/my/cube.cub', session_maker)
+    create_search_terms_record(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', session_maker)
     resp = session.query(SearchTerms).filter(SearchTerms.upcid == upc_id).first()
 
     for key in cam_info_dict.keys():

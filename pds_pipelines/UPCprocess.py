@@ -281,7 +281,7 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
 
     return upc_id
 
-def create_search_terms_record(cam_info_pvl, upc_id, input_cube, session_maker):
+def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, session_maker):
     """
     Creates a new SearchTerms record through values from a given caminfo file
     and adds the new record to the database
@@ -333,8 +333,8 @@ def create_search_terms_record(cam_info_pvl, upc_id, input_cube, session_maker):
     search_term_attributes['processdate'] = datetime.datetime.now(pytz.utc).strftime(
         "%Y-%m-%d %H:%M:%S")
 
-    search_term_attributes['targetid'] = get_target_id(cam_info_pvl, session_maker)
-    search_term_attributes['instrumentid'] = get_instrument_id(cam_info_pvl, session_maker)
+    search_term_attributes['targetid'] = get_target_id(label, session_maker)
+    search_term_attributes['instrumentid'] = get_instrument_id(label, session_maker)
 
     session = session_maker()
     search_terms_qobj = session.query(SearchTerms).filter(
@@ -480,9 +480,7 @@ def process_isis(processes, workarea, pwd, logger):
     for process in processes:
         for k, v in process.getProcess().items():
             # load a function into func
-            # print(k, v)
             func = getattr(isis, k)
-            print(func)
             try:
                 os.chdir(workarea)
                 # execute function
@@ -491,7 +489,7 @@ def process_isis(processes, workarea, pwd, logger):
 
             except ProcessError as e:
                 logger.error("%s", e)
-                failing_command = item
+                failing_command = k
                 break
 
     return failing_command
@@ -566,7 +564,7 @@ def main(user_args):
         upc_id = create_datafiles_record(pds_label, edr_source, infile, upc_session_maker)
 
         ######## Generate SearchTerms Record ########
-        create_search_terms_record(caminfoOUT, upc_id, infile, upc_session_maker)
+        create_search_terms_record(pds_label, caminfoOUT, upc_id, infile, upc_session_maker)
 
         ######## Generate JsonKeywords Record ########
         create_json_keywords_record(caminfoOUT, upc_id, inputfile, failing_command, upc_session_maker)
