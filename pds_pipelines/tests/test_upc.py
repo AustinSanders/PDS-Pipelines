@@ -8,7 +8,7 @@ from shapely.geometry import Polygon
 from geoalchemy2.elements import WKBElement
 from geoalchemy2.shape import from_shape, to_shape
 import numpy as np
-from unittest.mock import patch, PropertyMock
+from unittest.mock import patch, PropertyMock, Mock
 from unittest import mock
 
 import pysis
@@ -19,7 +19,13 @@ def getsn(from_):
     return b'ISISSERIAL'
 pysis.isis.getsn = getsn
 
+# Stub in the getsn function for testing
+def spiceinit(from_):
+    raise ProcessError(1, ['spiceinit'], '', '')
+pysis.isis.spiceinit = spiceinit
+
 import pds_pipelines
+from pds_pipelines.process import Process
 from pds_pipelines.db import db_connect
 from pds_pipelines import upc_process
 from pds_pipelines.upc_process import *
@@ -221,7 +227,7 @@ def test_generate_isis_processes():
 
     processes, inputfile, caminfoOUT, pwd = generate_isis_processes(inputfile, archive, logger)
 
-    # TODO Factor using the Recipe object out of this test
+    # TODO Factor out the Recipe object from this test
     recipeOBJ = Recipe()
     recipeOBJ.addMissionJson(archive, 'upc')
     original_recipe = recipeOBJ.getRecipe()
@@ -230,14 +236,20 @@ def test_generate_isis_processes():
         for k, v in process.getProcess().items():
             assert original_recipe[i][k].keys() == v.keys()
 
-# def test_process_isis():
-#     RQ_main = RedisQueue('UPC_ReadyQueue')
-#     RQ_error = RedisQueue('UPC_ErrorQueue')
-#     RQ_main.QueueAdd(("./pds_pipelines/tests/data/5600r.lbl", "1", "galileo_ssi_edr"))
-#     context = {'job_id': 1, 'array_id':1, 'inputfile': ''}
-#
-#     logger = logging.getLogger('UPC_Process')
-#
-#     failing_command = process_isis(processes)
-#     print(inputfile, caminfoOUT, edr_source, failing_command)
-#     assert False
+def test_process_isis():
+    logger = logging.getLogger('UPC_Process')
+
+    process = Mock(spec=Process)
+    process.getProcess.return_value = {'getsn': {'from_': '/Path/to/some/cube.cub'}}
+
+    failing_command = process_isis([process], '/', '/', logger)
+    assert failing_command == ''
+
+def test_bad_process_isis():
+    logger = logging.getLogger('UPC_Process')
+
+    process = Mock(spec=Process)
+    process.getProcess.return_value = {'spiceinit': {'from_': '/Path/to/some/cube.cub'}}
+
+    failing_command = process_isis([process], '/', '/', logger)
+    assert failing_command == 'spiceinit'
