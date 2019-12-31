@@ -10,8 +10,8 @@ import argparse
 import pytz
 
 from ast import literal_eval
-from pds_pipelines.RedisQueue import RedisQueue
-from pds_pipelines.RedisLock import RedisLock
+from pds_pipelines.redis_queue import RedisQueue
+from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.config import pds_db, pds_log, pds_info, lock_obj, upc_error_queue
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files

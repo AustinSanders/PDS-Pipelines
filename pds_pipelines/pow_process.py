@@ -12,12 +12,12 @@ from pysis import isis
 from pysis.exceptions import ProcessError
 
 from pds_pipelines.config import lock_obj, scratch, pds_log, default_namespace
-from pds_pipelines.RedisQueue import RedisQueue
-from pds_pipelines.RedisLock import RedisLock
-from pds_pipelines.RedisHash import RedisHash
-from pds_pipelines.Process import Process
-from pds_pipelines.Loggy import Loggy
-from pds_pipelines.SubLoggy import SubLoggy
+from pds_pipelines.redis_queue import RedisQueue
+from pds_pipelines.redis_lock import RedisLock
+from pds_pipelines.redis_hash import RedisHash
+from pds_pipelines.process import Process
+from pds_pipelines.pds_logging import Loggy
+from pds_pipelines.pds_process_logging import SubLoggy
 
 
 def parse_args():

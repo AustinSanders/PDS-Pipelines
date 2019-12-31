@@ -6,7 +6,7 @@ import json
 import logging
 import argparse
 from pds_pipelines.config import recipe_base, link_dest
-from pds_pipelines.RedisQueue import RedisQueue
+from pds_pipelines.redis_queue import RedisQueue
 from ast import literal_eval
 from pds_pipelines.config import pds_log
 

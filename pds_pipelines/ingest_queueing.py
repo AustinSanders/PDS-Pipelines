@@ -6,7 +6,7 @@ import json
 import logging
 import argparse
 
-from pds_pipelines.RedisQueue import RedisQueue
+from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.config import pds_info, pds_log
 
 

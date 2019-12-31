@@ -13,15 +13,15 @@ from pysis import isis
 from pysis.exceptions import ProcessError
 from pysis.isis import getsn
 
-from pds_pipelines.RedisQueue import RedisQueue
-from pds_pipelines.RedisLock import RedisLock
-from pds_pipelines.Recipe import Recipe
-from pds_pipelines.Process import Process
+from pds_pipelines.redis_queue import RedisQueue
+from pds_pipelines.redis_lock import RedisLock
+from pds_pipelines.recipe import Recipe
+from pds_pipelines.process import Process
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.upc_models import MetaString, DataFiles
 from pds_pipelines.models.pds_models import ProcessRuns
 from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db, lock_obj, upc_error_queue
-from pds_pipelines.UPC_process import get_tid
+from pds_pipelines.upc_process import get_tid
 
 def getISISid(infile):
     serial_num = getsn(from_=infile)

@@ -8,14 +8,14 @@ import redis
 import json
 from collections import OrderedDict
 
-from pds_pipelines.Process import Process
-from pds_pipelines.RedisQueue import RedisQueue
+from pds_pipelines.process import Process
+from pds_pipelines.redis_queue import RedisQueue
 
 from pds_pipelines.config import recipe_base
 
 class Recipe(Process):
     """
-    
+
     Parameters
     ----------
     Process

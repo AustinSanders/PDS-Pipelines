@@ -12,9 +12,9 @@ import xml.etree.ElementTree as ET
 
 from io import BytesIO
 from collections import OrderedDict
-from pds_pipelines.RedisQueue import RedisQueue
-from pds_pipelines.RedisHash import RedisHash
-from pds_pipelines.PDS_DBquery import PDS_DBquery
+from pds_pipelines.redis_queue import RedisQueue
+from pds_pipelines.redis_hash import RedisHash
+from pds_pipelines.pds_db_query import PDS_DBquery
 from pds_pipelines.config import pds_log, pow_map2_base, scratch
 from pysis import ISIS_VERSION as isis_version
 
@@ -58,7 +58,7 @@ def main(user_args):
     log_level = user_args.log_level
 
 #***************** Setup Logging **************
-    logger = logging.getLogger('ServiceFinal_' + key)
+    logger = logging.getLogger('service_final' + key)
     level = logging.getLevelName(log_level)
     logger.setLevel(level)
     logFileHandle = logging.FileHandler(pds_log+'Service.log')
@@ -108,8 +108,8 @@ def main(user_args):
             logger.error('Addin Error XML to JOBS DB: Error')
         print(fh.getvalue())
 
-    Fdir = pow_map2_base + infoHash.Service() + '/' + key 
-    Wpath = scratch + key 
+    Fdir = pow_map2_base + infoHash.Service() + '/' + key
+    Wpath = scratch + key
 
     # Make final directory
     if not os.path.exists(Fdir):
