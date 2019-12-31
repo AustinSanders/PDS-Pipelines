@@ -15,7 +15,7 @@ from pds_pipelines.config import recipe_base
 
 class Recipe(Process):
     """
-    
+
     Parameters
     ----------
     Process
@@ -63,7 +63,7 @@ class Recipe(Process):
             The process pipeline.
         """
 
-        recipe_json = recipe_base + mission + '.json'
+        recipe_json = recipe_base + "/" + mission + '.json'
         self.AddJsonFile(recipe_json, proc)
 
     def getRecipe(self):
