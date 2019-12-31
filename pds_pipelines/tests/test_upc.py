@@ -25,7 +25,7 @@ from pds_pipelines import upc_process
 from pds_pipelines.upc_process import *
 
 from pds_pipelines.upc_process import create_datafiles_record, create_search_terms_record, create_json_keywords_record, get_target_id, getISISid
-from pds_pipelines.models import upc_models as model
+from pds_pipelines.models import upc_models as models
 
 @pytest.fixture
 def tables():
