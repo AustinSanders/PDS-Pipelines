@@ -45,7 +45,7 @@
         "archiveid": "25",
         "path": "/pds_san/PDS_Archive/Galileo/SSI/",
         "bandbinQuery": "FilterName",
-        "upc_reqs": ["/SSI/", ".lbl", ["c3", "g1", "g2", "j0"]]
+        "upc_reqs": [".lbl"]
     },
     "kaguya_lism": {
         "archiveid": "92",
