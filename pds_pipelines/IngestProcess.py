@@ -107,7 +107,7 @@ def main(user_args):
 
             # If all upc requirements are in 'inputfile,' flag for upc
             try:
-                upcflag = all(x in inputfile for x in PDSinfoDICT[archive]['upc_reqs'])
+                upcflag = all([any(sub_req in inputfile for sub_req in req) if isinstance(req, list) else req in inputfile for req in PDSinfoDICT[archive]['upc_reqs']])
             except KeyError:
                 logger.warn("No upc_reqs found for %s\nSetting upc eligibility False for all related files.", str(archive))
                 upcflag = False
