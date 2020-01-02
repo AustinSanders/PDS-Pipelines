@@ -8,7 +8,7 @@ from shapely.geometry import Polygon
 from geoalchemy2.elements import WKBElement
 from geoalchemy2.shape import from_shape, to_shape
 import numpy as np
-from unittest.mock import patch, PropertyMock
+from unittest.mock import patch, PropertyMock, Mock
 from unittest import mock
 
 import pysis
@@ -19,12 +19,18 @@ def getsn(from_):
     return b'ISISSERIAL'
 pysis.isis.getsn = getsn
 
+# Stub in the getsn function for testing
+def spiceinit(from_):
+    raise ProcessError(1, ['spiceinit'], '', '')
+pysis.isis.spiceinit = spiceinit
+
 import pds_pipelines
+from pds_pipelines.process import Process
 from pds_pipelines.db import db_connect
 from pds_pipelines import upc_process
 from pds_pipelines.upc_process import *
 
-from pds_pipelines.upc_process import create_datafiles_record, create_search_terms_record, create_json_keywords_record, get_target_id, getISISid
+from pds_pipelines.upc_process import create_datafiles_record, create_search_terms_record, create_json_keywords_record, get_target_id, getISISid, process_isis, generate_isis_processes
 from pds_pipelines.models import upc_models as models
 
 @pytest.fixture
@@ -181,12 +187,11 @@ def test_search_terms_insert(mocked_product_id, mocked_keyword, mocked_init, ses
 
     models.DataFiles.create(session, **{'upcid': upc_id})
 
-    create_search_terms_record(pds_label, upc_id, '/Path/to/my/cube.cub', session_maker)
+    create_search_terms_record(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', session_maker)
     resp = session.query(SearchTerms).filter(SearchTerms.upcid == upc_id).first()
 
     for key in cam_info_dict.keys():
         resp_attribute = resp.__getattribute__(key)
-        print(resp_attribute)
         if isinstance(resp_attribute, datetime.date):
             resp_attribute = resp_attribute.strftime("%Y-%m-%d %H:%M")
         if isinstance(resp_attribute, WKBElement):
@@ -212,3 +217,39 @@ def test_json_keywords_insert(mocked_init, session, session_maker, pds_label):
     assert res_json['TARGET_NAME'] == pds_label['TARGET_NAME']
     assert res_json['INSTRUMENT_NAME'] == pds_label['INSTRUMENT_NAME']
     assert res_json['SPACECRAFT_NAME'] == pds_label['SPACECRAFT_NAME']
+
+def test_generate_isis_processes():
+    logger = logging.getLogger('UPC_Process')
+
+    inputfile = "./pds_pipelines/tests/data/5600r.lbl"
+    fid = "1"
+    archive = "galileo_ssi_edr"
+
+    processes, inputfile, caminfoOUT, pwd = generate_isis_processes(inputfile, archive, logger)
+
+    # TODO Factor out the Recipe object from this test
+    recipeOBJ = Recipe()
+    recipeOBJ.addMissionJson(archive, 'upc')
+    original_recipe = recipeOBJ.getRecipe()
+
+    for i, process in enumerate(processes):
+        for k, v in process.getProcess().items():
+            assert original_recipe[i][k].keys() == v.keys()
+
+def test_process_isis():
+    logger = logging.getLogger('UPC_Process')
+
+    process = Mock(spec=Process)
+    process.getProcess.return_value = {'getsn': {'from_': '/Path/to/some/cube.cub'}}
+
+    failing_command = process_isis([process], '/', '/', logger)
+    assert failing_command == ''
+
+def test_bad_process_isis():
+    logger = logging.getLogger('UPC_Process')
+
+    process = Mock(spec=Process)
+    process.getProcess.return_value = {'spiceinit': {'from_': '/Path/to/some/cube.cub'}}
+
+    failing_command = process_isis([process], '/', '/', logger)
+    assert failing_command == 'spiceinit'

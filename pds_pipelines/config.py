@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 # Database credentials
 credentials = {'upc_test': {'user': 'postgres',
                         'pass': '',
@@ -23,17 +24,19 @@ archive_base = '/pds_san/PDS_Archive/'
 link_dest = '/pds_san/PDS_Archive_Links/'
 
 # Recipe base path
-recipe_base = '/home/acpaquette/repos/PDS-Pipelines/recipe/new/'
+# Uses the root of the project to set the base path for all necessary files
+root = Path(__file__).parent.parent
+recipe_base = os.path.join(root, 'recipe/new/')
 
-pds_info = '/home/acpaquette/repos/PDS-Pipelines/pds_pipelines/PDSinfo.json'
+pds_info = os.path.join(root, 'pds_pipelines/PDSinfo.json')
 
 pds_log = '/home/acpaquette/repos/PDS-Pipelines/logs/'
 
 slurm_log = '/home/acpaquette/repos/PDS-Pipelines/output/'
 
-cmd_dir = '/home/acpaquette/repos/PDS-Pipelines/pds_pipelines/'
+cmd_dir = os.path.join(root, 'pds_pipelines/')
 
-keyword_def = '/home/acpaquette/repos/PDS-Pipelines/recipe/Keyword_Definition.json'
+keyword_def = os.path.join(root, 'recipe/Keyword_Definition.json')
 
 # workarea = '/home/acpaquette/repos/PDS-Pipelines/products/'
 workarea = '/home/acpaquette/repos/PDS-Pipelines/workarea/'

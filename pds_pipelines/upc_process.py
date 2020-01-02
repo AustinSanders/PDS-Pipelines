@@ -281,7 +281,7 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
 
     return upc_id
 
-def create_search_terms_record(cam_info_pvl, upc_id, input_cube, session_maker):
+def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, session_maker):
     """
     Creates a new SearchTerms record through values from a given caminfo file
     and adds the new record to the database
@@ -333,8 +333,8 @@ def create_search_terms_record(cam_info_pvl, upc_id, input_cube, session_maker):
     search_term_attributes['processdate'] = datetime.datetime.now(pytz.utc).strftime(
         "%Y-%m-%d %H:%M:%S")
 
-    search_term_attributes['targetid'] = get_target_id(cam_info_pvl, session_maker)
-    search_term_attributes['instrumentid'] = get_instrument_id(cam_info_pvl, session_maker)
+    search_term_attributes['targetid'] = get_target_id(label, session_maker)
+    search_term_attributes['instrumentid'] = get_instrument_id(label, session_maker)
 
     session = session_maker()
     search_terms_qobj = session.query(SearchTerms).filter(
@@ -413,6 +413,79 @@ def create_json_keywords_record(cam_info_pvl, upc_id, input_file, failing_comman
         session.commit()
     session.close()
 
+def generate_isis_processes(inputfile, archive, logger):
+    logger.info('Starting Process: %s', inputfile)
+
+    recipeOBJ = Recipe()
+    recipeOBJ.addMissionJson(archive, 'upc')
+
+    infile = os.path.splitext(inputfile)[0] + '.UPCinput.cub'
+    logger.debug("Beginning processing on %s\n", inputfile)
+
+    outfile = os.path.splitext(inputfile)[0] + '.UPCoutput.cub'
+    caminfoOUT = os.path.splitext(inputfile)[0] + '_caminfo.pvl'
+
+    processes = []
+    # Iterate through each process listed in the recipe
+    for item in recipeOBJ.getProcesses():
+        # If any of the processes failed, discontinue processing
+        processOBJ = Process()
+        processOBJ.ProcessFromRecipe(item, recipeOBJ.getRecipe())
+        # Handle processing based on string description.
+        if '2isis' in item:
+            processOBJ.updateParameter('from_', inputfile)
+            processOBJ.updateParameter('to', outfile)
+        elif item == 'thmproc':
+            processOBJ.updateParameter('from_', inputfile)
+            processOBJ.updateParameter('to', outfile)
+            thmproc_odd = str(workarea) + str(os.path.splitext(
+                os.path.basename(inputfile))[0]) + '.UPCoutput.raw.odd.cub'
+            thmproc_even = str(workarea) + str(
+                os.path.splitext(os.path.basename(
+                    inputfile))[0]) + '.UPCoutput.raw.even.cub'
+        elif item == 'handmos':
+            processOBJ.updateParameter('from_', thmproc_even)
+            processOBJ.updateParameter('mosaic', thmproc_odd)
+        elif item == 'spiceinit':
+            processOBJ.updateParameter('from_', infile)
+        elif item == 'cubeatt':
+            band_infile = infile + '+' + str(1)
+            processOBJ.updateParameter('from_', band_infile)
+            processOBJ.updateParameter('to', outfile)
+        elif item == 'footprintinit':
+            processOBJ.updateParameter('from_', infile)
+        elif item == 'caminfo':
+            processOBJ.updateParameter('from_', infile)
+            processOBJ.updateParameter('to', caminfoOUT)
+        else:
+            processOBJ.updateParameter('from_', infile)
+            processOBJ.updateParameter('to', outfile)
+
+        processes.append(processOBJ)
+        pwd = os.getcwd()
+
+    return processes, infile, caminfoOUT, pwd
+
+def process_isis(processes, workarea, pwd, logger):
+    # iterate through functions listed in process obj
+    failing_command = ''
+    for process in processes:
+        for command, keywargs in process.getProcess().items():
+            # load a function into func
+            func = getattr(isis, command)
+            try:
+                os.chdir(workarea)
+                # execute function
+                func(**keywargs)
+                os.chdir(pwd)
+
+            except ProcessError as e:
+                logger.error("%s", e)
+                failing_command = command
+                break
+
+    return failing_command
+
 def parse_args():
     parser = argparse.ArgumentParser(description='UPC Processing')
     parser.add_argument('--persist', '-p', dest="persist",
@@ -423,7 +496,6 @@ def parse_args():
     parser.set_defaults(persist=False)
     args = parser.parse_args()
     return args
-
 
 def main(user_args):
     upc_session_maker, upc_engine = db_connect(upc_db)
@@ -439,7 +511,7 @@ def main(user_args):
         slurm_job_id = ''
         slurm_array_id = ''
     inputfile = ''
-    context = {'job_id': slurm_job_id, 'array_id':slurm_array_id,'inputfile':inputfile}
+    context = {'job_id': slurm_job_id, 'array_id':slurm_array_id, 'inputfile': inputfile}
     logger = logging.getLogger('UPC_Process')
     level = logging.getLevelName(log_level)
     logger.setLevel(level)
@@ -451,8 +523,6 @@ def main(user_args):
     logger = logging.LoggerAdapter(logger, context)
 
     # ***************** Set up logging *****************
-
-    PDSinfoDICT = json.load(open(pds_info, 'r'))
 
     # Redis Queue Objects
     RQ_main = RedisQueue('UPC_ReadyQueue')
@@ -470,89 +540,23 @@ def main(user_args):
         inputfile = item[0]
         fid = item[1]
         archive = item[2]
+
         if not os.path.isfile(inputfile):
             RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during UPC processing')
             logger.warn("%s is not a file\n", inputfile)
             exit()
-        logger.info('Starting Process: %s', inputfile)
-
-        # Update the logger context to include inputfile
-        context['inputfile'] = inputfile
-
-        recipeOBJ = Recipe()
-        recipeOBJ.addMissionJson(archive, 'upc')
-
-        infile = os.path.splitext(inputfile)[0] + '.UPCinput.cub'
-        logger.debug("Beginning processing on %s\n", inputfile)
-
-        outfile = os.path.splitext(inputfile)[0] + '.UPCoutput.cub'
-        caminfoOUT= os.path.splitext(inputfile)[0] + '_caminfo.pvl'
 
         # Build URL for edr_source based on archive path from PDSinfo.json
+        PDSinfoDICT = json.load(open(pds_info, 'r'))
         archive_path = PDSinfoDICT[archive]['path']
         orig_file = inputfile.replace(workarea, archive_path)
         edr_source = orig_file.replace(archive_base, web_base)
 
-        status = 'success'
-        # Iterate through each process listed in the recipe
-        for item in recipeOBJ.getProcesses():
-            # If any of the processes failed, discontinue processing
-            if status == 'error':
-                break
-            elif status == 'success':
-                processOBJ = Process()
-                processOBJ.ProcessFromRecipe(item, recipeOBJ.getRecipe())
-                # Handle processing based on string description.
-                if '2isis' in item:
-                    processOBJ.updateParameter('from_', inputfile)
-                    processOBJ.updateParameter('to', outfile)
-                elif item == 'thmproc':
-                    processOBJ.updateParameter('from_', inputfile)
-                    processOBJ.updateParameter('to', outfile)
-                    thmproc_odd = str(workarea) + str(os.path.splitext(
-                        os.path.basename(inputfile))[0]) + '.UPCoutput.raw.odd.cub'
-                    thmproc_even = str(workarea) + str(
-                        os.path.splitext(os.path.basename(
-                            inputfile))[0]) + '.UPCoutput.raw.even.cub'
-                elif item == 'handmos':
-                    processOBJ.updateParameter('from_', thmproc_even)
-                    processOBJ.updateParameter('mosaic', thmproc_odd)
-                elif item == 'spiceinit':
-                    processOBJ.updateParameter('from_', infile)
-                elif item == 'cubeatt':
-                    band_infile = infile + '+' + str(1)
-                    processOBJ.updateParameter('from_', band_infile)
-                    processOBJ.updateParameter('to', outfile)
-                elif item == 'footprintinit':
-                    processOBJ.updateParameter('from_', infile)
-                elif item == 'caminfo':
-                    processOBJ.updateParameter('from_', infile)
-                    processOBJ.updateParameter('to', caminfoOUT)
-                else:
-                    processOBJ.updateParameter('from_', infile)
-                    processOBJ.updateParameter('to', outfile)
+        # Update the logger context to include inputfile
+        context['inputfile'] = inputfile
 
-                pwd = os.getcwd()
-                # iterate through functions listed in process obj
-                for k, v in processOBJ.getProcess().items():
-                    # load a function into func
-                    func = getattr(isis, k)
-                    try:
-                        os.chdir(workarea)
-                        # execute function
-                        func(**v)
-                        os.chdir(pwd)
-                        if item == 'handmos':
-                            if os.path.isfile(thmproc_odd):
-                                os.rename(thmproc_odd, infile)
-                        else:
-                            if os.path.isfile(outfile):
-                                os.rename(outfile, infile)
-
-                    except ProcessError as e:
-                        logger.error("%s", e)
-                        failing_command = item
-                        break
+        processes, infile, caminfoOUT, pwd = generate_isis_processes(inputfile, archive, logger)
+        failing_command = process_isis(processes, workarea, pwd, logger)
 
         pds_label = pvl.load(inputfile)
 
@@ -560,10 +564,10 @@ def main(user_args):
         upc_id = create_datafiles_record(pds_label, edr_source, infile, upc_session_maker)
 
         ######## Generate SearchTerms Record ########
-        create_search_terms_record(caminfoOUT, upc_id, infile, upc_session_maker)
+        create_search_terms_record(pds_label, caminfoOUT, upc_id, infile, upc_session_maker)
 
         ######## Generate JsonKeywords Record ########
-        create_json_keywords_record(caminfoOUT, upc_id, inputfile, failing_command, session_maker)
+        create_json_keywords_record(caminfoOUT, upc_id, inputfile, failing_command, upc_session_maker)
 
         try:
             session.flush()

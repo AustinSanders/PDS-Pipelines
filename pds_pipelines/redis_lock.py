@@ -4,7 +4,8 @@ import redis
 from pds_pipelines.config import redis_info as ri
 
 class RedisLock(object):
-    """A single-point of access 'lock' for Redis Queues
+    """
+    A single-point of access 'lock' for Redis Queues
     """
 
     def __init__(self, name):
@@ -19,12 +20,14 @@ class RedisLock(object):
 
 
     def contains(self, key):
-        """ Test if a key exists in the hash map.
+        """
+        Test if a key exists in the hash map.
+
         Parameters
         ----------
         element : str
             The key for which the function will search
-        
+
         Returns
         -------
         bool
@@ -34,12 +37,14 @@ class RedisLock(object):
 
 
     def add(self, item):
-        """ Adds a key : value pair to the hash map.
+        """
+        Adds a key : value pair to the hash map.
+
         Parameters
         ----------
         item : dict
             A key value pair to be added to the hash map.
-        
+
         Returns
         -------
         None
@@ -53,7 +58,9 @@ class RedisLock(object):
 
 
     def remove(self, key):
-        """ Removes a key : value pair from the hash map.
+        """
+        Removes a key : value pair from the hash map.
+
         Parameters
         ----------
         key : str
@@ -67,7 +74,9 @@ class RedisLock(object):
 
 
     def delete(self):
-        """ Removes the underlying hash map from the Redis DB.
+        """
+        Removes the underlying hash map from the Redis DB.
+
         Parameters
         ----------
         None
@@ -80,15 +89,16 @@ class RedisLock(object):
 
 
     def _set(self, key, value):
-        """ Sets the value in the key : value pair.
-        
+        """
+        Sets the value in the key : value pair.
+
         Parameters
         ----------
         key : str
             The key that will be added to the hash map
         value : obj
             The value associated with the key
-        
+
         Returns
         -------
         None
@@ -98,7 +108,8 @@ class RedisLock(object):
 
 
     def get(self, key):
-        """ Returns the value given a key.
+        """
+        Returns the value given a key.
 
         Automatically decodes byte strings returned by Redis.
 
@@ -106,7 +117,7 @@ class RedisLock(object):
         ----------
         key : str
             The key associated with the value to be returned
-        
+
         Returns
         -------
         str
@@ -119,7 +130,9 @@ class RedisLock(object):
 
 
     def get_all(self):
-        """ Convenience function that returns a dict of all.
+        """
+        Convenience function that returns a dict of all.
+
         Parameters
         ----------
         None
@@ -133,12 +146,14 @@ class RedisLock(object):
 
 
     def lock(self, key):
-        """ Locks processing for the provided queue.
+        """
+        Locks processing for the provided queue.
+
         Parameters
         ----------
         key : str
             The name of the queue that we wish to lock
-        
+
         Returns
         -------
         None
@@ -152,7 +167,7 @@ class RedisLock(object):
         ----------
         key : str
             The name of the queue that we wish to lock
-        
+
         Returns
         -------
         None
@@ -167,7 +182,7 @@ class RedisLock(object):
         ----------
         key : str
             The name of the queue that we wish to unlock
-        
+
         Returns
         -------
         None
@@ -177,7 +192,9 @@ class RedisLock(object):
 
 
     def lock_all(self):
-        """ A convenience function that locks all queues in the hash map.
+        """
+        A convenience function that locks all queues in the hash map.
+
         Parameters
         ----------
         None
@@ -191,8 +208,10 @@ class RedisLock(object):
 
 
     def stop_all(self):
-        """ A convenience function that stops processing for all queues in
+        """
+        A convenience function that stops processing for all queues in
         the hash map.
+
         Parameters
         ----------
         None
@@ -206,7 +225,9 @@ class RedisLock(object):
 
 
     def unlock_all(self):
-        """ A convenience function that unlocks all queues in the hash map.
+        """
+        A convenience function that unlocks all queues in the hash map.
+        
         Parameters
         ----------
         None
@@ -226,7 +247,7 @@ class RedisLock(object):
         ----------
         key : str
             The key to be tested for locked/unlocked status.
-        
+
         Returns
         -------
         bool
