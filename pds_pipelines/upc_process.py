@@ -307,7 +307,7 @@ def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, session_
 
     try:
         keywordsOBJ = UPCkeywords(cam_info_pvl)
-    except Exception as e:
+    except:
         keywordsOBJ = None
 
     if keywordsOBJ:

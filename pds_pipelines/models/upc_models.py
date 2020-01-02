@@ -2,8 +2,8 @@ import sqlalchemy
 
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy_utils import database_exists, create_database
-from sqlalchemy import (Column, Integer, Float,
-                        Time, String, Boolean, PrimaryKeyConstraint, ForeignKey, CHAR, DateTime)
+from sqlalchemy import (Column, Integer, Float, Time, String, Boolean, 
+                        ForeignKey, CHAR, DateTime)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from geoalchemy2 import Geometry
