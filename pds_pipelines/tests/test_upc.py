@@ -254,12 +254,8 @@ def test_search_terms_keyword_exception(mocked_product_id, session, session_make
 def test_search_terms_no_datafile(mocked_product_id, mocked_keyword, mocked_init, session, session_maker, pds_label):
     upc_id = cam_info_dict['upcid']
 
-    create_search_terms_record(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', session_maker)
-    resp = session.query(SearchTerms).filter(SearchTerms.upcid == upc_id).first()
-    print(resp.upcid)
-    resp = session.query(DataFiles).filter(DataFiles.upcid == upc_id).first()
-    print(resp)
-    assert False    
+    with pytest.raises(sqlalchemy.exc.IntegrityError):
+        create_search_terms_record(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', session_maker)   
 
 @patch('pds_pipelines.upc_keywords.UPCkeywords.__init__', return_value = None)
 def test_json_keywords_insert(mocked_init, session, session_maker, pds_label):
@@ -292,6 +288,14 @@ def test_json_keywords_exception(session, session_maker):
     assert resp_json['errormessage'] == f'Error running {error_message} on file {input_cube}'
     assert resp_json['error'] == True
 
+@patch('pds_pipelines.upc_keywords.UPCkeywords.__init__', return_value = None)
+def test_json_keywords_no_datafile(mocked_init, session, session_maker, pds_label):
+    upc_id = cam_info_dict['upcid']
+
+    with pytest.raises(sqlalchemy.exc.IntegrityError),\
+    patch('pds_pipelines.upc_keywords.UPCkeywords.label', new_callable=PropertyMock) as mocked_label:
+        mocked_label.return_value = pds_label
+        create_json_keywords_record(pds_label, upc_id, '/Path/to/my/cube.cub', 'No Failures', session_maker)  
 
 def test_generate_isis_processes():
     logger = logging.getLogger('UPC_Process')
