@@ -11,7 +11,7 @@ import pvl
 from pysis import isis
 from pysis.exceptions import ProcessError
 
-from pds_pipelines.config import lock_obj, scratch, pds_log, default_namespace
+from pds_pipelines.config import lock_obj, scratch, pds_log, default_namespace, upc_error_queue
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.redis_hash import RedisHash
@@ -50,6 +50,7 @@ def main(key, namespace=None):
     RQ_loggy = RedisQueue(key + '_loggy', namespace)
     RQ_final = RedisQueue('FinalQueue', namespace)
     RQ_recipe = RedisQueue(key + '_recipe', namespace)
+    RQ_error = RedisQueue(upc_error_queue, namespace)
     RHash = RedisHash(key + '_info')
     RHerror = RedisHash(key + '_error')
     RQ_lock = RedisLock(lock_obj)
@@ -238,6 +239,7 @@ def main(key, namespace=None):
                             status = 'success'
 
                         except ProcessError as e:
+                            RQ_error.QueueAdd(f'Process {k} failed for {jobFile}')
                             logger.error('Process %s :: Error', k)
                             logger.error(e)
                             status = 'error'
@@ -250,6 +252,7 @@ def main(key, namespace=None):
                             subloggyOBJ.setHelpLink(processOBJ.LogHelpLink())
                             subloggyOBJ.errorOut(eSTR)
                             loggyOBJ.AddProcess(subloggyOBJ.getSLprocess())
+                            sys.exit()
 
                 else:
                     GDALcmd = ""
