@@ -178,9 +178,8 @@ def test_datafiles_insert(mocked_pds_id, mocked_isis_id, session, session_maker,
 @patch('pds_pipelines.upc_process.getISISid', return_value = 'ISISSERIAL')
 @patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
 def test_datafiles_no_label(mocked_pds_id, mocked_isis_id, session, session_maker, pds_label):
-    no_image_pvl = pds_label
-    no_image_pvl['^IMAGE'] = 1
-    upc_id = create_datafiles_record(no_image_pvl, '/Path/to/label/location/label.lbl', '/Path/to/my/cube.cub', session_maker)
+    pds_label['^IMAGE'] = 1
+    upc_id = create_datafiles_record(pds_label, '/Path/to/label/location/label.lbl', '/Path/to/my/cube.cub', session_maker)
     resp = session.query(models.DataFiles).filter(models.DataFiles.upcid==upc_id).first()
     assert resp.detached_label == None
     assert resp.source == '/Path/to/label/location/label.lbl'
@@ -210,7 +209,7 @@ def extract_keyword(key):
 def test_search_terms_insert(mocked_product_id, mocked_keyword, mocked_init, session, session_maker, pds_label):
     upc_id = cam_info_dict['upcid']
 
-    models.DataFiles.create(session, **{'upcid': upc_id})
+    models.DataFiles.create(session, upcid = upc_id)
 
     create_search_terms_record(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', session_maker)
     resp = session.query(SearchTerms).filter(SearchTerms.upcid == upc_id).first()
@@ -229,7 +228,7 @@ def test_search_terms_insert(mocked_product_id, mocked_keyword, mocked_init, ses
 @patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
 def test_search_terms_keyword_exception(mocked_product_id, session, session_maker, pds_label):
     upc_id = cam_info_dict['upcid']
-    models.DataFiles.create(session, **{'upcid': upc_id})
+    models.DataFiles.create(session, upcid = upc_id)
 
     create_search_terms_record(pds_label, "", upc_id, '/Path/to/my/cube.cub', session_maker)
     resp = session.query(SearchTerms).filter(SearchTerms.upcid == upc_id).first()
@@ -261,7 +260,7 @@ def test_search_terms_no_datafile(mocked_product_id, mocked_keyword, mocked_init
 def test_json_keywords_insert(mocked_init, session, session_maker, pds_label):
     upc_id = cam_info_dict['upcid']
 
-    models.DataFiles.create(session, **{'upcid': upc_id})
+    models.DataFiles.create(session, upcid = upc_id)
 
     with patch('pds_pipelines.upc_keywords.UPCkeywords.label', new_callable=PropertyMock) as mocked_label:
         mocked_label.return_value = pds_label
@@ -276,7 +275,7 @@ def test_json_keywords_insert(mocked_init, session, session_maker, pds_label):
 
 def test_json_keywords_exception(session, session_maker):
     upc_id = cam_info_dict['upcid']
-    models.DataFiles.create(session, **{'upcid': upc_id})
+    models.DataFiles.create(session, upcid = upc_id)
 
     input_cube = '/Path/to/my/cube.cub'
     error_message = 'Got to exception.'
