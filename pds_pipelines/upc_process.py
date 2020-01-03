@@ -435,17 +435,13 @@ def generate_isis_processes(inputfile, archive, logger):
         if '2isis' in item:
             processOBJ.updateParameter('from_', inputfile)
             processOBJ.updateParameter('to', outfile)
-        elif item == 'thmproc':
-            processOBJ.updateParameter('from_', inputfile)
-            processOBJ.updateParameter('to', outfile)
-            thmproc_odd = str(workarea) + str(os.path.splitext(
-                os.path.basename(inputfile))[0]) + '.UPCoutput.raw.odd.cub'
-            thmproc_even = str(workarea) + str(
-                os.path.splitext(os.path.basename(
-                    inputfile))[0]) + '.UPCoutput.raw.even.cub'
         elif item == 'handmos':
-            processOBJ.updateParameter('from_', thmproc_even)
-            processOBJ.updateParameter('mosaic', thmproc_odd)
+            even = str(workarea) + str(os.path.splitext(
+                os.path.basename(inputfile))[0]) + '.UPCoutput.raw.even.cub'
+            odd = str(workarea) + str(os.path.splitext(
+                os.path.basename(inputfile))[0]) + '.UPCoutput.raw.odd.cub'
+            processOBJ.updateParameter('from_', even)
+            processOBJ.updateParameter('mosaic', odd)
         elif item == 'spiceinit':
             processOBJ.updateParameter('from_', infile)
         elif item == 'cubeatt':
