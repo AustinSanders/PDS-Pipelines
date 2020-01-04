@@ -233,7 +233,7 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
         original_image_ext = os.path.splitext(label['^IMAGE'][0])[-1]
         img_file = os.path.splitext(edr_source)[0] + original_image_ext.lower()
         d_label = edr_source
-    except TypeError:
+    except (TypeError, KeyError):
         img_file = edr_source
         d_label = None
 
@@ -432,7 +432,7 @@ def generate_isis_processes(inputfile, archive, logger):
         processOBJ = Process()
         processOBJ.ProcessFromRecipe(item, recipeOBJ.getRecipe())
         # Handle processing based on string description.
-        if '2isis' in item:
+        if '2isis' in item or item == 'thmproc':
             processOBJ.updateParameter('from_', inputfile)
             processOBJ.updateParameter('to', outfile)
         elif item == 'handmos':
@@ -446,6 +446,7 @@ def generate_isis_processes(inputfile, archive, logger):
             processOBJ.updateParameter('from_', infile)
         elif item == 'cubeatt':
             band_infile = infile + '+' + str(1)
+            print(band_infile)
             processOBJ.updateParameter('from_', band_infile)
             processOBJ.updateParameter('to', outfile)
         elif item == 'footprintinit':
@@ -462,7 +463,7 @@ def generate_isis_processes(inputfile, archive, logger):
 
     return processes, infile, caminfoOUT, pwd
 
-def process_isis(processes, workarea, pwd, logger):
+def process_isis(processes, workarea, pwd, logger, input_cub):
     # iterate through functions listed in process obj
     failing_command = ''
     for process in processes:
@@ -474,11 +475,22 @@ def process_isis(processes, workarea, pwd, logger):
                 # execute function
                 func(**keywargs)
                 os.chdir(pwd)
+                if command == 'handmos':
+                    if os.path.isfile(keywargs['mosaic']):
+                        os.rename(keywargs['mosaic'], input_cub)
+                elif command != 'caminfo':
+                    if 'to' in keywargs:
+                        if os.path.isfile(keywargs['to']):
+                            os.rename(keywargs['to'], input_cub)
 
             except ProcessError as e:
                 logger.error("%s", e)
+                print(command)
                 failing_command = command
                 break
+
+        if failing_command != '':
+            break
 
     return failing_command
 
@@ -552,7 +564,7 @@ def main(user_args):
         context['inputfile'] = inputfile
 
         processes, infile, caminfoOUT, pwd = generate_isis_processes(inputfile, archive, logger)
-        failing_command = process_isis(processes, workarea, pwd, logger)
+        failing_command = process_isis(processes, workarea, pwd, logger, infile)
 
         pds_label = pvl.load(inputfile)
 
