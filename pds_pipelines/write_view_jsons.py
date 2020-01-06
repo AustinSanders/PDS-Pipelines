@@ -2,6 +2,7 @@ from pds_pipelines.db import db_connect
 from pds_pipelines.config import upc_db, summaries_path
 import os
 import json
+import argparse
 
 queries = {
     'volume_summary': """
@@ -37,7 +38,7 @@ queries = {
         					  ('maximumincidence', t.maximumincidence),
         					  ('minimumincidence', t.minimumincidence)) v (stat_type, val)) AS s WHERE s.val IS NOT NULL
         GROUP BY s.instrumentid, s.targetid, s.stat_type, bucket
-        ORDER BY s.instrumentid, s.targetid, s.stat_type;
+        ORDER BY s.instrumentid, s.targetid, s.stat_type
         """
 }
 
