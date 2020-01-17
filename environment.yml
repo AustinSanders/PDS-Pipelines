@@ -16,6 +16,7 @@ dependencies:
     - pytest
     - mock
     - shapely
-    - sqlalchemy-utils 
+    - sqlalchemy-utils
+    - gdal
     - pip:
         - redis>=2.0.0,<3.0.0
