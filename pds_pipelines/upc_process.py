@@ -434,24 +434,23 @@ def generate_isis_processes(inputfile, archive, logger):
         # Handle processing based on string description.
         if '2isis' in item:
             processOBJ.updateParameter('from_', inputfile)
-            processOBJ.updateParameter('to', outfile)
+            processOBJ.updateParameter('to', infile)
         elif item == 'thmproc':
             processOBJ.updateParameter('from_', inputfile)
-            processOBJ.updateParameter('to', outfile)
+            processOBJ.updateParameter('to', infile)
             thmproc_odd = str(workarea) + str(os.path.splitext(
-                os.path.basename(inputfile))[0]) + '.UPCoutput.raw.odd.cub'
+                os.path.basename(inputfile))[0]) + '.UPCinput.raw.odd.cub'
             thmproc_even = str(workarea) + str(
                 os.path.splitext(os.path.basename(
-                    inputfile))[0]) + '.UPCoutput.raw.even.cub'
+                    inputfile))[0]) + '.UPCinput.raw.even.cub'
         elif item == 'handmos':
             processOBJ.updateParameter('from_', thmproc_even)
             processOBJ.updateParameter('mosaic', thmproc_odd)
+            # Anticipate the mosaicked image being passed to footprintinit next
+            #  and re-reference accordingly
+            infile = thmproc_odd
         elif item == 'spiceinit':
             processOBJ.updateParameter('from_', infile)
-        elif item == 'cubeatt':
-            band_infile = infile + '+' + str(1)
-            processOBJ.updateParameter('from_', band_infile)
-            processOBJ.updateParameter('to', outfile)
         elif item == 'footprintinit':
             processOBJ.updateParameter('from_', infile)
         elif item == 'caminfo':

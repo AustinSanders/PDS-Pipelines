@@ -13,27 +13,18 @@
                 "mosaic": "value",
                 "priority": "beneath"
             },
-            "cubeatt": {
-                "from_": "value",
-                "to": "value"
-            },
-            "stretch": {
-                "from_": "value",
-                "to": "value",
-                "null": "100"
-            },
             "footprintinit": {
                 "from_": "value",
                 "increaseprecision": "yes",
                 "inctype": "vertices",
-                "numvertices": "40"
+                "numvertices": "20"
             },
             "caminfo": {
                 "from_": "value",
                 "to": "value",
                 "geometry": "yes",
                 "isislabel": "yes",
-                "originallabel": "yes",
+                "originallabel": "no",
                 "statistics": "yes",
                 "camstats": "yes",
                 "linc": "100",

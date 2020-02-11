@@ -11,7 +11,7 @@
         "archiveid": "53",
         "path": "/pds_san/PDS_Archive/Cassini/ISS/",
 	"bandbinQuery": "FilterName",
-	"upc_reqs": ["/data/",".IMG"]
+	"upc_reqs": ["/data/",".LBL"]
     },
     "cassini_radar": {
         "archiveid": "51",
@@ -91,11 +91,14 @@
     },
     "messenger": {
         "archiveid": "14",
-        "path": "/pds_san/PDS_Archive/MESSENGER/"
+        "path": "/pds_san/PDS_Archive/MESSENGER/",
+	"upc_reqs": [".IMG"]
     },
     "mgs_moc": {
         "archiveid": "44",
-        "path": "/pds_san/PDS_Archive/Mars_Global_Surveyor/MOC/"
+        "path": "/pds_san/PDS_Archive/Mars_Global_Surveyor/MOC/",
+	"bandbinQuery": "FilterName",
+	"upc_reqs": [".imq"]
     },
     "mro_ctx": {
         "archiveid": "16",
@@ -162,10 +165,14 @@
     },
     "viking_orbiter": {
         "archiveid": "3",
-        "path": "/pds_san/PDS_Archive/Viking_Orbiter/"
+        "path": "/pds_san/PDS_Archive/Viking_Orbiter/",
+        "bandbinQuery" : "FilterId",
+	"upc_reqs": ["vo_1", ".imq"]
     },
     "voyager": {
         "archiveid": "30",
-        "path": "/pds_san/PDS_Archive/Voyager/"
+        "path": "/pds_san/PDS_Archive/Voyager/",
+        "bandbinQuery" : "FilterNumber",
+	"upc_reqs": [".imq"]
     }
 }
