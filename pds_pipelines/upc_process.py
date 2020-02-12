@@ -169,13 +169,23 @@ def get_instrument_id(label, session_maker):
         The defined instrument_id from the database. If this is 0 a instrument
         name could not be pulled from the label
     """
-    try:
-        instrument_name = label['INSTRUMENT_NAME']
-    except KeyError as e:
+    # Although PDS3 the INSTRUMENT_NAME keyword, it is missing from some older datasets.
+    #  PDS3 defines several (often interchangeable) keywords to
+    #  hold instrument name, so try each of them in preferred order and grab the first match.
+    # If no match is found, leave as None
+    for inst in ['INSTRUMENT_NAME', 'INSTRUMENT_ID']:
+        try:
+            instrument_name = label[inst]
+            break
+        except KeyError as e:
+            instrument_name = None
+
+    if not instrument_name:
         return None
+    
     # PDS3 does not require a keyword to hold spacecraft name,
     #  and PDS3 defines several (often interchangeable) keywords to
-    #  hold spacecraft name, so each of them in preferred order and grab the first match.
+    #  hold spacecraft name, so try each of them in preferred order and grab the first match.
     # If no match is found, leave as None
     for sc in ['SPACECRAFT_NAME','INSTRUMENT_HOST_NAME','MISSION_NAME','SPACECRAFT_ID','INSTRUMENT_HOST_ID']:
         try:
@@ -561,10 +571,10 @@ def main(user_args):
         failing_command = process_isis(processes, workarea, pwd, logger)
 
         pds_label = pvl.load(inputfile)
-
+ 
         ######## Generate DataFiles Record ########
         upc_id = create_datafiles_record(pds_label, edr_source, infile, upc_session_maker)
-
+ 
         ######## Generate SearchTerms Record ########
         create_search_terms_record(pds_label, caminfoOUT, upc_id, infile, upc_session_maker)
 
@@ -574,7 +584,7 @@ def main(user_args):
         try:
             session.flush()
         except:
-            logger.warn("Unable to flush database connection")
+            logger.warning("Unable to flush database connection")
 
         pds_session = pds_session_maker()
         AddProcessDB(pds_session, fid, True)
