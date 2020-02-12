@@ -6,6 +6,7 @@
             "thmproc": {
                 "from_": "value",
                 "to": "value",
+                "mapping": "no",
                 "remove": "no"
             },
             "handmos": {

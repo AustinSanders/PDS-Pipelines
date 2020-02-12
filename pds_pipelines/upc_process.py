@@ -233,7 +233,7 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
         original_image_ext = os.path.splitext(label['^IMAGE'][0])[-1]
         img_file = os.path.splitext(edr_source)[0] + original_image_ext.lower()
         d_label = edr_source
-    except TypeError:
+    except (TypeError, KeyError):
         img_file = edr_source
         d_label = None
 
@@ -419,6 +419,9 @@ def generate_isis_processes(inputfile, archive, logger):
     recipeOBJ = Recipe()
     recipeOBJ.addMissionJson(archive, 'upc')
 
+    # Working directory for processing should be same as inputfile
+    pwd = os.path.dirname(inputfile)
+    
     infile = os.path.splitext(inputfile)[0] + '.UPCinput.cub'
     logger.debug("Beginning processing on %s\n", inputfile)
 
@@ -438,11 +441,13 @@ def generate_isis_processes(inputfile, archive, logger):
         elif item == 'thmproc':
             processOBJ.updateParameter('from_', inputfile)
             processOBJ.updateParameter('to', infile)
-            thmproc_odd = str(workarea) + str(os.path.splitext(
-                os.path.basename(inputfile))[0]) + '.UPCinput.raw.odd.cub'
-            thmproc_even = str(workarea) + str(
-                os.path.splitext(os.path.basename(
-                    inputfile))[0]) + '.UPCinput.raw.even.cub'
+            # thmproc writes intermediate files to os.cwd(),
+            # so working directory must be changed to match
+            # paths on next lines before thmproc actually called
+            thmproc_odd = str(os.path.splitext(
+                inputfile)[0]) + '.UPCinput.raw.odd.cub'
+            thmproc_even = str(os.path.splitext(
+                inputfile)[0]) + '.UPCinput.raw.even.cub'
         elif item == 'handmos':
             processOBJ.updateParameter('from_', thmproc_even)
             processOBJ.updateParameter('mosaic', thmproc_odd)
@@ -461,7 +466,6 @@ def generate_isis_processes(inputfile, archive, logger):
             processOBJ.updateParameter('to', outfile)
 
         processes.append(processOBJ)
-        pwd = os.getcwd()
 
     return processes, infile, caminfoOUT, pwd
 
@@ -473,10 +477,9 @@ def process_isis(processes, workarea, pwd, logger):
             # load a function into func
             func = getattr(isis, command)
             try:
-                os.chdir(workarea)
+                os.chdir(pwd)
                 # execute function
                 func(**keywargs)
-                os.chdir(pwd)
 
             except ProcessError as e:
                 logger.error("%s", e)
