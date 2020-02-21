@@ -3,7 +3,7 @@
 import os
 import sys
 import pvl
-
+import re
 
 def find_keyword(obj, key, group=None):
     if group is not None:

@@ -7,10 +7,6 @@
                 "from_": "value",
                 "to": "value"
             },
-            "cubeatt": {
-                "from_": "value",
-                "to": "value"
-            },
             "spiceinit": {
                 "from_": "value",
                 "cknadir": "yes",
@@ -20,7 +16,7 @@
                 "from_": "value",
                 "increaseprecision": "yes",
                 "inctype": "vertices",
-                "numvertices": "40"
+                "numvertices": "20"
             },
             "caminfo": {
                 "from_": "value",
