@@ -10,7 +10,12 @@ credentials = {'upc_test': {'user': 'postgres',
                             'pass': '',
                             'host': 'localhost',
                             'port': '5432',
-                            'db': 'di_test'}
+                            'db': 'di_test'},
+               'clusterjob_test': {'user': 'postgres',
+                                  'pass': '',
+                                  'host': 'localhost',
+                                  'port': '5432',
+                                  'db': 'clusterjobs_test'}
                }
 
 # Redis path(?) info
@@ -44,6 +49,7 @@ default_namespace = 'adampaquette_queue'
 
 pds_db = 'di_test'
 upc_db = 'upc_test'
+cluster_db = 'clusterjob_test'
 
 scratch = '/scratch/pds_services/'
 

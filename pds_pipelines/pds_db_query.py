@@ -13,7 +13,7 @@ from sqlalchemy.ext.automap import automap_base
 
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files, Archives
-from pds_pipelines.config import pds_db
+from pds_pipelines.config import pds_db, cluster_db
 
 
 class PDS_DBquery(object):
@@ -24,23 +24,16 @@ class PDS_DBquery(object):
         database : str
         """
         if database == "JOBS":
-            self.session, self.engine =  db_connect('clusterjob_prd')
-            DBsession = self.session
+            self.session_maker, self.engine =  db_connect(cluster_db)
             Base = automap_base()
             Base.prepare(self.engine, reflect=True)
             self.processingTAB = Base.classes.processing
         elif database == "DI":
             base = automap_base()
-            self.session, _ =  db_connect(pds_db)
+            self.session_maker, _ =  db_connect(pds_db)
             self.files = Files
             self.archives = Archives
-            DBsession = self.session
             self.DB_files = self.files
-
-
-    def closeDB(self):
-
-        self.session.close()
 
     def AddFile(self, Tfile):
         """
@@ -48,13 +41,15 @@ class PDS_DBquery(object):
         ----------
         Tfile
         """
+        session = self.session_maker()
         date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
 
         insert = self.files(filename=str(Tfile),
                             entry_date=date)
 
-        self.session.add(insert)
-        self.session.commit()
+        session.add(insert)
+        session.commit()
+        seesion.close()
 
     def jobKey(self):
         """
@@ -63,10 +58,10 @@ class PDS_DBquery(object):
         str
             key
         """
-
-        queryOBJ = self.session.query(self.processingTAB.key).filter(
+        session = self.session_maker()
+        queryOBJ = session.query(self.processingTAB.key).filter(
             self.processingTAB.queued == None).order_by(self.processingTAB.submitted).first()
-
+        session.close()
         for key in queryOBJ:
             return key
 
@@ -82,8 +77,10 @@ class PDS_DBquery(object):
         xml
             queryOBJ.xml
         """
-        queryOBJ = self.session.query(self.processingTAB.xml).filter(
+        session = self.session_maker()
+        queryOBJ = session.query(self.processingTAB.xml).filter(
             self.processingTAB.key == key).first()
+        session.close()
         try:
             return queryOBJ.xml
         except AttributeError:
@@ -102,13 +99,16 @@ class PDS_DBquery(object):
             Success is succesful, Error otherwise
         """
         date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
+        session = self.session_maker()
         try:
-            queryOBJ = self.session.query(self.processingTAB).filter(
+            queryOBJ = session.query(self.processingTAB).filter(
                 self.processingTAB.key == key).first()
             queryOBJ.queued = date
-            self.session.commit()
+            session.commit()
+            session.close()
             return date
         except AttributeError:
+            session.close()
             raise KeyError("Key {} not found in jobs database".format(key))
 
     def setJobsStarted(self, key):
@@ -123,13 +123,16 @@ class PDS_DBquery(object):
             Success is succesful, Error otherwise
         """
         date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
+        session = self.session_maker()
         try:
-            queryOBJ = self.session.query(self.processingTAB).filter(
+            queryOBJ = session.query(self.processingTAB).filter(
                 self.processingTAB.key == key).first()
             queryOBJ.started = date
-            self.session.commit()
+            session.commit()
+            session.close()
             return date
         except AttributeError:
+            session.close()
             raise KeyError("Key {} not found in jobs database".format(key))
 
     def setJobsFinished(self, key):
@@ -144,13 +147,16 @@ class PDS_DBquery(object):
             Success is succesful, Error otherwise
         """
         date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
+        session = self.session_maker()
         try:
-            queryOBJ = self.session.query(self.processingTAB).filter(
+            queryOBJ = session.query(self.processingTAB).filter(
                 self.processingTAB.key == key).first()
             queryOBJ.finished = date
-            self.session.commit()
+            session.commit()
+            session.close()
             return 'Success'
         except:
+            session.close()
             return 'Error'
 
     def addErrors(self, key, errorxml):
@@ -165,7 +171,9 @@ class PDS_DBquery(object):
         str
             Success is succesful, Error otherwise
         """
-        queryOBJ = self.session.query(self.processingTAB).filter(
+        session = self.session_maker()
+        queryOBJ = session.query(self.processingTAB).filter(
             self.processingTAB.key == key).first()
         queryOBJ.error = errorxml
-        self.session.commit()
+        session.commit()
+        session.close()
