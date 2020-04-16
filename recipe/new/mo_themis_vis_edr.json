@@ -4,25 +4,25 @@
     "upc": {
         "recipe": {
             "thmproc": {
-                "from_": "value",
-                "to": "value",
+                "from_": "{{inputfile}}",
+                "to": "{{no_extension_inputfile}}.cub",
                 "mapping": "no",
                 "remove": "no"
             },
             "handmos": {
-                "from_": "value",
-                "mosaic": "value",
+                "from_": "{{no_extension_inputfile}}.raw.even.cub",
+                "mosaic": "{{no_extension_inputfile}}.raw.odd.cub",
                 "priority": "beneath"
             },
             "footprintinit": {
-                "from_": "value",
+                "from_": "{{no_extension_inputfile}}.raw.odd.cub",
                 "increaseprecision": "yes",
                 "inctype": "vertices",
                 "numvertices": "20"
             },
             "caminfo": {
-                "from_": "value",
-                "to": "value",
+                "from_": "{{no_extension_inputfile}}.raw.odd.cub",
+                "to": "{{cam_info_file}}",
                 "geometry": "yes",
                 "isislabel": "yes",
                 "originallabel": "no",

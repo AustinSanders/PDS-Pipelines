@@ -4,16 +4,16 @@
     "upc": {
         "recipe": {
             "mdis2isis": {
-                "from_": "value",
-                "to": "value"
+                "from_": "{{inputfile}}",
+                "to": "{{no_extension_inputfile}}.cub"
             },
             "spiceinit": {
-                "from_": "value",
+                "from_": "{{no_extension_inputfile}}.cub",
                 "cknadir": "yes",
                 "cksmithed": "yes"
             },
             "footprintinit": {
-                "from_": "value",
+                "from_": "{{no_extension_inputfile}}.cub",
                 "increaseprecision": "yes",
                 "inctype": "vertices",
                 "numvertices": "40",
@@ -21,8 +21,8 @@
                 "maxincidence": "120.0"
             },
             "caminfo": {
-                "from_": "value",
-                "to": "value",
+                "from_": "{{no_extension_inputfile}}.cub",
+                "to": "{{cam_info_file}}",
                 "geometry": "yes",
                 "isislabel": "yes",
                 "originallabel": "yes",

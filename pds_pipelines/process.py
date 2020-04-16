@@ -13,10 +13,10 @@ class Process(object):
     ----------
     ProcessName : str
     """
-    def __init__(self):
+    def __init__(self, process="", args=None):
 
-        self.processName = ""
-        self.process = None
+        self.processName = process
+        self.process = {process: args}
 
     def Process2JSON(self):
         """
@@ -179,10 +179,6 @@ class Process(object):
         """
         testDict = {param: newValue}
 
-        test = []
-        test.append(param)
-        test.append(newValue)
-
         for k, v in testDict.items():
             self.process[self.processName][str(k)] = str(v)
 
@@ -201,8 +197,11 @@ class Process(object):
                    'signedword': 'Int16',
                    'real': 'Float32'
                    }
-
-        return bitDICT[ibit]
+        try:
+            return bitDICT[ibit]
+        except KeyError:
+            raise Exception(f"Unsupported ibit type given {ibit}. " +
+                            f"Currently supported bit types are {list(bitDICT.keys())}")
 
     def GDAL_Creation(self, format):
         """
@@ -220,5 +219,8 @@ class Process(object):
                  'JP2KAK': 'quality=100',
                  'GTiff': 'bigtiff=if_safer'
                  }
-
-        return cDICT[format]
+        try:
+            return cDICT[format]
+        except KeyError:
+            raise Exception(f"Unsupported format {format}. " +
+                            f"Currently supported bit types are {list(cDICT.keys())}")
