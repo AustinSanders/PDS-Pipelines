@@ -82,14 +82,18 @@ def main(user_args):
         root = ET.Element('errors')
 
         test = errorHash.getKeys()
-        for key in test:
+        for item in test:
             sub = ET.Element('error')
             root.append(sub)
 
             field1 = ET.SubElement(sub, 'file')
-            field1.text = key
+            if isinstance(item, bytes):
+                item = item.decode('utf-8')
+            field1.text = item
 
-            Eval = errorHash.getError(key)
+            Eval = errorHash.getError(item)
+            if isinstance(Eval, bytes):
+                Eval = Eval.decode('utf-8')
 
             field2 = ET.SubElement(sub, 'message')
             field2.text = Eval
