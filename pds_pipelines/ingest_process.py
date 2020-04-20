@@ -55,14 +55,6 @@ def main(user_args):
     RQ_lock.add({RQ_main.id_name: '1'})
     RQ_work = RedisQueue('Ingest_WorkQueue')
 
-    RQ_upc = RedisQueue('UPC_ReadyQueue')
-    RQ_thumb = RedisQueue('Thumbnail_ReadyQueue')
-    RQ_browse = RedisQueue('Browse_ReadyQueue')
-
-    logger.info("UPC Queue: %s", RQ_upc.id_name)
-    logger.info("Thumbnail Queue: %s", RQ_thumb.id_name)
-    logger.info("Browse Queue: %s", RQ_browse.id_name)
-
     try:
         Session, engine = db_connect(pds_db)
         session = Session()
@@ -135,12 +127,6 @@ def main(user_args):
 
                 session.merge(ingest_entry)
                 session.flush()
-
-                if upcflag:
-                    RQ_upc.QueueAdd((inputfile, ingest_entry.fileid, archive))
-                    RQ_thumb.QueueAdd((inputfile, ingest_entry.fileid, archive))
-                    RQ_browse.QueueAdd((inputfile, ingest_entry.fileid, archive))
-                    #RQ_pilotB.QueueAdd((inputfile,ingest_entry.fileid, archive))
 
                 RQ_work.QueueRemove(inputfile)
 
