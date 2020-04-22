@@ -3,26 +3,26 @@
     "src": "/pds_san/PDS_Archive/Mars_Global_Surveyor/MOC/",
     "upc": {
         "recipe": {
-            "moc2isis": {
-                "from_": "value",
-                "to": "value"
+            "isis.moc2isis": {
+                "from_": "{{inputfile}}",
+                "to": "{{no_extension_inputfile}}.cub"
             },
-            "spiceinit": {
-                "from_": "value",
+            "isis.spiceinit": {
+                "from_": "{{no_extension_inputfile}}.cub",
                 "cknadir": "yes",
                 "cksmithed": "yes"
             },
-            "footprintinit": {
-                "from_": "value",
+            "isis.footprintinit": {
+                "from_": "{{no_extension_inputfile}}.cub",
                 "increaseprecision": "yes",
                 "inctype": "vertices",
                 "numvertices": "40",
                 "maxemission": "89.5",
                 "maxincidence": "120.0"
             },
-            "caminfo": {
-                "from_": "value",
-                "to": "value",
+            "isis.caminfo": {
+                "from_": "{{no_extension_inputfile}}.cub",
+                "to": "{{cam_info_file}}",
                 "geometry": "yes",
                 "isislabel": "yes",
                 "originallabel": "yes",
