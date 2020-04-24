@@ -40,11 +40,10 @@ def gdal_translate(dest, src, *args, **kwargs):
 def gdal_polygonize(input_file, output_name, mask=None, *args, **kwargs):
     driver = ogr.GetDriverByName("ESRI Shapefile")
     src_ds = gdal.Open(input_file)
-    prj = src_ds.GetProjection()
     band = src_ds.GetRasterBand(1)
     srs = src_ds.GetSpatialRef()
     output_datasource = driver.CreateDataSource(output_name + ".shp")
-    out_layer = output_datasource.CreateLayer(output_name, geom_type=ogr.wkbPolygon, srs=srs)
+    out_layer = output_datasource.CreateLayer(output_name, srs=srs)
     field = ogr.FieldDefn('DN', ogr.OFTInteger)
     out_layer.CreateField(field)
     field_id = out_layer.GetLayerDefn().GetFieldIndex('DN')
