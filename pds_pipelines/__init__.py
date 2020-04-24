@@ -37,17 +37,26 @@ def gdal_translate(dest, src, *args, **kwargs):
     return gdal.Translate(dest, src, options=opts)
 
 
-def gdal_polygonize(input_file, output_name, mask=None, *args, **kwargs):
+def gdal_polygonize(input_file, output_name, mask='default', *args, **kwargs):
     driver = ogr.GetDriverByName("ESRI Shapefile")
     src_ds = gdal.Open(input_file)
-    band = src_ds.GetRasterBand(1)
+    src_band = src_ds.GetRasterBand(1)
+
+    if mask == 'default':
+        mask_band = src_band.GetMaskBand()
+    elif mask.lower() == 'none':
+        mask_band = None
+    else:
+        mask_ds = gdal.Open(mask)
+        mask_band = mask_ds.GetRasterBand(1)
+
     srs = src_ds.GetSpatialRef()
     output_datasource = driver.CreateDataSource(output_name + ".shp")
     out_layer = output_datasource.CreateLayer(output_name, srs=srs)
     field = ogr.FieldDefn('DN', ogr.OFTInteger)
     out_layer.CreateField(field)
     field_id = out_layer.GetLayerDefn().GetFieldIndex('DN')
-    return gdal.Polygonize(band, mask, out_layer, field_id, [], **kwargs)
+    return gdal.Polygonize(src_band, mask_band, out_layer, field_id, [], **kwargs)
 
 
 def ogr2ogr(dest, src, *args, **kwargs):
