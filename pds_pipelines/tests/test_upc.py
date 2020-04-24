@@ -188,7 +188,7 @@ def test_datafiles_no_label(mocked_pds_id, mocked_isis_id, session, session_make
 def test_datafiles_no_isisid(mocked_pds_id, session, session_maker, pds_label):
     # Since we mock getsn above, make it throw an exception here so we can test
     # when there is no ISIS ID.
-    with patch('pysis.isis.getsn', side_effect=Exception('ProcessError')):
+    with patch('pysis.isis.getsn', side_effect=ProcessError(1, ['getsn'], '', '')):
         upc_id = create_datafiles_record(pds_label, '/Path/to/label/location/label.lbl', '/Path/to/my/cube.cub', session_maker)
     resp = session.query(models.DataFiles).filter(models.DataFiles.upcid==upc_id).first()
     assert resp.isisid == None

@@ -68,7 +68,12 @@ def getISISid(infile):
     newisisSerial : str
         The serial number of the input file.
     """
-    serial_num = available_modules['isis'].getsn(from_=infile)
+    try:
+    	serial_num = available_modules['isis'].getsn(from_=infile)
+    except(ProcessError, KeyError):
+        # If either isis was not imported or a serial number could not be
+        # generated from the infile set the serial number to an empty string
+        return None
 
     # in later versions of getsn, serial_num is returned as bytes
     if isinstance(serial_num, bytes):
@@ -256,15 +261,7 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
     datafile_attributes['detached_label'] = d_label
 
     # Attemp to get the ISIS serial from the cube
-    try:
-        isis_id = getISISid(input_cube)
-        
-    except(ProcessError, KeyError):
-        # If either isis was not imported or a serial number could not be
-        # generated from the infile set the serial number to an empty string
-        isis_id = None
-
-    datafile_attributes['isisid'] = isis_id
+    datafile_attributes['isisid'] = getISISid(input_cube)
 
     # Attemp to get the product id from the cube
     try:
