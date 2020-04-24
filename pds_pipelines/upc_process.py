@@ -5,6 +5,7 @@ import sys
 import datetime
 import logging
 import hashlib
+import pds_pipelines
 from ast import literal_eval
 import pytz
 import argparse
@@ -456,19 +457,24 @@ def process(processes, workarea_pwd, logger):
     # iterate through functions from the processes dictionary
     failing_command = ''
     for process, keywargs in processes.items():
-        module, command = process.split('.')
-        # load a function into func
-        func = getattr(available_modules[module], command)
+        try:
+            module, command = process.split('.')
+            # load a function into func
+            func = getattr(available_modules[module], command)
+            print(func)
+        except ValueError:
+            func = getattr(pds_pipelines, process)
+            print(func)
         try:
             os.chdir(workarea_pwd)
             # execute function
-            logger.debug("Running %s", command)
+            logger.debug("Running %s", process)
             func(**keywargs)
 
         except ProcessError as e:
             logger.debug("%s", e)
             logger.debug("%s", e.stderr)
-            failing_command = command
+            failing_command = process
             break
 
     return failing_command

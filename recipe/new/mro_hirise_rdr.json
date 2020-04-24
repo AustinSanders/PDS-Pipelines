@@ -8,27 +8,24 @@
                 "to": "{{cam_info_file}}"
             },
             "gdal_translate": {
-                "scale": "1 65535 1 1",
-                "a_nodata": "0",
-                "ot": "Byte",
-                "tr": "25 25",
-                "{{no_extension_inputfile}}.cub",
-                "{{no_extension_inputfile}}.tif"
-                
+                "scaleParams": "1 65535 1 1",
+                "noData": "0",
+                "outputType": "gdal.GDT_Byte",
+                "xRes": "25",
+                "yRes": "25",
+                "src" : "{{no_extension_inputfile}}.cub",
+                "dest": "{{no_extension_inputfile}}.tif"
             },
             "gdal_polygonize": {
-                "8",
-                "f": ""ESRI Shapefile"",
-                "{{no_extension_inputfile}}.tif",
-                "{{no_extension_inputfile}}_footprint.shp",
-                "{{no_extension_inputfile}}_footprint"
+                "band": "{{no_extension_inputfile}}.tif",
+                "output_name": "{{no_extension_inputfile}}_footprint"
             },
             "ogr2ogr": {
-                 "f": "GeoJSON",
-                 "t_srs": ""+proj=longlat +R=3396190 +no_defs"",
-                 "{{no_extension_inputfile}}_footprint.json",
-                 "{{no_extension_inputfile}}_footprint.shp"
-            },
+                 "format": "GeoJSON",
+                 "tsrs": "+proj=longlat +R=3396190 +no_defs",
+                 "src": "{{no_extension_inputfile}}_footprint.json",
+                 "dest": "{{no_extension_inputfile}}_footprint.shp"
+            }
         },
         "search_term_mapping": {
                 "meangroundresolution": "PixelResolution",

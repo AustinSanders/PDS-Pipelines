@@ -26,7 +26,7 @@ except Exception as e:
 
 
 def gdal_translate(dest, src, **kwargs):
-    options = gdal.TranslateOptions(**kwargs)
+    options = gdal.TranslateOptions([], **kwargs)
     return gdal.Translate(dest, src, options)
 
 
