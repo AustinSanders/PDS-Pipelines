@@ -25,24 +25,36 @@ except Exception as e:
                  f'Failed with the following {e}.')
 
 
-def gdal_translate(dest, src, **kwargs):
-    options = gdal.TranslateOptions([], **kwargs)
-    return gdal.Translate(dest, src, options)
+def gdal_translate(dest, src, *args, **kwargs):
+    try:
+        # If outputType is specified, convert it to gdal datatype
+        kwargs['outputType'] = gdal.GetDataTypeByName(kwargs['outputType'])
+    except KeyError:
+        # If outputType not specified, no conversion is necessary and GDAL will
+        #  use default arguments.
+        pass
+    opts = gdal.TranslateOptions(*args, **kwargs)
+    return gdal.Translate(dest, src, options=opts)
 
 
-def gdal_polygonize(band, mask, output_name, **kwargs):
+def gdal_polygonize(input_file, output_name, mask=None, *args, **kwargs):
     driver = ogr.GetDriverByName("ESRI Shapefile")
+    src_ds = gdal.Open(input_file)
+    prj = src_ds.GetProjection()
+    band = src_ds.GetRasterBand(1)
+    srs = src_ds.GetSpatialRef()
     output_datasource = driver.CreateDataSource(output_name + ".shp")
-    out_layer = output_datasource.CreateLayer(output_name, srs=None)
-    field = ogr.FieldDefn('MYFLD', ogr.OFTInteger)
+    out_layer = output_datasource.CreateLayer(output_name, geom_type=ogr.wkbPolygon, srs=srs)
+    field = ogr.FieldDefn('DN', ogr.OFTInteger)
     out_layer.CreateField(field)
-    return gdal.Polygonize(band, mask, out_layer, -1, [], **kwargs)
+    field_id = out_layer.GetLayerDefn().GetFieldIndex('DN')
+    return gdal.Polygonize(band, mask, out_layer, field_id, [], **kwargs)
 
 
-def ogr2ogr(dest, src, **kwargs):
+def ogr2ogr(dest, src, *args, **kwargs):
     srcDS = gdal.OpenEx(src)
-    vto = gdal.VectorTranslateOptions(**kwargs)
-    ds = gdal.VectorTranslate(dest, srcDS=srcDS, options = vto)
+    opts = gdal.VectorTranslateOptions(skipFailures=True, *args, **kwargs)
+    ds = gdal.VectorTranslate(dest, srcDS=srcDS, options = opts)
     # Dataset isn't written until dataset is closed and dereferenced
     # https://gis.stackexchange.com/questions/255586/gdal-vectortranslate-returns-empty-object
     del ds

@@ -1,6 +1,6 @@
 {
     "inst": "mro_hirise_rdr",
-    "src": "/pds_san/PDS_Archive/Mars_Reconnaissance_Orbiter/HiRISE/RDR",
+    "src": "/Users/arsanders/hirise/Mars_Reconnaissance_Orbiter/HiRISE/RDR/",
     "upc": {
         "recipe": {
             "isis.hirdr2isis": {
@@ -8,7 +8,7 @@
                 "to": "{{cam_info_file}}"
             },
             "gdal_translate": {
-                "scaleParams": "1 65535 1 1",
+                "scaleParams": [[1,65535,1,1]],
                 "noData": "0",
                 "outputType": "gdal.GDT_Byte",
                 "xRes": "25",
@@ -17,14 +17,14 @@
                 "dest": "{{no_extension_inputfile}}.tif"
             },
             "gdal_polygonize": {
-                "band": "{{no_extension_inputfile}}.tif",
+                "input_file": "{{no_extension_inputfile}}.tif",
                 "output_name": "{{no_extension_inputfile}}_footprint"
             },
             "ogr2ogr": {
                  "format": "GeoJSON",
-                 "tsrs": "+proj=longlat +R=3396190 +no_defs",
-                 "src": "{{no_extension_inputfile}}_footprint.json",
-                 "dest": "{{no_extension_inputfile}}_footprint.shp"
+                 "dstSRS": "+proj=longlat +R=3396190 +no_defs",
+                 "dest": "{{no_extension_inputfile}}_footprint.json",
+                 "src": "{{no_extension_inputfile}}_footprint.shp"
             }
         },
         "search_term_mapping": {
