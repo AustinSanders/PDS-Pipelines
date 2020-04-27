@@ -461,10 +461,9 @@ def process(processes, workarea_pwd, logger):
             module, command = process.split('.')
             # load a function into func
             func = getattr(available_modules[module], command)
-            print(func)
         except ValueError:
             func = getattr(pds_pipelines, process)
-            print(func)
+            command = process
         try:
             os.chdir(workarea_pwd)
             # execute function
@@ -474,7 +473,7 @@ def process(processes, workarea_pwd, logger):
         except ProcessError as e:
             logger.debug("%s", e)
             logger.debug("%s", e.stderr)
-            failing_command = process
+            failing_command = command
             break
 
     return failing_command
