@@ -18,7 +18,7 @@
             },
             "gdal_polygonize": {
                 "input_file": "{{no_extension_inputfile}}.tif",
-                "output_name": "{{no_extension_inputfile}}_footprint"
+                "output_name": "{{footprint_file}}"
             },
             "ogr2ogr": {
                  "format": "GeoJSON",
