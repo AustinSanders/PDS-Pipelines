@@ -51,7 +51,7 @@ class Files(BaseMixin, Base):
     file_size = Column(Integer)
     di_pass = Column(Boolean)
     di_date = Column(TIMESTAMP)
-    process_run = relationship('ProcessRuns', backref='files', uselist=False)
+    process_run = relationship('ProcessRuns', backref='files', uselist=True, cascade="save-update, merge, delete, delete-orphan")
 
 
 class Archives(BaseMixin, Base):

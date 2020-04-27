@@ -16,6 +16,8 @@ import pvl
 import json
 from sqlalchemy import and_
 from pds_pipelines import available_modules
+
+from pysis import isis
 from pysis.exceptions import ProcessError
 
 from pds_pipelines.redis_lock import RedisLock
@@ -30,16 +32,17 @@ from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_d
 
 
 def getPDSid(infile):
-    """ Use ISIS to get the PDS Product ID of a cube.
+    """
+    Use ISIS to get the PDS Product ID of a cube.
 
-        Using ISIS `getkey` is preferred over extracting the Product ID
-        using the PVL library because of an edge case where PVL will
-        erroneously convert Product IDs from string to floating point.
+    Using ISIS `getkey` is preferred over extracting the Product ID
+    using the PVL library because of an edge case where PVL will
+    erroneously convert Product IDs from string to floating point.
 
     Parameters
     ----------
     infile : str
-        A string file path from which the Product ID will be extracted.
+             A string file path from which the Product ID will be extracted.
 
 
     Returns
@@ -47,8 +50,16 @@ def getPDSid(infile):
     prod_id : str
         The PDS Product ID.
     """
-    upc_keywords = UPCkeywords(infile)
-    prod_id = upc_keywords.getKeyword('productid')
+    for key in ['product_id', 'productid']:
+        try:
+            prod_id = isis.getkey(from_=infile, keyword=key)
+            break
+        except ProcessError as e:
+            prod_id = None
+
+    if not prod_id:
+        return None
+
     # in later versions of ISIS, key values are returned as bytes
     if isinstance(prod_id, bytes):
         prod_id = prod_id.decode()
@@ -70,11 +81,12 @@ def getISISid(infile):
         The serial number of the input file.
     """
     try:
-        serial_num = available_modules['isis'].getsn(from_=infile)
-    except (ProcessError, KeyError) as e:
+        serial_num = isis.getsn(from_=infile)
+    except (ProcessError, KeyError):
         # If either isis was not imported or a serial number could not be
         # generated from the infile set the serial number to an empty string
-        serial_num = ''
+        return None
+
     # in later versions of getsn, serial_num is returned as bytes
     if isinstance(serial_num, bytes):
         serial_num = serial_num.decode()
@@ -220,6 +232,14 @@ def get_instrument_id(label, session_maker):
     session.close()
     return instrument_id
 
+def read_json_footprint(footprint_file):
+    with open(footprint_file, 'r') as fp:
+        geo_json = json.load(fp)
+        geo_str = json.dumps(geo_json['features'][0]['geometry'])
+
+    footprint = osgeo.ogr.CreateGeometryFromJson(geo_str)
+    return footprint.ExportToWkt()
+
 def create_datafiles_record(label, edr_source, input_cube, session_maker):
     """
     Creates a new DataFiles record through values from a given label and adds
@@ -261,18 +281,10 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
     datafile_attributes['detached_label'] = d_label
 
     # Attemp to get the ISIS serial from the cube
-    try:
-        isis_id = getISISid(input_cube)
-    except:
-        isis_id = None
+    datafile_attributes['isisid'] = getISISid(input_cube)
 
-    datafile_attributes['isisid'] = isis_id
-
-    # Attemp to get the product id from the cube
-    try:
-        product_id = getPDSid(input_cube)
-    except:
-        product_id = None
+    # Attemp to get the product id from the original label
+    product_id = getPDSid(input_cube)
 
     datafile_attributes['productid'] = product_id
     datafile_attributes['instrumentid'] = get_instrument_id(label, session_maker)
@@ -299,7 +311,7 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
 
     return upc_id
 
-def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, search_term_mapping={}, session_maker=None):
+def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, footprint_file, search_term_mapping={}, session_maker=None):
     """
     Creates a new SearchTerms record through values from a given caminfo file
     and adds the new record to the database
@@ -340,14 +352,15 @@ def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, search_t
                 search_term_attributes[key] = None
 
         search_term_attributes['isisfootprint'] = keywordsOBJ.getKeyword('GisFootprint')
+
+        if os.path.exists(footprint_file):
+            search_term_attributes['isisfootprint'] = read_json_footprint(footprint_file)
+
         search_term_attributes['err_flag'] = False
 
     search_term_attributes['upcid'] = upc_id
 
-    try:
-        product_id = getPDSid(input_cube)
-    except:
-        product_id = None
+    product_id = getPDSid(input_cube)
 
     search_term_attributes['pdsproductid'] = product_id
 
@@ -443,15 +456,17 @@ def generate_processes(inputfile, recipe_string, logger):
 
     logger.debug("Beginning processing on %s\n", inputfile)
     no_extension_inputfile = os.path.splitext(inputfile)[0]
-    cam_info_file = os.path.splitext(inputfile)[0] + '.caminfo.pvl'
+    cam_info_file = no_extension_inputfile + '_caminfo.pvl'
+    footprint_file = no_extension_inputfile + '_footprint.json'
 
     template = jinja2.Template(recipe_string)
     recipe_str = template.render(inputfile=inputfile,
                                  no_extension_inputfile=no_extension_inputfile,
-                                 cam_info_file=cam_info_file)
+                                 cam_info_file=cam_info_file,
+                                 footprint_file=footprint_file)
     processes = json.loads(recipe_str)
 
-    return processes, no_extension_inputfile, cam_info_file, workarea_pwd
+    return processes, no_extension_inputfile, cam_info_file, footprint_file, workarea_pwd
 
 def process(processes, workarea_pwd, logger):
     # iterate through functions from the processes dictionary
@@ -559,7 +574,7 @@ def main(user_args):
             except KeyError:
                 search_term_mapping = {}
 
-        processes, infile, caminfoOUT, workarea_pwd = generate_processes(inputfile,recipe_string, logger)
+        processes, infile, caminfoOUT, footprint_file, workarea_pwd = generate_processes(inputfile, recipe_string, logger)
         failing_command = process(processes, workarea_pwd, logger)
 
         pds_label = pvl.load(inputfile)
@@ -568,7 +583,7 @@ def main(user_args):
         upc_id = create_datafiles_record(pds_label, edr_source, infile, upc_session_maker)
 
         ######## Generate SearchTerms Record ########
-        create_search_terms_record(pds_label, caminfoOUT, upc_id, infile, search_term_mapping, upc_session_maker)
+        create_search_terms_record(pds_label, caminfoOUT, upc_id, infile, footprint_file, search_term_mapping, upc_session_maker)
 
         ######## Generate JsonKeywords Record ########
         create_json_keywords_record(caminfoOUT, upc_id, inputfile, failing_command, upc_session_maker, logger)

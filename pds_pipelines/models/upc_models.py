@@ -2,7 +2,7 @@ import sqlalchemy
 
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy_utils import database_exists, create_database
-from sqlalchemy import (Column, Integer, Float, Time, String, Boolean, 
+from sqlalchemy import (Column, Integer, Float, Time, String, Boolean,
                         ForeignKey, CHAR, DateTime)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
@@ -60,8 +60,8 @@ class DataFiles(BaseMixin, Base):
     detached_label = Column(String(1024))
     instrumentid = Column(Integer, ForeignKey("instruments.instrumentid"))
     targetid = Column(Integer, ForeignKey("targets.targetid"))
-    search_terms = relationship('SearchTerms', backref="DataFiles", uselist=False)
-    json_keyword = relationship('JsonKeywords', backref="DataFiles", uselist=False)
+    search_terms = relationship('SearchTerms', backref="DataFiles", uselist=True, cascade="save-update, merge, delete, delete-orphan")
+    json_keyword = relationship('JsonKeywords', backref="DataFiles", uselist=True, cascade="save-update, merge, delete, delete-orphan")
     level = Column(CHAR(1))
 
 

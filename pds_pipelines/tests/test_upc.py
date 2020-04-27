@@ -13,11 +13,17 @@ from unittest import mock
 
 import pysis
 from pysis import isis
+from pysis.exceptions import ProcessError
 
 # Stub in the getsn function for testing
 def getsn(from_):
     return b'ISISSERIAL'
 pysis.isis.getsn = getsn
+
+# Stub in the getkey function for testing
+def getkey(from_, objname=None, grp=None, keyword=None, keyindex=None, upper=False, recursive=False):
+    return b'PRODUCTID'
+pysis.isis.getkey = getkey
 
 # Stub in the getsn function for testing
 def spiceinit(from_):
@@ -103,11 +109,8 @@ cam_info_dict = {'upcid': 1,
                                            (153.30256122853893, -32.68515128444211),
                                            (153.80256122853893, -32.68515128444211)]).wkt}
 
-@pytest.mark.parametrize('get_key_return', [('PRODUCTID'), (b'PRODUCTID')])
-@patch('pds_pipelines.upc_keywords.UPCkeywords.__init__', return_value = None)
-def test_get_pds_id(mocked_init, get_key_return, pds_label):
-    with patch('pds_pipelines.upc_keywords.UPCkeywords.getKeyword', return_value=get_key_return) as mocked_getkey:
-        prod_id = getPDSid(pds_label)
+def test_get_pds_id():
+    prod_id = getPDSid('/Path/to/my/cube.cub')
     assert isinstance(prod_id, str)
     assert prod_id == 'PRODUCTID'
 
@@ -190,14 +193,17 @@ def test_datafiles_no_label(mocked_pds_id, mocked_isis_id, session, session_make
 def test_datafiles_no_isisid(mocked_pds_id, session, session_maker, pds_label):
     # Since we mock getsn above, make it throw an exception here so we can test
     # when there is no ISIS ID.
-    with patch('pysis.isis.getsn', side_effect=Exception('AttributeError')):
+    with patch('pysis.isis.getsn', side_effect=ProcessError(1, ['getsn'], '', '')):
         upc_id = create_datafiles_record(pds_label, '/Path/to/label/location/label.lbl', '/Path/to/my/cube.cub', session_maker)
     resp = session.query(models.DataFiles).filter(models.DataFiles.upcid==upc_id).first()
     assert resp.isisid == None
 
 @patch('pds_pipelines.upc_process.getISISid', return_value = 'ISISSERIAL')
 def test_datafiles_no_pdsid(mocked_isis_id, session, session_maker, pds_label):
-    upc_id = create_datafiles_record(pds_label, '/Path/to/label/location/label.lbl', '/Path/to/my/cube.cub', session_maker)
+    # Since we mock getkey above, make it throw an exception here so we can test
+    # when there is no PDS ID.
+    with patch('pysis.isis.getkey', side_effect=ProcessError(1, 'getkey', '', '')):
+        upc_id = create_datafiles_record(pds_label, '/Path/to/label/location/label.lbl', '/Path/to/my/cube.cub', session_maker)
     resp = session.query(models.DataFiles).filter(models.DataFiles.upcid==upc_id).first()
     assert resp.productid == None
 
@@ -213,7 +219,7 @@ def test_search_terms_insert(mocked_product_id, mocked_keyword, mocked_init, ses
 
     models.DataFiles.create(session, upcid = upc_id)
 
-    create_search_terms_record(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', session_maker = session_maker)
+    create_search_terms_record(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', '', session_maker = session_maker)
     resp = session.query(SearchTerms).filter(SearchTerms.upcid == upc_id).first()
 
     for key in cam_info_dict.keys():
@@ -232,7 +238,7 @@ def test_search_terms_keyword_exception(mocked_product_id, session, session_make
     upc_id = cam_info_dict['upcid']
     models.DataFiles.create(session, upcid = upc_id)
 
-    create_search_terms_record(pds_label, "", upc_id, '/Path/to/my/cube.cub', session_maker = session_maker)
+    create_search_terms_record(pds_label, "", upc_id, '/Path/to/my/cube.cub', '', session_maker = session_maker)
     resp = session.query(SearchTerms).filter(SearchTerms.upcid == upc_id).first()
     assert resp.starttime == None
     assert resp.solarlongitude == None
@@ -256,7 +262,7 @@ def test_search_terms_no_datafile(mocked_product_id, mocked_keyword, mocked_init
     upc_id = cam_info_dict['upcid']
 
     with pytest.raises(sqlalchemy.exc.IntegrityError):
-        create_search_terms_record(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', session_maker = session_maker)
+        create_search_terms_record(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', '', session_maker = session_maker)
 
 @patch('pds_pipelines.upc_keywords.UPCkeywords.__init__', return_value = None)
 def test_json_keywords_insert(mocked_init, session, session_maker, pds_label):
@@ -311,7 +317,7 @@ def test_generate_processes():
         original_recipe = json.load(fp)['upc']['recipe']
         recipe_string = json.dumps(original_recipe)
 
-    processes, inputfile, caminfoOUT, pwd = generate_processes(inputfile, recipe_string, logger)
+    processes, inputfile, caminfoOUT, footprint_file, pwd = generate_processes(inputfile, recipe_string, logger)
 
     for k, v in processes.items():
         assert original_recipe[k].keys() == v.keys()

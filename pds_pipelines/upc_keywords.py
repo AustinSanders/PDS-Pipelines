@@ -30,26 +30,28 @@ class UPCkeywords(object):
 
     label = None
 
-    def __init__(self, pvlfile):
-        try:
-            label = lower_keys(pvl.load(pvlfile, strict=False))
-        except:
-            # Some labels are poorly formatted or include characters that
-            #  cannot be parsed with the PVL library.  This finds those
-            #  characters and replaces them so that we can properly parse
-            #  the PVL.
-            with open(pvlfile, 'r') as f:
-                filedata = f.read()
+    def __init__(self, input_pvl):
+        if isinstance(input_pvl, str):
+            try:
+                self.label = lower_keys(pvl.load(input_pvl, strict=False))
+            except:
+                # Some labels are poorly formatted or include characters that
+                #  cannot be parsed with the PVL library.  This finds those
+                #  characters and replaces them so that we can properly parse
+                #  the PVL.
+                with open(input_pvl, 'r') as f:
+                    filedata = f.read()
 
-            filedata = filedata.replace(';', '-').replace('&', '-')
-            filedata = re.sub(r'\-\s+', r'', filedata, flags=re.M)
+                filedata = filedata.replace(';', '-').replace('&', '-')
+                filedata = re.sub(r'\-\s+', r'', filedata, flags=re.M)
 
-            with open(pvlfile, 'w') as f:
-                f.write(filedata)
+                with open(input_pvl, 'w') as f:
+                    f.write(filedata)
 
-            label = lower_keys(pvl.load(pvlfile, strict=False))
+                self.label = lower_keys(pvl.load(input_pvl, strict=False))
 
-        self.label = label
+        elif isinstance(input_pvl, pvl.PVLModule):
+            self.label = lower_keys(input_pvl)
 
 
     def __str__(self):
