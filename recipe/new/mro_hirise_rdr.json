@@ -1,12 +1,8 @@
 {
     "inst": "mro_hirise_rdr",
-    "src": "/Users/arsanders/hirise/Mars_Reconnaissance_Orbiter/HiRISE/RDR/",
+    "src": "/pds_san/PDS_archive/Mars_Reconnaissance_Orbiter/HiRISE/RDR",
     "upc": {
         "recipe": {
-            "isis.hirdr2isis": {
-                "from_": "{{inputfile}}",
-                "to": "{{cam_info_file}}"
-            },
             "gdal_translate": {
                 "scaleParams": [[1,65535,1,1]],
                 "noData": "0",
