@@ -219,7 +219,7 @@ def test_search_terms_insert(mocked_product_id, mocked_keyword, mocked_init, ses
 
     models.DataFiles.create(session, upcid = upc_id)
 
-    create_search_terms_record(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', session_maker = session_maker)
+    create_search_terms_record(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', '', session_maker = session_maker)
     resp = session.query(SearchTerms).filter(SearchTerms.upcid == upc_id).first()
 
     for key in cam_info_dict.keys():
@@ -238,7 +238,7 @@ def test_search_terms_keyword_exception(mocked_product_id, session, session_make
     upc_id = cam_info_dict['upcid']
     models.DataFiles.create(session, upcid = upc_id)
 
-    create_search_terms_record(pds_label, "", upc_id, '/Path/to/my/cube.cub', session_maker = session_maker)
+    create_search_terms_record(pds_label, "", upc_id, '/Path/to/my/cube.cub', '', session_maker = session_maker)
     resp = session.query(SearchTerms).filter(SearchTerms.upcid == upc_id).first()
     assert resp.starttime == None
     assert resp.solarlongitude == None
@@ -262,7 +262,7 @@ def test_search_terms_no_datafile(mocked_product_id, mocked_keyword, mocked_init
     upc_id = cam_info_dict['upcid']
 
     with pytest.raises(sqlalchemy.exc.IntegrityError):
-        create_search_terms_record(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', session_maker = session_maker)
+        create_search_terms_record(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', '', session_maker = session_maker)
 
 @patch('pds_pipelines.upc_keywords.UPCkeywords.__init__', return_value = None)
 def test_json_keywords_insert(mocked_init, session, session_maker, pds_label):
@@ -317,7 +317,7 @@ def test_generate_processes():
         original_recipe = json.load(fp)['upc']['recipe']
         recipe_string = json.dumps(original_recipe)
 
-    processes, inputfile, caminfoOUT, pwd = generate_processes(inputfile, recipe_string, logger)
+    processes, inputfile, caminfoOUT, footprint_file, pwd = generate_processes(inputfile, recipe_string, logger)
 
     for k, v in processes.items():
         assert original_recipe[k].keys() == v.keys()

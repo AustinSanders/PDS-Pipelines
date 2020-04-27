@@ -232,6 +232,14 @@ def get_instrument_id(label, session_maker):
     session.close()
     return instrument_id
 
+def read_json_footprint(footprint_file):
+    with open(footprint_file, 'r') as fp:
+        geo_json = json.load(fp)
+        geo_str = json.dumps(geo_json['features'][0]['geometry'])
+
+    footprint = osgeo.ogr.CreateGeometryFromJson(geo_str)
+    return footprint.ExportToWkt()
+
 def create_datafiles_record(label, edr_source, input_cube, session_maker):
     """
     Creates a new DataFiles record through values from a given label and adds
@@ -303,7 +311,7 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
 
     return upc_id
 
-def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, search_term_mapping={}, session_maker=None):
+def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, footprint_file, search_term_mapping={}, session_maker=None):
     """
     Creates a new SearchTerms record through values from a given caminfo file
     and adds the new record to the database
@@ -344,6 +352,10 @@ def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, search_t
                 search_term_attributes[key] = None
 
         search_term_attributes['isisfootprint'] = keywordsOBJ.getKeyword('GisFootprint')
+
+        if os.path.exists(footprint_file):
+            search_term_attributes['isisfootprint'] = read_json_footprint(footprint_file)
+
         search_term_attributes['err_flag'] = False
 
     search_term_attributes['upcid'] = upc_id
@@ -444,15 +456,17 @@ def generate_processes(inputfile, recipe_string, logger):
 
     logger.debug("Beginning processing on %s\n", inputfile)
     no_extension_inputfile = os.path.splitext(inputfile)[0]
-    cam_info_file = os.path.splitext(inputfile)[0] + '.caminfo.pvl'
+    cam_info_file = no_extension_inputfile + '_caminfo.pvl'
+    footprint_file = no_extension_inputfile + '_footprint.json'
 
     template = jinja2.Template(recipe_string)
     recipe_str = template.render(inputfile=inputfile,
                                  no_extension_inputfile=no_extension_inputfile,
-                                 cam_info_file=cam_info_file)
+                                 cam_info_file=cam_info_file,
+                                 footprint_file=footprint_file)
     processes = json.loads(recipe_str)
 
-    return processes, no_extension_inputfile, cam_info_file, workarea_pwd
+    return processes, no_extension_inputfile, cam_info_file, footprint_file, workarea_pwd
 
 def process(processes, workarea_pwd, logger):
     # iterate through functions from the processes dictionary
@@ -560,7 +574,7 @@ def main(user_args):
             except KeyError:
                 search_term_mapping = {}
 
-        processes, infile, caminfoOUT, workarea_pwd = generate_processes(inputfile, recipe_string, logger)
+        processes, infile, caminfoOUT, footprint_file, workarea_pwd = generate_processes(inputfile, recipe_string, logger)
         failing_command = process(processes, workarea_pwd, logger)
 
         pds_label = pvl.load(inputfile)
@@ -569,7 +583,7 @@ def main(user_args):
         upc_id = create_datafiles_record(pds_label, edr_source, infile, upc_session_maker)
 
         ######## Generate SearchTerms Record ########
-        create_search_terms_record(pds_label, caminfoOUT, upc_id, infile, search_term_mapping, upc_session_maker)
+        create_search_terms_record(pds_label, caminfoOUT, upc_id, infile, footprint_file, search_term_mapping, upc_session_maker)
 
         ######## Generate JsonKeywords Record ########
         create_json_keywords_record(caminfoOUT, upc_id, inputfile, failing_command, upc_session_maker, logger)
