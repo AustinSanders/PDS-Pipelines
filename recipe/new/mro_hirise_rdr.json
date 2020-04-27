@@ -1,6 +1,6 @@
 {
     "inst": "mro_hirise_rdr",
-    "src": "/pds_san/PDS_archive/Mars_Reconnaissance_Orbiter/HiRISE/RDR",
+    "src": "/pds_san/PDS_Archive/Mars_Reconnaissance_Orbiter/HiRISE/RDR",
     "upc": {
         "recipe": {
             "isis.hirdr2isis": {
