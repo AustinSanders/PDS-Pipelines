@@ -16,6 +16,7 @@ import pvl
 import json
 from sqlalchemy import and_
 from pds_pipelines import available_modules
+from osgeo import ogr
 
 from pysis import isis
 from pysis.exceptions import ProcessError
@@ -237,7 +238,7 @@ def read_json_footprint(footprint_file):
         geo_json = json.load(fp)
         geo_str = json.dumps(geo_json['features'][0]['geometry'])
 
-    footprint = osgeo.ogr.CreateGeometryFromJson(geo_str)
+    footprint = ogr.CreateGeometryFromJson(geo_str)
     return footprint.ExportToWkt()
 
 def create_datafiles_record(label, edr_source, input_cube, session_maker):
@@ -280,10 +281,10 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
     datafile_attributes['source'] = img_file
     datafile_attributes['detached_label'] = d_label
 
-    # Attemp to get the ISIS serial from the cube
+    # Attempt to get the ISIS serial from the cube
     datafile_attributes['isisid'] = getISISid(input_cube)
 
-    # Attemp to get the product id from the original label
+    # Attempt to get the product id from the original label
     product_id = getPDSid(input_cube)
 
     datafile_attributes['productid'] = product_id
@@ -374,6 +375,8 @@ def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, footprin
     search_terms_qobj = session.query(SearchTerms).filter(
         SearchTerms.upcid == upc_id).first()
 
+    search_term_attributes = get_keyword_values(search_term_attributes)
+
     if search_terms_qobj is None:
         SearchTerms.create(session, **search_term_attributes)
     else:
@@ -383,6 +386,16 @@ def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, footprin
             update(search_term_attributes)
         session.commit()
     session.close()
+
+def get_keyword_values(keywords):
+    for k,v in keywords.items():
+        try:
+            keywords[k] = v.value
+        except AttributeError:
+            # Intentionally left blank.  If v doesn't have a .value, then it
+            #  doesn't need to be converted.
+            pass
+    return keywords
 
 def create_json_keywords_record(cam_info_pvl, upc_id, input_file, failing_command, session_maker, logger):
     """

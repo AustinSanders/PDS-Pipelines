@@ -12,9 +12,9 @@ def parse_args():
     parser.add_argument('--pdsid', '-r', dest='pdsid', help="PDS id to delete from " +
                         "the selected databases", type=str)
     parser.add_argument('-di', dest="di", help="Flag defining if the record should " +
-                        "be deleted from the di database", action='store_true')
+                        "be deleted from the DI database", action='store_true')
     parser.add_argument('-upc', dest="upc", help="Flag defining if the record should " +
-                        "be deleted from the upc database", action='store_true')
+                        "be deleted from the UPC database", action='store_true')
     parser.set_defaults(di=False)
     parser.set_defaults(upc=False)
     args = parser.parse_args()
