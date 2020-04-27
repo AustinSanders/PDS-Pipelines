@@ -13,11 +13,17 @@ from unittest import mock
 
 import pysis
 from pysis import isis
+from pysis.exceptions import ProcessError
 
 # Stub in the getsn function for testing
 def getsn(from_):
     return b'ISISSERIAL'
 pysis.isis.getsn = getsn
+
+# Stub in the getkey function for testing
+def getkey(from_, objname=None, grp=None, keyword=None, keyindex=None, upper=False, recursive=False):
+    return b'PRODUCTID'
+pysis.isis.getkey = getkey
 
 # Stub in the getsn function for testing
 def spiceinit(from_):
@@ -103,11 +109,8 @@ cam_info_dict = {'upcid': 1,
                                            (153.30256122853893, -32.68515128444211),
                                            (153.80256122853893, -32.68515128444211)]).wkt}
 
-@pytest.mark.parametrize('get_key_return', [('PRODUCTID'), (b'PRODUCTID')])
-@patch('pds_pipelines.upc_keywords.UPCkeywords.__init__', return_value = None)
-def test_get_pds_id(mocked_init, get_key_return, pds_label):
-    with patch('pds_pipelines.upc_keywords.UPCkeywords.getKeyword', return_value=get_key_return) as mocked_getkey:
-        prod_id = getPDSid(pds_label)
+def test_get_pds_id():
+    prod_id = getPDSid('/Path/to/my/cube.cub')
     assert isinstance(prod_id, str)
     assert prod_id == 'PRODUCTID'
 
@@ -197,7 +200,10 @@ def test_datafiles_no_isisid(mocked_pds_id, session, session_maker, pds_label):
 
 @patch('pds_pipelines.upc_process.getISISid', return_value = 'ISISSERIAL')
 def test_datafiles_no_pdsid(mocked_isis_id, session, session_maker, pds_label):
-    upc_id = create_datafiles_record(pds_label, '/Path/to/label/location/label.lbl', '/Path/to/my/cube.cub', session_maker)
+    # Since we mock getkey above, make it throw an exception here so we can test
+    # when there is no PDS ID.
+    with patch('pysis.isis.getkey', side_effect=ProcessError(1, 'getkey', '', '')):
+        upc_id = create_datafiles_record(pds_label, '/Path/to/label/location/label.lbl', '/Path/to/my/cube.cub', session_maker)
     resp = session.query(models.DataFiles).filter(models.DataFiles.upcid==upc_id).first()
     assert resp.productid == None
 

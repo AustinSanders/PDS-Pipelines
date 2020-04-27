@@ -15,6 +15,8 @@ import pvl
 import json
 from sqlalchemy import and_
 from pds_pipelines import available_modules
+
+from pysis import isis
 from pysis.exceptions import ProcessError
 
 from pds_pipelines.redis_lock import RedisLock
@@ -29,16 +31,17 @@ from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_d
 
 
 def getPDSid(infile):
-    """ Use ISIS to get the PDS Product ID of a cube.
+    """
+    Use ISIS to get the PDS Product ID of a cube.
 
-        Using ISIS `getkey` is preferred over extracting the Product ID
-        using the PVL library because of an edge case where PVL will
-        erroneously convert Product IDs from string to floating point.
+    Using ISIS `getkey` is preferred over extracting the Product ID
+    using the PVL library because of an edge case where PVL will
+    erroneously convert Product IDs from string to floating point.
 
     Parameters
     ----------
     infile : str
-        A string file path from which the Product ID will be extracted.
+             A string file path from which the Product ID will be extracted.
 
 
     Returns
@@ -46,8 +49,16 @@ def getPDSid(infile):
     prod_id : str
         The PDS Product ID.
     """
-    upc_keywords = UPCkeywords(infile)
-    prod_id = upc_keywords.getKeyword('productid')
+    for key in ['product_id', 'productid']:
+        try:
+            prod_id = isis.getkey(from_=infile, keyword=key)
+            break
+        except ProcessError as e:
+            prod_id = None
+
+    if not prod_id:
+        return None
+
     # in later versions of ISIS, key values are returned as bytes
     if isinstance(prod_id, bytes):
         prod_id = prod_id.decode()
@@ -69,8 +80,8 @@ def getISISid(infile):
         The serial number of the input file.
     """
     try:
-    	serial_num = available_modules['isis'].getsn(from_=infile)
-    except(ProcessError, KeyError):
+        serial_num = isis.getsn(from_=infile)
+    except (ProcessError, KeyError):
         # If either isis was not imported or a serial number could not be
         # generated from the infile set the serial number to an empty string
         return None
@@ -263,11 +274,8 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
     # Attemp to get the ISIS serial from the cube
     datafile_attributes['isisid'] = getISISid(input_cube)
 
-    # Attemp to get the product id from the cube
-    try:
-        product_id = getPDSid(input_cube)
-    except:
-        product_id = None
+    # Attemp to get the product id from the original label
+    product_id = getPDSid(input_cube)
 
     datafile_attributes['productid'] = product_id
     datafile_attributes['instrumentid'] = get_instrument_id(label, session_maker)
@@ -339,10 +347,7 @@ def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, search_t
 
     search_term_attributes['upcid'] = upc_id
 
-    try:
-        product_id = getPDSid(input_cube)
-    except:
-        product_id = None
+    product_id = getPDSid(input_cube)
 
     search_term_attributes['pdsproductid'] = product_id
 
@@ -550,7 +555,7 @@ def main(user_args):
             except KeyError:
                 search_term_mapping = {}
 
-        processes, infile, caminfoOUT, workarea_pwd = generate_processes(inputfile,recipe_string, logger)
+        processes, infile, caminfoOUT, workarea_pwd = generate_processes(inputfile, recipe_string, logger)
         failing_command = process(processes, workarea_pwd, logger)
 
         pds_label = pvl.load(inputfile)
