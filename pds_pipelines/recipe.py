@@ -39,8 +39,8 @@ class Recipe(Process):
         proc : str
             The process pipeline.
         """
-        with open(file, 'r') as fp:
-            testjson = json.loads(fp, object_pairs_hook=OrderedDict)
+
+        testjson = json.loads(open(file).read(), object_pairs_hook=OrderedDict)
 
         for IP in testjson[proc]['recipe']:
             process = str(IP)
