@@ -35,7 +35,7 @@ def parse_args():
     return args
 
 
-def main(key, namespace=None):
+def main(user_args):
     key = user_args.key
     namespace = user_args.namespace
     print(namespace)
