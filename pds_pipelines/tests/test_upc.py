@@ -173,7 +173,7 @@ def test_datafiles_insert(mocked_pds_id, mocked_isis_id, session, session_maker,
                            'INSTRUMENT_NAME': 'TEST INSTRUMENT',
                            'TARGET_NAME': 'TEST TARGET'})
     input_cube = '/Path/to/my/cube.cub'
-    upc_id = create_datafiles_record(pds_label, '/Path/to/label/location/label.lbl', '/Path/to/my/cube.cub', session_maker)
+    upc_id = create_datafiles_record(pds_label, '/Path/to/label/location/label.lbl', '/Path/to/my/cube', session_maker)
     mocked_isis_id.assert_called_with(input_cube)
     mocked_pds_id.assert_called_with(input_cube)
 
