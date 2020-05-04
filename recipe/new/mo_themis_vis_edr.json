@@ -14,6 +14,10 @@
                 "mosaic": "{{no_extension_inputfile}}.raw.odd.cub",
                 "priority": "beneath"
             },
+            "isis.cubeatt": {
+                "from_": "{{no_extension_inputfile}}.raw.odd.cub",
+                "to": "{{no_extension_inputfile}}.cub"
+            },
             "isis.footprintinit": {
                 "from_": "{{no_extension_inputfile}}.raw.odd.cub",
                 "increaseprecision": "yes",

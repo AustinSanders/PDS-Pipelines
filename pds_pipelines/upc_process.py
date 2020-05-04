@@ -53,7 +53,7 @@ def getPDSid(infile):
     """
     for key in ['product_id', 'productid']:
         try:
-            prod_id = isis.getkey(from_=infile, keyword=key)
+            prod_id = isis.getkey(from_=infile, keyword=key, recursive="TRUE")
             break
         except ProcessError as e:
             prod_id = None
@@ -285,7 +285,7 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
     datafile_attributes['isisid'] = getISISid(input_cube)
 
     # Attempt to get the product id from the original label
-    product_id = getPDSid(input_cube)
+    product_id = getPDSid(input_cube + ".cub")
 
     datafile_attributes['productid'] = product_id
     datafile_attributes['instrumentid'] = get_instrument_id(label, session_maker)
@@ -361,7 +361,7 @@ def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, footprin
 
     search_term_attributes['upcid'] = upc_id
 
-    product_id = getPDSid(input_cube)
+    product_id = getPDSid(input_cube + ".cub")
 
     search_term_attributes['pdsproductid'] = product_id
 

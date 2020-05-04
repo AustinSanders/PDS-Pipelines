@@ -21,7 +21,7 @@ def getsn(from_):
 pysis.isis.getsn = getsn
 
 # Stub in the getkey function for testing
-def getkey(from_, objname=None, grp=None, keyword=None, keyindex=None, upper=False, recursive=False):
+def getkey(from_, objname=None, grp=None, keyword=None, keyindex=None, upper=False, recursive=True):
     return b'PRODUCTID'
 pysis.isis.getkey = getkey
 
@@ -173,8 +173,9 @@ def test_datafiles_insert(mocked_pds_id, mocked_isis_id, session, session_maker,
                            'INSTRUMENT_NAME': 'TEST INSTRUMENT',
                            'TARGET_NAME': 'TEST TARGET'})
     input_cube = '/Path/to/my/cube.cub'
-    upc_id = create_datafiles_record(pds_label, '/Path/to/label/location/label.lbl', '/Path/to/my/cube.cub', session_maker)
+    upc_id = create_datafiles_record(pds_label, '/Path/to/label/location/label.lbl', '/Path/to/my/cube', session_maker)
     mocked_isis_id.assert_called_with(input_cube)
+    input_cube = '/Path/to/my/cube'
     mocked_pds_id.assert_called_with(input_cube)
 
     resp = session.query(models.DataFiles).filter(models.DataFiles.isisid=='ISISSERIAL').first()
