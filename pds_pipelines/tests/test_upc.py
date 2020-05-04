@@ -21,7 +21,7 @@ def getsn(from_):
 pysis.isis.getsn = getsn
 
 # Stub in the getkey function for testing
-def getkey(from_, objname=None, grp=None, keyword=None, keyindex=None, upper=False, recursive=False):
+def getkey(from_, objname=None, grp=None, keyword=None, keyindex=None, upper=False, recursive=True):
     return b'PRODUCTID'
 pysis.isis.getkey = getkey
 
