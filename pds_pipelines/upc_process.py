@@ -15,7 +15,7 @@ from glob import glob
 import pvl
 import json
 from sqlalchemy import and_
-from pds_pipelines import available_modules
+from pds_pipelines.available_modules import *
 from osgeo import ogr
 
 from pysis import isis
@@ -490,7 +490,7 @@ def process(processes, workarea_pwd, logger):
             # load a function into func
             func = getattr(available_modules[module], command)
         except ValueError:
-            func = getattr(pds_pipelines, process)
+            func = getattr(pds_pipelines.available_modules, process)
             command = process
         try:
             os.chdir(workarea_pwd)
