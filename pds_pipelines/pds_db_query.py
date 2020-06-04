@@ -172,8 +172,14 @@ class PDS_DBquery(object):
             Success is succesful, Error otherwise
         """
         session = self.session_maker()
-        queryOBJ = session.query(self.processingTAB).filter(
-            self.processingTAB.key == key).first()
-        queryOBJ.error = errorxml
-        session.commit()
-        session.close()
+        try:
+            queryOBJ = session.query(self.processingTAB).filter(
+                self.processingTAB.key == key).first()
+            queryOBJ.error = errorxml
+            session.commit()
+            session.close()
+            return 'Success'
+        except:
+            session.close()
+            return 'Error'
+
