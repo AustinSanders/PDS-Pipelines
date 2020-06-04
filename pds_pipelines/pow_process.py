@@ -252,7 +252,8 @@ def main(user_args):
                             subloggyOBJ.setHelpLink(processOBJ.LogHelpLink())
                             subloggyOBJ.errorOut(eSTR)
                             loggyOBJ.AddProcess(subloggyOBJ.getSLprocess())
-                            sys.exit()
+                            RQ_work.QueueRemove(jobFile)
+                            break
 
                 else:
                     GDALcmd = ""

@@ -286,10 +286,12 @@ def main(user_args):
     DBQO2 = PDS_DBquery('JOBS')
     DBQO2.setJobsFinished(key )
 
+    errorHash.RemoveAll()
     infoHash.RemoveAll()
     loggyQueue.RemoveAll()
     zipQueue.RemoveAll()
     recipeQueue.RemoveAll()
+
 
     logger.info('Job %s is Complete', key)
 
