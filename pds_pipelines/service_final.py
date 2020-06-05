@@ -105,12 +105,13 @@ def main(user_args):
 
         fh = BytesIO()
         tree.write(fh, encoding='utf-8', xml_declaration=True)
-        testval = DBQO.addErrors(key , fh.getvalue())
+        errorxml = str(fh.getvalue(), 'utf-8').replace("\n","")
+        testval = DBQO.addErrors(key , errorxml)
         if testval == 'Success':
             logger.info('Error XML add to JOBS DB')
         elif testval == 'Error':
             logger.error('Addin Error XML to JOBS DB: Error')
-        print(fh.getvalue())
+        print(errorxml)
 
     Fdir = pow_map2_base + infoHash.Service() + '/' + key
     Wpath = scratch + key
