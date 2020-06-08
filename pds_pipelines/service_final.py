@@ -108,9 +108,9 @@ def main(user_args):
         errorxml = str(fh.getvalue(), 'utf-8').replace("\n","")
         testval = DBQO.addErrors(key , errorxml)
         if testval == 'Success':
-            logger.info('Error XML add to JOBS DB')
+            logger.info('Error XML added to JOBS DB')
         elif testval == 'Error':
-            logger.error('Addin Error XML to JOBS DB: Error')
+            logger.error('Adding Error XML to JOBS DB: Error')
         print(errorxml)
 
     Fdir = pow_map2_base + infoHash.Service() + '/' + key
