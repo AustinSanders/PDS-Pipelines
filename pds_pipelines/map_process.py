@@ -157,6 +157,8 @@ def main(user_args):
                             subloggyOBJ.setHelpLink(processOBJ.LogHelpLink())
                             subloggyOBJ.errorOut(eSTR)
                             loggyOBJ.AddProcess(subloggyOBJ.getSLprocess())
+                            RQ_work.QueueRemove(jobFile)
+                            break
 
                 else:
 
