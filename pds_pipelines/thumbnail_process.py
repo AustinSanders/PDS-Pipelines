@@ -61,7 +61,7 @@ def makedir(inputfile):
     temppath = os.path.dirname(inputfile).lower()
     # @TODO change finalpath back to production path
     #finalpath = temppath.replace('/pds_san/pds_archive/', '/home/arsanders/PDS-Pipelines/products/thumb/')
-    finalpath = temppath.replace('/pds_san/pds_archive/', '/pds_san/PDS_Derived/UPC/images/')
+    finalpath = temppath.replace(archive_base, derived_base)
 
     if not os.path.exists(finalpath):
         try:
@@ -79,7 +79,7 @@ def DB_addURL(session, isisSerial, inputfile, tid):
 
     if str(Qobj.isisid) == str(isisSerial):
 
-        outputfile = inputfile.replace('/pds_san/PDS_Derived/UPC/images/', '$thumbnail_server/')
+        outputfile = inputfile.replace(derived_base, '$thumbnail_server/')
 
         print(Qobj.upcid)
         DBinput = MetaString(upcid=Qobj.upcid,

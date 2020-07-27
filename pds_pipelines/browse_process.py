@@ -20,7 +20,7 @@ from pds_pipelines.process import Process
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.upc_models import MetaString, DataFiles
 from pds_pipelines.models.pds_models import ProcessRuns
-from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db, lock_obj, upc_error_queue
+from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db, lock_obj, upc_error_queue, archive_base, derived_base
 from pds_pipelines.upc_process import get_tid
 
 def getISISid(infile):
@@ -61,7 +61,7 @@ def makedir(inputfile):
 #    pdb.set_trace()
 
     temppath = os.path.dirname(inputfile).lower()
-    finalpath = temppath.replace('/pds_san/pds_archive/', '/pds_san/PDS_Derived/UPC/images/')
+    finalpath = temppath.replace(archive_base, derived_base)
 
     if not os.path.exists(finalpath):
         try:
@@ -81,7 +81,7 @@ def DB_addURL(session, isisSerial, inputfile, tid):
 
     if str(Qobj.isisid) == str(isisSerial):
 
-        outputfile = inputfile.replace('/pds_san/PDS_Derived/UPC/images/', '$browse_server/')
+        outputfile = inputfile.replace(derived_base, '$browse_server/')
 
         print(Qobj.upcid)
         DBinput = MetaString(upcid=Qobj.upcid,
