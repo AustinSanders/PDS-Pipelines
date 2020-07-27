@@ -52,7 +52,7 @@ def archive_expired(session, archiveID, testing_date=None):
     """
     if testing_date is None:
         td = (datetime.datetime.now(pytz.utc)
-              - datetime.timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
+              - datetime.timedelta(days=90)).strftime("%Y-%m-%d %H:%M:%S")
 
         testing_date = datetime.datetime.strptime(str(td), "%Y-%m-%d %H:%M:%S")
 
@@ -80,7 +80,7 @@ def volume_expired(session, archiveID, volume, testing_date=None):
     """
     if testing_date is None:
         td = (datetime.datetime.now(pytz.utc)
-              - datetime.timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
+              - datetime.timedelta(days=90)).strftime("%Y-%m-%d %H:%M:%S")
 
         testing_date = datetime.datetime.strptime(str(td), "%Y-%m-%d %H:%M:%S")
 
@@ -144,7 +144,7 @@ def main(user_args):
                 exit()
         # if db connection fails, there's no sense in doing this part
         td = (datetime.datetime.now(pytz.utc)
-              - datetime.timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
+              - datetime.timedelta(days=90)).strftime("%Y-%m-%d %H:%M:%S")
         testing_date = datetime.datetime.strptime(str(td), "%Y-%m-%d %H:%M:%S")
 
         if volume:

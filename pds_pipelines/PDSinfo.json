@@ -5,7 +5,7 @@
     },
     "apollo_rock": {
         "archiveid": "101",
-        "path": "/pds_san/PDS_Archive/Apollo/Rock_Sample_Images/"
+        "path": "/pds_san/PDS_Archive/Apollo/Lunar_Sample_Photographs/"
     },
     "cassini_iss": {
         "archiveid": "53",
@@ -139,6 +139,10 @@
         "archiveid": "9",
         "path": "/pds_san/PDS_Archive/Phoenix/"
     },
+    "mo_themis_geo_v1": {
+        "archiveid": "128",
+        "path": "/pds_san/PDS_Archive/Mars_Odyssey/THEMIS/USA_NASA_PDS_ODTGEO_100XX/"
+},
     "mo_themis_geo": {
         "archiveid": "118",
         "path": "/pds_san/PDS_Archive/Mars_Odyssey/THEMIS/USA_NASA_PDS_ODTGEO_200XX/"
