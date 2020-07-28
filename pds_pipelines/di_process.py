@@ -83,6 +83,9 @@ def main(user_args):
             checksum = f_hash.hexdigest()
 
             Qelement.di_pass = checksum == Qelement.checksum
+            if !Qelement.di_pass:
+                logger.warn('File %s checksum %s does not match the database entry checksum %s', 
+                            cpfile, checksum, Qelement.checksum)
 
             Qelement.di_date = datetime.datetime.now(
                 pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
