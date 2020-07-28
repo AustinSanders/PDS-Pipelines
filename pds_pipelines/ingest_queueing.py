@@ -29,6 +29,7 @@ def parse_args():
 
     parser.add_argument('--link-only', dest='ingest', action='store_false')
     parser.set_defaults(ingest=True)
+    parser.set_defaults(search='')
 
     args = parser.parse_args()
     return args
@@ -80,25 +81,16 @@ def main(user_args):
     for dirpath, _, files in os.walk(archivepath):
         for filename in files:
             fname = os.path.join(dirpath, filename)
-            if search:
-                if search in fname:
-                    try:
-                        if os.path.basename(fname) == "voldesc.cat":
-                            voldescs.append(fname)
-                        if ingest:
-                            RQ_ingest.QueueAdd((fname, archive))
-                    except Exception as e:
-                        logger.warn('File %s NOT added to Ingest Queue: %s', fname, str(e))
-                else:
-                    continue
-            else:
+            if search in fname:
                 try:
-                    if os.path.basename(fname) == "voldesc.cat":
+                    if os.path.basename(fname).lower() == "voldesc.cat":
                         voldescs.append(fname)
                     if ingest:
                         RQ_ingest.QueueAdd((fname, archive))
                 except Exception as e:
                     logger.warn('File %s NOT added to Ingest Queue: %s', fname, str(e))
+            else:
+                continue
 
     n_added = RQ_ingest.QueueSize() - queue_size
     for fpath in voldescs:
