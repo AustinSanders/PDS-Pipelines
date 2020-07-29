@@ -1,5 +1,5 @@
 create view upc_geoserver_view as (
-  select d.upcid, d.isisid, d.productid, d.source, d.detached_label, d.instrumentid, d.targetid, d.level, t.targetname, 
+  select d.upcid, d.isisid, d.productid, d.source, d.detached_label, d.instrumentid, d.targetid, d.level, t.targetname, t.displayname, 
        i.instrument, j.jsonkeywords, s.processdate, s.starttime, s.solarlongitude, s.meangroundresolution, s.minimumemission, 
        s.maximumemission, s.emissionangle, s.minimumincidence, s.maximumincidence, s.incidenceangle, s.minimumphase, 
        s.maximumphase, s.phaseangle, s.err_flag, s.isisfootprint 
