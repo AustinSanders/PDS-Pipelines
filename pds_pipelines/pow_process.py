@@ -98,7 +98,8 @@ def main(user_args):
         process_props = {'no_extension_inputfile': no_extension_inputfile,
                          'output_bittype': RHash.OutBit(),
                          'spatial_summing': label.get('SAMPLING_FACTOR'),
-                         'cross_track_summing': label.get('CROSSTRACK_SUMMING')}
+                         'cross_track_summing': label.get('CROSSTRACK_SUMMING'),
+                         'band_split': bandSplit[1]}
         processes, workarea_pwd = generate_processes(jobFile, recipe_string, None, process_props = process_props)
         '''
         for element in RQ_recipe.RecipeGet():
