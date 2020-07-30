@@ -71,48 +71,36 @@
     },
     "reduced": {
         "recipe": {
-            "mroctx2isis": {
-                "from_": "value",
-                "to": "value"
+            "isis.mroctx2isis": {
+                "from_": "{{inputfile}}",
+                "to": "{{no_extension_inputfile}}.cub"
             },
-            "spiceinit": {
-                "from_": "value",
+            "isis.spiceinit": {
+                "from_": "{{no_extension_inputfile}}.cub",
                 "cknadir": "yes",
                 "cksmithed": "yes"
             },
-            "ctxcal": {
-                "from_": "value",
-                "to": "value"
+            "isis.ctxcal": {
+                "from_": "{{no_extension_inputfile}}.cub",
+                "to": "{{no_extension_inputfile}}.cal.cub"
             },
-            "reduce": {
-                "from_": "value",
-                "to": "value",
-                "algorithm": "average",
-                "mode": "scale",
-                "sscale": "value",
-                "lscale": "value",
-                "validper": "1",
-                "vper_replace": "nearest"
-            },
-            "isis2std": {
-                "from_": "value",
-                "to": "value",
-                "format": "jpeg",
-                "quality": "60",
-                "stretch": "linear"
-            }
+            "gdal.gdal_translate": {
+            		"outputType": "gdal.GDT_Byte",
+            		"format" : "JPEG",
+            		"scaleParams": "",
+            		"width" : "{{width}}" ,
+            		"height" : "{{height}}",
+            		"src" : "{{no_extension_inputfile}}.cal.cub",
+            		"dest": "{{final_path}}{{no_extension_inputfile}}.{{proc}}.jpg"
+      	    }
         },
 	"browse": {
-	    "minlines": "200",
-	    "minsamples": "200",
-	    "maxlines": "900",
-	    "maxsamples": "900"
+	    "width": "0",
+	    "height": "900",
 	},
 	"thumbnail": {
-	    "minlines": "50",
-	    "minsamples": "50",
-	    "maxlines": "300",
-	    "maxsamples": "300"
+	    "width": "0"
+	    "height": "300",
 	}
     },
     "projected": {
