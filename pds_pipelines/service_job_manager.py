@@ -17,7 +17,6 @@ from pds_pipelines.make_map import MakeMap
 from pds_pipelines.hpc_job import HPCjob
 from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.config import recipe_base, pds_log, scratch, archive_base, default_namespace, slurm_log, cmd_dir, pds_info, lock_obj
-from pds_pipelines.upc_process import generate_processes
 
 
 class jobXML(object):
@@ -891,7 +890,13 @@ def main(user_args):
             last_out_file = list(recipeOBJ.items())[-1][-1]['to']
             cubeatt_dict['from_'] = last_out_file
             cubeatt_dict['to'] = '{{no_extension_inputfile}}.cubeatt.cub'
-            recipeOBJ['isis.cubeatt-bit'] = cubeatt_dict
+
+            if xmlOBJ.getOutBit().lower() == 'unsignedbyte':
+                cubeatt_dict['to'] += '+lsb+tile+attached+unsignedbyte+1:254'
+            elif xmlOBJ.getOutBit().lower() == 'signedword':
+                cubeatt_dict['to'] += '+lsb+tile+attached+signedword+-32765:32765'
+
+            recipeOBJ['isis.cubeatt'] = cubeatt_dict
     elif xmlOBJ.getProcess() == 'MAP2':
         if xmlOBJ.getOutBit().upper() != 'INPUT':
             if xmlOBJ.getOutBit().upper() == 'UNSIGNEDBYTE' or xmlOBJ.getOutBit().upper() == 'SIGNEDWORD':
