@@ -7,6 +7,7 @@ import logging
 import shutil
 import argparse
 import pvl
+import json
 
 from pysis import isis
 from pysis.exceptions import ProcessError
@@ -15,9 +16,9 @@ from pds_pipelines.config import lock_obj, scratch, pds_log, default_namespace, 
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.redis_hash import RedisHash
-from pds_pipelines.process import Process
 from pds_pipelines.pds_logging import Loggy
 from pds_pipelines.pds_process_logging import SubLoggy
+from pds_pipelines.upc_process import generate_processes, process
 
 
 def parse_args():
@@ -56,10 +57,7 @@ def main(user_args):
     RQ_lock = RedisLock(lock_obj)
     RQ_lock.add({'POW':'1'})
 
-    if int(RQ_file.QueueSize()) == 0:
-        print("No Files Found in Redis Queue")
-    elif RQ_lock.available('POW'):
-        print(RQ_file.getQueueName())
+    if int(RQ_file.QueueSize()) > 0 and RQ_lock.available('POW'):
         jobFile = RQ_file.Qfile2Qwork(RQ_file.getQueueName(),
                                       RQ_work.getQueueName())
 
@@ -94,6 +92,16 @@ def main(user_args):
 
 
         status = 'success'
+        recipe_string = RQ_recipe.QueueGet()
+        label = pvl.load(inputFile)
+        print(label)
+        print(inputFile)
+        process_props = {'output_bittype': RHash.OutBit(),
+                         'spatial_summing': label['SAMPLING_FACTOR'],
+                         }
+        processes, infile, _, _, workarea_pwd = generate_processes(infile, recipe_string, None)
+        print(processes)
+        '''
         for element in RQ_recipe.RecipeGet():
             if status == 'error':
                 break
@@ -304,6 +312,7 @@ def main(user_args):
                             'http://www.gdal.org/gdal_translate.html')
                         subloggyOBJ.errorOut('Process GDAL translate :: Error')
                         loggyOBJ.AddProcess(subloggyOBJ.getSLprocess())
+        '''
 
         if status == 'success':
 

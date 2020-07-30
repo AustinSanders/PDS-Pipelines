@@ -17,6 +17,7 @@ from pds_pipelines.make_map import MakeMap
 from pds_pipelines.hpc_job import HPCjob
 from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.config import recipe_base, pds_log, scratch, archive_base, default_namespace, slurm_log, cmd_dir, pds_info, lock_obj
+from pds_pipelines.upc_process import generate_processes
 
 
 class jobXML(object):
@@ -804,10 +805,11 @@ def main(user_args):
     # ** End Map Template Stuff **
 
     logger.info('Building Recipe')
-    recipeOBJ = Recipe()
     if xmlOBJ.getProcess() == 'POW':
-        recipeOBJ.AddJsonFile(recipe_base + xmlOBJ.getCleanName() + '.json', "pow")
+        with open(recipe_base + xmlOBJ.getCleanName() + '.json', 'r') as json_file:
+            recipeOBJ = json.load(json_file)['pow']['recipe']
     elif xmlOBJ.getProcess() == 'MAP2':
+        recipeOBJ = Recipe()
         recipeOBJ.AddJsonFile(recipe_base + "map2_process.json", "map")
     # Test for stretch and add to recipe
     # if MAP2 and 8 or 16 bit run stretch to set range
@@ -842,13 +844,13 @@ def main(user_args):
                 strpairs = '0:-32765 ' + xmlOBJ.STR_PercentMin() + ':-32765 ' + \
                     xmlOBJ.STR_PercentMax() + ':32765 100:32765'
 
-            STRprocessOBJ = Process()
-            STRprocessOBJ.newProcess('stretch')
-            STRprocessOBJ.AddParameter('from_', 'value')
-            STRprocessOBJ.AddParameter('to', 'value')
-            STRprocessOBJ.AddParameter('usepercentages', 'yes')
-            STRprocessOBJ.AddParameter('pairs', strpairs)
-            recipeOBJ.AddProcess(STRprocessOBJ.getProcess())
+            stretch_dict = {}
+            last_out_file = list(recipeOBJ.items())[-1][-1]['to']
+            stretch_dict['from_'] = last_out_file
+            stretch_dict['to'] = '{{no_extension_inputfile}}.stretch.cub'
+            stretch_dict['usepercentages'] = 'yes'
+            stretch_dict['pairs'] = strpairs
+            recipeOBJ['isis.stretch'] = stretch_dict
 
     elif strType == 'GaussStretch':
         STRprocessOBJ = Process()
@@ -885,11 +887,11 @@ def main(user_args):
     # Test for output bit type and add to recipe
     if xmlOBJ.getProcess() == 'POW':
         if xmlOBJ.getOutBit().upper() == 'UNSIGNEDBYTE' or xmlOBJ.getOutBit().upper() == 'SIGNEDWORD':
-            CAprocessOBJ = Process()
-            CAprocessOBJ.newProcess('cubeatt-bit')
-            CAprocessOBJ.AddParameter('from_', 'value')
-            CAprocessOBJ.AddParameter('to', 'value')
-            recipeOBJ.AddProcess(CAprocessOBJ.getProcess())
+            cubeatt_dict = {}
+            last_out_file = list(recipeOBJ.items())[-1][-1]['to']
+            cubeatt_dict['from_'] = last_out_file
+            cubeatt_dict['to'] = '{{no_extension_inputfile}}.cubeatt.cub'
+            recipeOBJ['isis.cubeatt-bit'] = cubeatt_dict
     elif xmlOBJ.getProcess() == 'MAP2':
         if xmlOBJ.getOutBit().upper() != 'INPUT':
             if xmlOBJ.getOutBit().upper() == 'UNSIGNEDBYTE' or xmlOBJ.getOutBit().upper() == 'SIGNEDWORD':
@@ -921,18 +923,37 @@ def main(user_args):
             Oformat = 'JP2KAK'
         if Oformat == 'GeoTiff-BigTiff':
             Oformat = 'GTiff'
-        GDALprocessOBJ = Process()
-        GDALprocessOBJ.newProcess('gdal_translate')
+        gdal_translate_dict = {}
+
+        def GDAL_OBit(ibit):
+            bitDICT = {'unsignedbyte': 'Byte',
+                       'signedword': 'Int16',
+                       'real': 'Float32'
+                       }
+            try:
+                return bitDICT[ibit]
+            except KeyError:
+                raise Exception(f"Unsupported ibit type given {ibit}. " +
+                                f"Currently supported bit types are {list(bitDICT.keys())}")
+        def GDAL_Creation(format):
+            cDICT = {'JPEG': 'quality=100',
+                     'JP2KAK': 'quality=100',
+                     'GTiff': 'bigtiff=if_safer'
+                     }
+            try:
+                return cDICT[format]
+            except KeyError:
+                raise Exception(f"Unsupported format {format}. " +
+                                f"Currently supported bit types are {list(cDICT.keys())}")
+
         if xmlOBJ.getOutBit() != 'input':
-            GDALprocessOBJ.AddParameter(
-                '-ot', GDALprocessOBJ.GDAL_OBit(xmlOBJ.getOutBit()))
-        GDALprocessOBJ.AddParameter('-of', Oformat)
+            gdal_translate_dict['-ot'] = GDAL_OBit(xmlOBJ.getOutBit())
+        gdal_translate_dict['-of'] = Oformat
 
         if Oformat == 'GTiff' or Oformat == 'JP2KAK' or Oformat == 'JPEG':
-            GDALprocessOBJ.AddParameter(
-                '-co', GDALprocessOBJ.GDAL_Creation(Oformat))
+            gdal_translate_dict['-co'] = GDAL_Creation(Oformat)
 
-        recipeOBJ.AddProcess(GDALprocessOBJ.getProcess())
+        recipeOBJ['gdal_translate'] = gdal_translate_dict
     # set up pds2isis and add to recipe
     elif Oformat == 'PDS':
         pdsProcessOBJ = Process()
@@ -946,44 +967,43 @@ def main(user_args):
 
         recipeOBJ.AddProcess(pdsProcessOBJ.getProcess())
 
-    for item in recipeOBJ.getProcesses():
-        processOBJ = Process()
-        processOBJ.ProcessFromRecipe(item, recipeOBJ.getRecipe())
+    # for item in recipeOBJ.getProcesses():
+    #     processOBJ = Process()
+    #     processOBJ.ProcessFromRecipe(item, recipeOBJ.getRecipe())
 
-        if item == 'cam2map':
+    if 'cam2map' in recipeOBJ.keys():
 
-            processOBJ.updateParameter('map', MAPfile)
+        recipeOBJ['isis.cam2map']['map'] = MAPfile
 
-            if xmlOBJ.getResolution() is None:
-                processOBJ.updateParameter('pixres', 'CAMERA')
-            else:
-                processOBJ.updateParameter('pixres', 'MAP')
+        if xmlOBJ.getResolution() is None:
+            recipeOBJ['isis.cam2map']['pixres'] = 'CAMERA'
+        else:
+            recipeOBJ['isis.cam2map']['pixres'] = 'MAP'
 
-            if xmlOBJ.getRangeType() is None:
-                processOBJ.updateParameter('defaultrange', 'MINIMIZE')
-            elif xmlOBJ.getRangeType() == 'smart' or xmlOBJ.getRangeType() == 'fill':
-                processOBJ.updateParameter('defaultrange', 'CAMERA')
-                processOBJ.AddParameter('trim', 'YES')
+        if xmlOBJ.getRangeType() is None:
+            recipeOBJ['isis.cam2map']['defaultrange'] = 'MINIMIZE'
+        elif xmlOBJ.getRangeType() == 'smart' or xmlOBJ.getRangeType() == 'fill':
+            recipeOBJ['isis.cam2map']['defaultrange'] = 'CAMERA'
+            recipeOBJ['isis.cam2map']['trim'] = 'YES'
 
-        elif item == 'map2map':
-            processOBJ.updateParameter('map', MAPfile)
-            if xmlOBJ.getResolution() is None:
-                processOBJ.updateParameter('pixres', 'FROM')
-            else:
-                processOBJ.updateParameter('pixres', 'MAP')
+    elif 'map2map' in recipeOBJ.keys():
+        recipeOBJ['isis.map2map']['map'] = MAPfile
+        if xmlOBJ.getResolution() is None:
+            recipeOBJ['isis.map2map']['pixres'] = 'FROM'
+        else:
+            recipeOBJ['isis.map2map']['pixres'] = 'MAP'
 
-            if xmlOBJ.OutputGeometry() is not None:
-                processOBJ.updateParameter('defaultrange', 'MAP')
-                processOBJ.AddParameter('trim', 'YES')
-            else:
-                processOBJ.updateParameter('defaultrange', 'FROM')
+        if xmlOBJ.OutputGeometry() is not None:
+            recipeOBJ['isis.map2map']['defaultrange'] = 'MAP'
+            recipeOBJ['isis.map2map']['trim'] = 'YES'
+        else:
+            recipeOBJ['isis.map2map']['defaultrange'] = 'FROM'
 
-        processJSON = processOBJ.Process2JSON()
-        try:
-            RQ_recipe.QueueAdd(processJSON)
-            logger.info('Recipe Element Added to Redis: %s : Success', item)
-        except Exception as e:
-            logger.warn('Recipe Element NOT Added to Redis: %s', item)
+    try:
+        RQ_recipe.QueueAdd(json.dumps(recipeOBJ))
+        logger.info('Recipe Added to Redis')
+    except Exception as e:
+        logger.warn('Recipe NOT Added to Redis: %s', recipeOBJ)
 
     # HPC job stuff
     logger.info('HPC Cluster job Submission Starting')
