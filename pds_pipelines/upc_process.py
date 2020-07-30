@@ -474,7 +474,7 @@ def generate_processes(inputfile, recipe_string, logger = None, process_props = 
                                  process_props=process_props)
     processes = json.loads(recipe_str)
 
-    return processes, no_extension_inputfile, cam_info_file, footprint_file, workarea_pwd
+    return processes, workarea_pwd
 
 def process(processes, workarea_pwd, logger):
     # iterate through functions from the processes dictionary
