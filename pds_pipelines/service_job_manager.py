@@ -970,8 +970,7 @@ def main(user_args):
     # for item in recipeOBJ.getProcesses():
     #     processOBJ = Process()
     #     processOBJ.ProcessFromRecipe(item, recipeOBJ.getRecipe())
-
-    if 'cam2map' in recipeOBJ.keys():
+    if 'isis.cam2map' in recipeOBJ.keys():
 
         recipeOBJ['isis.cam2map']['map'] = MAPfile
 
@@ -986,7 +985,7 @@ def main(user_args):
             recipeOBJ['isis.cam2map']['defaultrange'] = 'CAMERA'
             recipeOBJ['isis.cam2map']['trim'] = 'YES'
 
-    elif 'map2map' in recipeOBJ.keys():
+    elif 'isis.map2map' in recipeOBJ.keys():
         recipeOBJ['isis.map2map']['map'] = MAPfile
         if xmlOBJ.getResolution() is None:
             recipeOBJ['isis.map2map']['pixres'] = 'FROM'
