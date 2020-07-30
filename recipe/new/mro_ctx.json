@@ -5,15 +5,15 @@
         "recipe": {
             "isis.mroctx2isis": {
                 "from_": "{{inputfile}}",
-                "to": "{{no_extension_inputfile}}.cub"
+                "to": "{{process_props.no_extension_inputfile}}.cub"
             },
             "isis.spiceinit": {
-                "from_": "{{no_extension_inputfile}}.cub",
+                "from_": "{{process_props.no_extension_inputfile}}.cub",
                 "cknadir": "yes",
                 "cksmithed": "yes"
             },
             "isis.footprintinit": {
-                "from_": "{{no_extension_inputfile}}.cub",
+                "from_": "{{process_props.no_extension_inputfile}}.cub",
                 "increaseprecision": "yes",
                 "inctype": "vertices",
                 "numvertices": "40",
@@ -21,8 +21,8 @@
                 "maxincidence": "120.0"
             },
             "isis.caminfo": {
-                "from_": "{{no_extension_inputfile}}.cub",
-                "to": "{{cam_info_file}}",
+                "from_": "{{process_props.no_extension_inputfile}}.cub",
+                "to": "{{process_props.cam_info_file}}",
                 "geometry": "yes",
                 "isislabel": "yes",
                 "originallabel": "yes",
@@ -44,24 +44,24 @@
         "recipe": {
             "isis.mroctx2isis": {
                 "from_": "{{inputfile}}",
-                "to": "{{no_extension_inputfile}}.cub"
+                "to": "{{process_props.no_extension_inputfile}}.cub"
             },
             "isis.spiceinit": {
-                "from_": "{{no_extension_inputfile}}.cub",
+                "from_": "{{process_props.no_extension_inputfile}}.cub",
                 "cknadir": "yes",
                 "cksmithed": "yes"
             },
             "isis.ctxcal": {
-                "from_": "{{no_extension_inputfile}}.cub",
-                "to": "{{no_extension_inputfile}}.cal.cub"
+                "from_": "{{process_props.no_extension_inputfile}}.cub",
+                "to": "{{process_props.no_extension_inputfile}}.cal.cub"
             },
             "isis.ctxevenodd": {
-                "from_": "{{no_extension_inputfile}}.cal.cub",
-                "to": "{{no_extension_inputfile}}.cal.eo.cub"
+                "from_": "{{process_props.no_extension_inputfile}}.cal.cub",
+                "to": "{{process_props.no_extension_inputfile}}.cal.eo.cub"
             },
             "isis.cam2map": {
-                "from": "{{no_extension_inputfile}}.cal.eo.cub",
-                "to": "{{no_extension_inputfile}}.proj.cub",
+                "from": "{{process_props.no_extension_inputfile}}.cal.eo.cub",
+                "to": "{{process_props.no_extension_inputfile}}.proj.cub",
                 "map": "value",
                 "matchmap": "no",
                 "pixres": "value",

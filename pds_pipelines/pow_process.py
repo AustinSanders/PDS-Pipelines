@@ -96,10 +96,12 @@ def main(user_args):
         label = pvl.load(inputFile)
         print(label)
         print(inputFile)
-        process_props = {'output_bittype': RHash.OutBit(),
-                         'spatial_summing': label['SAMPLING_FACTOR'],
-                         }
-        processes, infile, _, _, workarea_pwd = generate_processes(infile, recipe_string, None)
+        no_extension_inputfile = os.path.splitext(inputfile)[0]
+        process_props = {'no_extension_inputfile': no_extension_inputfile,
+                         'output_bittype': RHash.OutBit(),
+                         'spatial_summing': label.get('SAMPLING_FACTOR'),
+                         'cross_track_summing': label.get('CROSSTRACK_SUMMING')}
+        processes, infile, _, _, workarea_pwd = generate_processes(infile, recipe_string, None, process_props = process_props)
         print(processes)
         '''
         for element in RQ_recipe.RecipeGet():

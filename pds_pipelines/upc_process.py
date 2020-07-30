@@ -461,22 +461,17 @@ def create_json_keywords_record(cam_info_pvl, upc_id, input_file, failing_comman
         session.commit()
     session.close()
 
-def generate_processes(inputfile, recipe_string, logger):
-    logger.info('Starting Process: %s', inputfile)
+def generate_processes(inputfile, recipe_string, logger = None, process_props = {}):
+    print(process_props)
+    # logger.info('Starting Process: %s', inputfile)
 
     # Working directory for processing should be same as inputfile
     workarea_pwd = os.path.dirname(inputfile)
 
-    logger.debug("Beginning processing on %s\n", inputfile)
-    no_extension_inputfile = os.path.splitext(inputfile)[0]
-    cam_info_file = no_extension_inputfile + '_caminfo.pvl'
-    footprint_file = no_extension_inputfile + '_footprint.json'
-
+    # logger.debug("Beginning processing on %s\n", inputfile)
     template = jinja2.Template(recipe_string)
     recipe_str = template.render(inputfile=inputfile,
-                                 no_extension_inputfile=no_extension_inputfile,
-                                 cam_info_file=cam_info_file,
-                                 footprint_file=footprint_file)
+                                 process_props=process_props)
     processes = json.loads(recipe_str)
 
     return processes, no_extension_inputfile, cam_info_file, footprint_file, workarea_pwd
@@ -587,7 +582,15 @@ def main(user_args):
             except KeyError:
                 search_term_mapping = {}
 
-        processes, infile, caminfoOUT, footprint_file, workarea_pwd = generate_processes(inputfile, recipe_string, logger)
+        no_extension_inputfile = os.path.splitext(inputfile)[0]
+        cam_info_file = no_extension_inputfile + '_caminfo.pvl'
+        footprint_file = no_extension_inputfile + '_footprint.json'
+
+        process_props = {'no_extension_inputfile': no_extension_inputfile,
+                         'cam_info_file': cam_info_file,
+                         'footprint_file': footprint_file}
+
+        processes, infile, caminfoOUT, footprint_file, workarea_pwd = generate_processes(inputfile, recipe_string, logger, process_props=process_props)
         failing_command = process(processes, workarea_pwd, logger)
 
         pds_label = pvl.load(inputfile)
