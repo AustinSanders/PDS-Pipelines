@@ -55,10 +55,12 @@
                 "from_": "{{process_props.no_extension_inputfile}}.cub",
                 "to": "{{process_props.no_extension_inputfile}}.cal.cub"
             },
+            {% if process_props.spatial_summing == 1 %}
             "isis.ctxevenodd": {
                 "from_": "{{process_props.no_extension_inputfile}}.cal.cub",
                 "to": "{{process_props.no_extension_inputfile}}.cal.eo.cub"
             },
+            {% endif %}
             "isis.cam2map": {
                 "from": "{{process_props.no_extension_inputfile}}.cal.eo.cub",
                 "to": "{{process_props.no_extension_inputfile}}.proj.cub",
