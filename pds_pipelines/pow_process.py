@@ -95,12 +95,10 @@ def main(user_args):
         recipe_string = RQ_recipe.QueueGet()
         label = pvl.load(inputFile)
         no_extension_inputfile = workarea + os.path.splitext(os.path.basename(jobFile))[0]
-        process_props = {'no_extension_inputfile': no_extension_inputfile,
-                         'output_bittype': RHash.OutBit(),
-                         'spatial_summing': label.get('SAMPLING_FACTOR'),
-                         'cross_track_summing': label.get('CROSSTRACK_SUMMING'),
-                         'band_split': bandSplit[1]}
+        process_props = {'no_extension_inputfile': no_extension_inputfile}
         processes, workarea_pwd = generate_processes(jobFile, recipe_string, None, process_props = process_props)
+        print(processes)
+        # process(processes, workarea_pwd, logger)
         '''
         for element in RQ_recipe.RecipeGet():
             if status == 'error':
@@ -228,8 +226,6 @@ def main(user_args):
                     else:
                         processOBJ.updateParameter('from_', infile)
                         processOBJ.updateParameter('to', outfile)
-
-                    print(processOBJ.getProcess())
 
                     for k, v in processOBJ.getProcess().items():
                         func = getattr(isis, k)
