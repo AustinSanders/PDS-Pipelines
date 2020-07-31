@@ -559,6 +559,191 @@ class jobXML(object):
 
         return listArray
 
+def generate_pow_recipe(xmlOBJ, pds_label):
+    with open(recipe_base + xmlOBJ.getCleanName() + '.json', 'r') as json_file:
+            recipeOBJ = json.load(json_file)['pow']['recipe']
+
+    testBitType = xmlOBJ.getOutBit().upper()
+
+    strType = xmlOBJ.STR_Type()
+    stretch_dict = {}
+    stretch_dict['from_'] = list(recipeOBJ.items())[-1][-1]['to']
+    stretch_dict['to'] = '{{process_props.no_extension_inputfile}}.stretch.cub'
+    if strType == 'StretchPercent' and xmlOBJ.STR_PercentMin() is not None and xmlOBJ.STR_PercentMax() is not None and testBitType != 'REAL':
+        if float(xmlOBJ.STR_PercentMin()) != 0 and float(xmlOBJ.STR_PercentMax()) != 100:
+            if testBitType == 'UNSIGNEDBYTE':
+                strpairs = '0:1 ' + xmlOBJ.STR_PercentMin() + ':1 ' + \
+                    xmlOBJ.STR_PercentMax() + ':254 100:254'
+            elif testBitType == 'SIGNEDWORD':
+                strpairs = '0:-32765 ' + xmlOBJ.STR_PercentMin() + ':-32765 ' + \
+                    xmlOBJ.STR_PercentMax() + ':32765 100:32765'
+
+            stretch_dict['usepercentages'] = 'yes'
+            stretch_dict['pairs'] = strpairs
+            recipeOBJ['isis.stretch'] = stretch_dict
+
+    elif strType == 'GaussStretch':
+        stretch_dict['gsigma'] = xmlOBJ.STR_GaussSigma()
+        recipeOBJ['isis.gaussstretch'] = stretch_dict
+
+    elif strType == 'HistogramEqualization':
+        if xmlOBJ.STR_PercentMin() is None:
+            stretch_dict['minper'] = '0'
+        else:
+            stretch_dict['minper'] = xmlOBJ.STR_PercentMin()
+        if xmlOBJ.STR_PercentMax() is None:
+            stretch_dict['maxper'] = '100'
+        else:
+            stretch_dict['maxper'] = xmlOBJ.STR_PercentMax()
+        recipeOBJ['isis.histeq'] = stretch_dict
+
+    elif strType == 'SigmaStretch':
+        stretch_dict['variance'] = xmlOBJ.STR_SigmaVariance()
+        recipeOBJ['sigmastretch'] = stretch_dict
+
+    if xmlOBJ.getOutBit().upper() == 'UNSIGNEDBYTE' or xmlOBJ.getOutBit().upper() == 'SIGNEDWORD':
+        cubeatt_dict = {}
+        last_out_file = list(recipeOBJ.items())[-1][-1]['to']
+        cubeatt_dict['from_'] = last_out_file
+        cubeatt_dict['to'] = '{{process_props.no_extension_inputfile}}.cubeatt.cub'
+
+        if xmlOBJ.getOutBit().lower() == 'unsignedbyte':
+            cubeatt_dict['to'] += '+lsb+tile+attached+unsignedbyte+1:254'
+        elif xmlOBJ.getOutBit().lower() == 'signedword':
+            cubeatt_dict['to'] += '+lsb+tile+attached+signedword+-32765:32765'
+
+        recipeOBJ['isis.cubeatt'] = cubeatt_dict
+
+    recipeOBJ['isis.cam2map']['map'] = MAPfile
+
+    if xmlOBJ.getResolution() is None:
+        recipeOBJ['isis.cam2map']['pixres'] = 'CAMERA'
+    else:
+        recipeOBJ['isis.cam2map']['pixres'] = 'MAP'
+
+    if xmlOBJ.getRangeType() is None:
+        recipeOBJ['isis.cam2map']['defaultrange'] = 'MINIMIZE'
+    elif xmlOBJ.getRangeType() == 'smart' or xmlOBJ.getRangeType() == 'fill':
+        recipeOBJ['isis.cam2map']['defaultrange'] = 'CAMERA'
+        recipeOBJ['isis.cam2map']['trim'] = 'YES'
+
+    pds_label = pvl.load(Input_file)
+    if 'isis.ctxevenodd' in recipe_processes:
+        spatial_summing = pds_label.get('SAMPLING_FACTOR')
+        if spatial_summing != 1:
+            recipeOBJ.pop('isis.ctxevenodd')
+
+    if 'isis.mocevenodd' in recipe_processes:
+        cross_track_summing = pds_label.get('CROSSTRACK_SUMMING')
+        if cross_track_summing != 1:
+            recipeOBJ.pop('isis.mocevenodd')
+
+    if 'isis.mocnoise50' in recipe_processes:
+        cross_track_summing = pds_label.get('CROSSTRACK_SUMMING')
+        if cross_track_summing != 1:
+            recipeOBJ.pop('isis.mocnoise50')
+
+    return recipeOBJ
+
+def generate_map2_recipe(xmlOBJ, isis_label):
+    with open(recipe_base + 'map2_process.json', 'r') as json_file:
+            recipeOBJ = json.load(json_file)['map']['recipe']
+
+    if xmlOBJ.getOutBit() == 'input':
+        testBitType = str(isis_label['IsisCube']['Core']['Pixels']['Type']).upper()
+    else:
+        testBitType = xmlOBJ.getOutBit().upper()
+
+    strType = xmlOBJ.STR_Type()
+    stretch_dict = {}
+    stretch_dict['from_'] = list(recipeOBJ.items())[-1][-1]['to']
+    stretch_dict['to'] = '{{process_props.no_extension_inputfile}}.stretch.cub'
+
+    if xmlOBJ.getProcess() == 'MAP2' and strType is None:
+        isis_pixel_type = str(isis_label['IsisCube']['Core']['Pixels']['Type']).upper()
+        if isis_pixel_type != xmlOBJ.getOutBit().upper() and
+           isis_pixel_type != 'REAL':
+            if isis_pixel_type == 'SIGNEDWORD':
+                strpairs = '0:-32765 0:-32765 100:32765 100:32765'
+            elif isis_pixel_type == 'UNSIGNEDBYTE':
+                strpairs = '0:1 0:1 100:254 100:254'
+
+            stretch_dict['usepercentages'] = 'yes'
+            stretch_dict['pairs'] = strpairs
+            recipeOBJ['isis.stretch'] = stretch_dict
+
+    if strType == 'StretchPercent' and xmlOBJ.STR_PercentMin() is not None and xmlOBJ.STR_PercentMax() is not None and testBitType != 'REAL':
+        if float(xmlOBJ.STR_PercentMin()) != 0 and float(xmlOBJ.STR_PercentMax()) != 100:
+            if testBitType == 'UNSIGNEDBYTE':
+                strpairs = '0:1 ' + xmlOBJ.STR_PercentMin() + ':1 ' + \
+                    xmlOBJ.STR_PercentMax() + ':254 100:254'
+            elif testBitType == 'SIGNEDWORD':
+                strpairs = '0:-32765 ' + xmlOBJ.STR_PercentMin() + ':-32765 ' + \
+                    xmlOBJ.STR_PercentMax() + ':32765 100:32765'
+
+            stretch_dict['usepercentages'] = 'yes'
+            stretch_dict['pairs'] = strpairs
+            recipeOBJ['isis.stretch'] = stretch_dict
+
+    elif strType == 'GaussStretch':
+        stretch_dict['gsigma'] = xmlOBJ.STR_GaussSigma()
+        recipeOBJ['isis.gaussstretch'] = stretch_dict
+
+    elif strType == 'HistogramEqualization':
+        if xmlOBJ.STR_PercentMin() is None:
+            stretch_dict['minper'] = '0'
+        else:
+            stretch_dict['minper'] = xmlOBJ.STR_PercentMin()
+        if xmlOBJ.STR_PercentMax() is None:
+            stretch_dict['maxper'] = '100'
+        else:
+            stretch_dict['maxper'] = xmlOBJ.STR_PercentMax()
+        recipeOBJ['isis.histeq'] = stretch_dict
+
+    elif strType == 'SigmaStretch':
+        stretch_dict['variance'] = xmlOBJ.STR_SigmaVariance()
+        recipeOBJ['sigmastretch'] = stretch_dict
+
+    output_bit_type = xmlOBJ.getOutBit().upper()
+    if output_bit_type != 'INPUT':
+        if output_bit_type == 'UNSIGNEDBYTE' or output_bit_type == 'SIGNEDWORD':
+            if str(isis_label['IsisCube']['Core']['Pixels']['Type']).upper() != output_bit_type:
+                cubeatt_dict = {}
+                cubeatt_dict['from_'] = list(recipeOBJ.items())[-1][-1]['to']
+                cubeatt_dict['to'] = '{{process_props.no_extension_inputfile}}.cubeatt.cub'
+
+                if output_bit_type.lower() == 'unsignedbyte':
+                    cubeatt_dict['to'] += '+lsb+tile+attached+unsignedbyte+1:254'
+                elif output_bit_type.lower() == 'signedword':
+                    cubeatt_dict['to'] += '+lsb+tile+attached+signedword+-32765:32765'
+
+                recipeOBJ['isis.cubeatt'] = cubeatt_dict
+
+    if xmlOBJ.getGridInterval() is not None:
+        grid_dict = {}
+        grid_dict['from_'] = list(recipeOBJ.items())[-1][-1]['to'].split('+')[0]
+        grid_dict['to'] = '{{process_props.no_extension_inputfile}}.grid.cub'
+        grid_dict['latinc'] = xmlOBJ.getGridInterval()
+        grid_dict['loninc'] = xmlOBJ.getGridInterval()
+        grid_dict['outline'] = 'yes'
+        grid_dict['boundary'] = 'yes'
+        grid_dict['linewidth'] = '3'
+        recipeOBJ['isis.grid'] = grid_dict
+
+    recipeOBJ['isis.map2map']['map'] = MAPfile
+    if xmlOBJ.getResolution() is None:
+        recipeOBJ['isis.map2map']['pixres'] = 'FROM'
+    else:
+        recipeOBJ['isis.map2map']['pixres'] = 'MAP'
+
+    if xmlOBJ.OutputGeometry() is not None:
+        recipeOBJ['isis.map2map']['defaultrange'] = 'MAP'
+        recipeOBJ['isis.map2map']['trim'] = 'YES'
+    else:
+        recipeOBJ['isis.map2map']['defaultrange'] = 'FROM'
+
+    return recipeOBJ
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Service job manager')
@@ -711,14 +896,14 @@ def main(user_args):
                 tempFile = tempsplit[0]
             else:
                 tempFile = Input_file
-            label = pvl.load(tempFile)
-    # Output final file naming
+
+            # Output final file naming
             Tbasename = os.path.splitext(os.path.basename(tempFile))[0]
             splitBase = Tbasename.split('_')
 
             labP = xmlOBJ.getProjection()
             if labP == 'INPUT':
-                lab_proj = label['IsisCube']['Mapping']['ProjectionName'][0:4]
+                lab_proj = isis_label['IsisCube']['Mapping']['ProjectionName'][0:4]
             else:
                 lab_proj = labP[0:4]
 
@@ -738,7 +923,6 @@ def main(user_args):
             RedisH.MAPname(basefinal)
 
         try:
-            label = pvl.load(Input_file)
             basename = os.path.splitext(os.path.basename(Input_file))[0]
             RQ_file.QueueAdd(Input_file)
             logger.info('File %s Added to Redis Queue', Input_file)
@@ -753,7 +937,7 @@ def main(user_args):
     mapOBJ = MakeMap()
 
     if xmlOBJ.getProcess() == 'MAP2' and xmlOBJ.getProjection() == 'INPUT':
-        proj = label['IsisCube']['Mapping']['ProjectionName']
+        proj = isis_label['IsisCube']['Mapping']['ProjectionName']
         mapOBJ.Projection(proj)
     else:
         mapOBJ.Projection(xmlOBJ.getProjection())
@@ -806,121 +990,14 @@ def main(user_args):
     # ** End Map Template Stuff **
 
     logger.info('Building Recipe')
+
     if xmlOBJ.getProcess() == 'POW':
-        with open(recipe_base + xmlOBJ.getCleanName() + '.json', 'r') as json_file:
-            recipeOBJ = json.load(json_file)['pow']['recipe']
+        pds_label = pvl.load(Input_file)
+        generate_pow_recipe(xmlOBJ, pds_label)
+
     elif xmlOBJ.getProcess() == 'MAP2':
-        recipeOBJ = Recipe()
-        recipeOBJ.AddJsonFile(recipe_base + "map2_process.json", "map")
-    # Test for stretch and add to recipe
-    # if MAP2 and 8 or 16 bit run stretch to set range
-
-    if xmlOBJ.getOutBit() == 'input':
-        testBitType = str(label['IsisCube']['Core']['Pixels']['Type']).upper()
-    else:
-        testBitType = xmlOBJ.getOutBit().upper()
-
-    if xmlOBJ.getProcess() == 'MAP2' and xmlOBJ.STR_Type() is None:
-        if str(label['IsisCube']['Core']['Pixels']['Type']).upper() != xmlOBJ.getOutBit().upper() and str(label['IsisCube']['Core']['Pixels']['Type']).upper() != 'REAL':
-            if str(label['IsisCube']['Core']['Pixels']['Type']).upper() == 'SIGNEDWORD':
-                strpairs = '0:-32765 0:-32765 100:32765 100:32765'
-            elif str(label['IsisCube']['Core']['Pixels']['Type']).upper() == 'UNSIGNEDBYTE':
-                strpairs = '0:1 0:1 100:254 100:254'
-
-            STRprocessOBJ = Process()
-            STRprocessOBJ.newProcess('stretch')
-            STRprocessOBJ.AddParameter('from_', 'value')
-            STRprocessOBJ.AddParameter('to', 'value')
-            STRprocessOBJ.AddParameter('usepercentages', 'yes')
-            STRprocessOBJ.AddParameter('pairs', strpairs)
-            recipeOBJ.AddProcess(STRprocessOBJ.getProcess())
-
-    strType = xmlOBJ.STR_Type()
-    if strType == 'StretchPercent' and xmlOBJ.STR_PercentMin() is not None and xmlOBJ.STR_PercentMax() is not None and testBitType != 'REAL':
-        if float(xmlOBJ.STR_PercentMin()) != 0 and float(xmlOBJ.STR_PercentMax()) != 100:
-            if testBitType == 'UNSIGNEDBYTE':
-                strpairs = '0:1 ' + xmlOBJ.STR_PercentMin() + ':1 ' + \
-                    xmlOBJ.STR_PercentMax() + ':254 100:254'
-            elif testBitType == 'SIGNEDWORD':
-                strpairs = '0:-32765 ' + xmlOBJ.STR_PercentMin() + ':-32765 ' + \
-                    xmlOBJ.STR_PercentMax() + ':32765 100:32765'
-
-            stretch_dict = {}
-            last_out_file = list(recipeOBJ.items())[-1][-1]['to']
-            stretch_dict['from_'] = last_out_file
-            stretch_dict['to'] = '{{process_props.no_extension_inputfile}}.stretch.cub'
-            stretch_dict['usepercentages'] = 'yes'
-            stretch_dict['pairs'] = strpairs
-            recipeOBJ['isis.stretch'] = stretch_dict
-
-    elif strType == 'GaussStretch':
-        STRprocessOBJ = Process()
-        STRprocessOBJ.newProcess('gaussstretch')
-        STRprocessOBJ.AddParameter('from_', 'value')
-        STRprocessOBJ.AddParameter('to', 'value')
-        STRprocessOBJ.AddParameter('gsigma', xmlOBJ.STR_GaussSigma())
-        recipeOBJ.AddProcess(STRprocessOBJ.getProcess())
-
-    elif strType == 'HistogramEqualization':
-        STRprocessOBJ = Process()
-        STRprocessOBJ.newProcess('histeq')
-        STRprocessOBJ.AddParameter('from_', 'value')
-        STRprocessOBJ.AddParameter('to', 'value')
-        if xmlOBJ.STR_PercentMin() is None:
-            STRprocessOBJ.AddParameter('minper', '0')
-        else:
-            STRprocessOBJ.AddParameter('minper', xmlOBJ.STR_PercentMin())
-        if xmlOBJ.STR_PercentMax() is None:
-            STRprocessOBJ.AddParameter('maxper', '100')
-        else:
-            STRprocessOBJ.AddParameter('maxper', xmlOBJ.STR_PercentMax())
-        recipeOBJ.AddProcess(STRprocessOBJ.getProcess())
-
-    elif strType == 'SigmaStretch':
-        STRprocessOBJ = Process()
-        STRprocessOBJ.newProcess('sigmastretch')
-        STRprocessOBJ.AddParameter('from_', 'value')
-        STRprocessOBJ.AddParameter('to', 'value')
-        STRprocessOBJ.AddParameter('variance', xmlOBJ.STR_SigmaVariance())
-        recipeOBJ.AddProcess(STRprocessOBJ.getProcess())
-
-
-    # Test for output bit type and add to recipe
-    if xmlOBJ.getProcess() == 'POW':
-        if xmlOBJ.getOutBit().upper() == 'UNSIGNEDBYTE' or xmlOBJ.getOutBit().upper() == 'SIGNEDWORD':
-            cubeatt_dict = {}
-            last_out_file = list(recipeOBJ.items())[-1][-1]['to']
-            cubeatt_dict['from_'] = last_out_file
-            cubeatt_dict['to'] = '{{process_props.no_extension_inputfile}}.cubeatt.cub'
-
-            if xmlOBJ.getOutBit().lower() == 'unsignedbyte':
-                cubeatt_dict['to'] += '+lsb+tile+attached+unsignedbyte+1:254'
-            elif xmlOBJ.getOutBit().lower() == 'signedword':
-                cubeatt_dict['to'] += '+lsb+tile+attached+signedword+-32765:32765'
-
-            recipeOBJ['isis.cubeatt'] = cubeatt_dict
-    elif xmlOBJ.getProcess() == 'MAP2':
-        if xmlOBJ.getOutBit().upper() != 'INPUT':
-            if xmlOBJ.getOutBit().upper() == 'UNSIGNEDBYTE' or xmlOBJ.getOutBit().upper() == 'SIGNEDWORD':
-                if str(label['IsisCube']['Core']['Pixels']['Type']).upper() != xmlOBJ.getOutBit().upper():
-                    CAprocessOBJ = Process()
-                    CAprocessOBJ.newProcess('cubeatt-bit')
-                    CAprocessOBJ.AddParameter('from_', 'value')
-                    CAprocessOBJ.AddParameter('to', 'value')
-                    recipeOBJ.AddProcess(CAprocessOBJ.getProcess())
-
-    # Add Grid(MAP2)
-    if xmlOBJ.getGridInterval() is not None:
-        GprocessOBJ = Process()
-        GprocessOBJ.newProcess('grid')
-        GprocessOBJ.AddParameter('from_', 'value')
-        GprocessOBJ.AddParameter('to', 'value')
-        GprocessOBJ.AddParameter('latinc', xmlOBJ.getGridInterval())
-        GprocessOBJ.AddParameter('loninc', xmlOBJ.getGridInterval())
-        GprocessOBJ.AddParameter('outline', 'yes')
-        GprocessOBJ.AddParameter('boundary', 'yes')
-        GprocessOBJ.AddParameter('linewidth', '3')
-        recipeOBJ.AddProcess(GprocessOBJ.getProcess())
+        isis_label = pvl.load(tempFile)
+        generate_map2_recipe(xmlOBJ, isis_label)
 
     # OUTPUT FORMAT
     # Test for GDAL and add to recipe
@@ -988,7 +1065,7 @@ def main(user_args):
         recipeOBJ['isis.isis2pds'] = isis2pds_dict
 
     recipe_processes = recipeOBJ.keys()
-    
+
     if 'isis.cam2map' in recipe_processes:
 
         recipeOBJ['isis.cam2map']['map'] = MAPfile
@@ -1017,18 +1094,19 @@ def main(user_args):
         else:
             recipeOBJ['isis.map2map']['defaultrange'] = 'FROM'
 
+    pds_label = pvl.load(Input_file)
     if 'isis.ctxevenodd' in recipe_processes:
-        spatial_summing = label.get('SAMPLING_FACTOR')
+        spatial_summing = pds_label.get('SAMPLING_FACTOR')
         if spatial_summing != 1:
             recipeOBJ.pop('isis.ctxevenodd')
 
     if 'isis.mocevenodd' in recipe_processes:
-        cross_track_summing = label.get('CROSSTRACK_SUMMING')
+        cross_track_summing = pds_label.get('CROSSTRACK_SUMMING')
         if cross_track_summing != 1:
             recipeOBJ.pop('isis.mocevenodd')
 
     if 'isis.mocnoise50' in recipe_processes:
-        cross_track_summing = label.get('CROSSTRACK_SUMMING')
+        cross_track_summing = pds_label.get('CROSSTRACK_SUMMING')
         if cross_track_summing != 1:
             recipeOBJ.pop('isis.mocnoise50')
 
