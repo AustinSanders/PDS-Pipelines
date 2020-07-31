@@ -462,7 +462,6 @@ def create_json_keywords_record(cam_info_pvl, upc_id, input_file, failing_comman
     session.close()
 
 def generate_processes(inputfile, recipe_string, logger = None, process_props = {}):
-    print(process_props)
     # logger.info('Starting Process: %s', inputfile)
 
     # Working directory for processing should be same as inputfile

@@ -16,7 +16,7 @@ from pds_pipelines.process import Process
 from pds_pipelines.make_map import MakeMap
 from pds_pipelines.hpc_job import HPCjob
 from pds_pipelines.redis_lock import RedisLock
-from pds_pipelines.config import recipe_base, pds_log, scratch, archive_base, default_namespace, slurm_log, cmd_dir, pds_info, lock_obj
+from pds_pipelines.config import recipe_base, pds_log, scratch, archive_base, default_namespace, slurm_log, cmd_dir, pds_info, lock_obj, workarea
 
 
 class jobXML(object):
@@ -738,6 +738,7 @@ def main(user_args):
             RedisH.MAPname(basefinal)
 
         try:
+            basename = os.path.splitext(os.path.basename(Input_file))[0]
             RQ_file.QueueAdd(Input_file)
             logger.info('File %s Added to Redis Queue', Input_file)
         except Exception as e:
@@ -961,21 +962,18 @@ def main(user_args):
         recipeOBJ['gdal_translate'] = gdal_translate_dict
     # set up pds2isis and add to recipe
     elif Oformat == 'PDS':
-        pdsProcessOBJ = Process()
-        pdsProcessOBJ.newProcess('isis2pds')
-        pdsProcessOBJ.AddParameter('from_', 'value')
-        pdsProcessOBJ.AddParameter('to', 'value')
+        isis2pds_dict = {}
+        isis2pds_dict['from_'] = list(recipeOBJ.items())[-1][-1]['to']
+        isis2pds_dict['to'] = "{{no_extension_inputfile}}_final.img"
         if xmlOBJ.getOutBit() == 'unsignedbyte':
-            pdsProcessOBJ.AddParameter('bittype', '8bit')
+            isis2pds_dict['bittype'] = '8bit'
         elif xmlOBJ.getOutBit() == 'signedword':
-            pdsProcessOBJ.AddParameter('bittype', 's16bit')
+            isis2pds_dict['bittype'] = 's16bit'
+        recipeOBJ['isis.isis2pds'] = isis2pds_dict
 
-        recipeOBJ.AddProcess(pdsProcessOBJ.getProcess())
-
-    # for item in recipeOBJ.getProcesses():
-    #     processOBJ = Process()
-    #     processOBJ.ProcessFromRecipe(item, recipeOBJ.getRecipe())
-    if 'isis.cam2map' in recipeOBJ.keys():
+    recipe_processes = recipeOBJ.keys()
+    
+    if 'isis.cam2map' in recipe_processes:
 
         recipeOBJ['isis.cam2map']['map'] = MAPfile
 
@@ -990,7 +988,7 @@ def main(user_args):
             recipeOBJ['isis.cam2map']['defaultrange'] = 'CAMERA'
             recipeOBJ['isis.cam2map']['trim'] = 'YES'
 
-    elif 'isis.map2map' in recipeOBJ.keys():
+    if 'isis.map2map' in recipe_processes:
         recipeOBJ['isis.map2map']['map'] = MAPfile
         if xmlOBJ.getResolution() is None:
             recipeOBJ['isis.map2map']['pixres'] = 'FROM'
@@ -1002,6 +1000,21 @@ def main(user_args):
             recipeOBJ['isis.map2map']['trim'] = 'YES'
         else:
             recipeOBJ['isis.map2map']['defaultrange'] = 'FROM'
+
+    if 'isis.ctxevenodd' in recipe_processes:
+        spatial_summing = label.get('SAMPLING_FACTOR')
+        if spatial_summing != 1:
+            recipeOBJ.pop('isis.ctxevenodd')
+
+    if 'isis.mocevenodd' in recipe_processes:
+        cross_track_summing = label.get('CROSSTRACK_SUMMING')
+        if cross_track_summing != 1:
+            recipeOBJ.pop('isis.mocevenodd')
+
+    if 'isis.mocnoise50' in recipe_processes:
+        cross_track_summing = label.get('CROSSTRACK_SUMMING')
+        if cross_track_summing != 1:
+            recipeOBJ.pop('isis.mocnoise50')
 
     try:
         RQ_recipe.QueueAdd(json.dumps(recipeOBJ))
