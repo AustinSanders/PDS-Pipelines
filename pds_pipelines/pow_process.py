@@ -64,7 +64,7 @@ def main(user_args):
         # Setup system logging
         basename = os.path.splitext(os.path.basename(jobFile))[0]
         logger = logging.getLogger(key + '.' + basename)
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.DEBUG)
 
         logFileHandle = logging.FileHandler(pds_log + '/Service.log')
         formatter = logging.Formatter(
@@ -85,10 +85,10 @@ def main(user_args):
         else:
             inputFile = jobFile
 
-        infile = workarea + \
-            os.path.splitext(os.path.basename(jobFile))[0] + '.input.cub'
-        outfile = workarea + \
-            os.path.splitext(os.path.basename(jobFile))[0] + '.output.cub'
+        # infile = workarea + \
+        #     os.path.splitext(os.path.basename(jobFile))[0] + '.input.cub'
+        # outfile = workarea + \
+        #     os.path.splitext(os.path.basename(jobFile))[0] + '.output.cub'
 
 
         status = 'success'
@@ -98,7 +98,9 @@ def main(user_args):
         process_props = {'no_extension_inputfile': no_extension_inputfile}
         processes, workarea_pwd = generate_processes(jobFile, recipe_string, None, process_props = process_props)
         print(processes)
-        # process(processes, workarea_pwd, logger)
+        print(os.getcwd())
+        failing_command = process(processes, workarea, logger)
+        print(failing_command)
         '''
         for element in RQ_recipe.RecipeGet():
             if status == 'error':
@@ -309,12 +311,15 @@ def main(user_args):
                         subloggyOBJ.errorOut('Process GDAL translate :: Error')
                         loggyOBJ.AddProcess(subloggyOBJ.getSLprocess())
         '''
-
+        print(status)
         if status == 'success':
 
-            if RHash.Format() == 'ISIS3':
-                finalfile = infile.replace('.input.cub', '_final.cub')
-                shutil.move(infile, finalfile)
+            final_process, args = list(processes.items())[-1]
+            if final_process == 'gdal_translate':
+                finalfile = args['dest']
+            else:
+                finalfile = args['to']
+
             if RHash.getStatus() != 'ERROR':
                 RHash.Status('SUCCESS')
 

@@ -738,6 +738,7 @@ def main(user_args):
             RedisH.MAPname(basefinal)
 
         try:
+            label = pvl.load(Input_file)
             basename = os.path.splitext(os.path.basename(Input_file))[0]
             RQ_file.QueueAdd(Input_file)
             logger.info('File %s Added to Redis Queue', Input_file)
@@ -847,7 +848,7 @@ def main(user_args):
             stretch_dict = {}
             last_out_file = list(recipeOBJ.items())[-1][-1]['to']
             stretch_dict['from_'] = last_out_file
-            stretch_dict['to'] = '{{no_extension_inputfile}}.stretch.cub'
+            stretch_dict['to'] = '{{process_props.no_extension_inputfile}}.stretch.cub'
             stretch_dict['usepercentages'] = 'yes'
             stretch_dict['pairs'] = strpairs
             recipeOBJ['isis.stretch'] = stretch_dict
@@ -890,7 +891,7 @@ def main(user_args):
             cubeatt_dict = {}
             last_out_file = list(recipeOBJ.items())[-1][-1]['to']
             cubeatt_dict['from_'] = last_out_file
-            cubeatt_dict['to'] = '{{no_extension_inputfile}}.cubeatt.cub'
+            cubeatt_dict['to'] = '{{process_props.no_extension_inputfile}}.cubeatt.cub'
 
             if xmlOBJ.getOutBit().lower() == 'unsignedbyte':
                 cubeatt_dict['to'] += '+lsb+tile+attached+unsignedbyte+1:254'
@@ -953,18 +954,33 @@ def main(user_args):
                                 f"Currently supported bit types are {list(cDICT.keys())}")
 
         if xmlOBJ.getOutBit() != 'input':
-            gdal_translate_dict['-ot'] = GDAL_OBit(xmlOBJ.getOutBit())
-        gdal_translate_dict['-of'] = Oformat
+            gdal_translate_dict['outputType'] = GDAL_OBit(xmlOBJ.getOutBit())
+        gdal_translate_dict['format'] = Oformat
 
         if Oformat == 'GTiff' or Oformat == 'JP2KAK' or Oformat == 'JPEG':
-            gdal_translate_dict['-co'] = GDAL_Creation(Oformat)
+            gdal_translate_dict['creationOptions'] = [GDAL_Creation(Oformat)]
+
+        frmt = xmlOBJ.getOutFormat()
+        if frmt == 'GeoTiff-BigTiff':
+            fileext = 'tif'
+        elif frmt == 'GeoJPEG-2000':
+            fileext = 'jp2'
+        elif frmt == 'JPEG':
+            fileext = 'jpg'
+        elif frmt == 'PNG':
+            fileext = 'png'
+        elif frmt == 'GIF':
+            fileext = 'gif'
+
+        gdal_translate_dict['src'] = list(recipeOBJ.items())[-1][-1]['to'].split('+')[0]
+        gdal_translate_dict['dest'] = "{{process_props.no_extension_inputfile}}_final." + fileext
 
         recipeOBJ['gdal_translate'] = gdal_translate_dict
     # set up pds2isis and add to recipe
     elif Oformat == 'PDS':
         isis2pds_dict = {}
         isis2pds_dict['from_'] = list(recipeOBJ.items())[-1][-1]['to']
-        isis2pds_dict['to'] = "{{no_extension_inputfile}}_final.img"
+        isis2pds_dict['to'] = "{{process_props.no_extension_inputfile}}_final.img"
         if xmlOBJ.getOutBit() == 'unsignedbyte':
             isis2pds_dict['bittype'] = '8bit'
         elif xmlOBJ.getOutBit() == 'signedword':
