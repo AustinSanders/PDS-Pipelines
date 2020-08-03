@@ -4,7 +4,7 @@ import sys
 import logging
 import argparse
 import json
-
+from shutil import copy2, disk_usage
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files
@@ -69,11 +69,45 @@ def main():
     else:
         qOBJ = session.query(Files).filter(Files.archiveid == archiveID,
                                              Files.upc_required == 't')
+
+
+    if search:
+        qf = '%' + search + '%'
+        qOBJ = qOBJ.filter(Files.filename.like(qf))
+
     if qOBJ:
+        path = PDSinfoDICT[archive]['path']
         addcount = 0
+        size = 0
+        for element in qOBJ:
+            fname = path + element.filename
+            size += getsize(fname)
+
+        size_free = disk_usage(workarea).free
+        if size >= (disk_usage_ratio * size_free):
+            logger.error("Unable to process %s: size %d exceeds %d",
+                         volume, size, (size_free * disk_usage_ratio))
+            exit()
+
         for element in qOBJ:
             fname = PDSinfoDICT[args.archive]['path'] + element.filename
             fid = element.fileid
+
+            try:
+                dest_path = dirname(fname)
+                dest_path = dest_path.replace(path, workarea)
+                pathlib.Path(dest_path).mkdir(parents=True, exist_ok=True)
+                for f in glob.glob(splitext(fname)[0] + r'.*'):
+                    if not os.path.exists(f'{dest_path}{f}'):
+                        copy2(f, dest_path)
+
+                RQ.QueueAdd((workarea+element.filename, fid, archive))
+                addcount = addcount + 1
+            except Exception as e:
+                error_queue.QueueAdd(f'Unable to copy / queue {fname}: {e}')
+                logger.error('Unable to copy / queue %s: %s', fname, e)
+
+
             RQ.QueueAdd((fname, fid, args.archive))
             addcount = addcount + 1
 
