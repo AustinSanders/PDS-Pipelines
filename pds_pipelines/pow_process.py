@@ -39,7 +39,6 @@ def parse_args():
 def main(user_args):
     key = user_args.key
     namespace = user_args.namespace
-    print(namespace)
 
     if namespace is None:
         namespace = default_namespace
@@ -97,10 +96,9 @@ def main(user_args):
         no_extension_inputfile = workarea + os.path.splitext(os.path.basename(jobFile))[0]
         process_props = {'no_extension_inputfile': no_extension_inputfile}
         processes, workarea_pwd = generate_processes(jobFile, recipe_string, None, process_props = process_props)
-        print(processes)
-        print(os.getcwd())
         failing_command = process(processes, workarea, logger)
-        print(failing_command)
+        if failing_command:
+            status = 'error'
         '''
         for element in RQ_recipe.RecipeGet():
             if status == 'error':

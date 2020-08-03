@@ -17,6 +17,7 @@ from pds_pipelines.redis_hash import RedisHash
 from pds_pipelines.pds_logging import Loggy
 from pds_pipelines.pds_process_logging import SubLoggy
 from pds_pipelines.process import Process
+from pds_pipelines.upc_process import generate_processes, process
 
 
 def parse_args():
@@ -61,7 +62,7 @@ def main(user_args):
         # Setup system logging
         basename = os.path.splitext(os.path.basename(jobFile))[0]
         logger = logging.getLogger(key + '.' + basename)
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.DEBUG)
 
         logFileHandle = logging.FileHandler(pds_log + '/Service.log')
 
@@ -84,7 +85,18 @@ def main(user_args):
 
 
         status = 'success'
-
+        recipe_string = RQ_recipe.QueueGet()
+        no_extension_inputfile = workarea + os.path.splitext(os.path.basename(jobFile))[0]
+        print(no_extension_inputfile)
+        process_props = {'no_extension_inputfile': no_extension_inputfile}
+        print(jobFile)
+        processes, workarea_pwd = generate_processes(jobFile, recipe_string, None, process_props = process_props)
+        print(processes)
+        
+        failing_command = process(processes, workarea, logger)
+        if failing_command:
+            status = 'error'
+        '''
         for element in RQ_recipe.RecipeGet():
 
             if status == 'error':
@@ -208,11 +220,12 @@ def main(user_args):
                             'http://www.gdal.org/gdal_translate.html')
                         subloggyOBJ.errorOut(e)
                         loggyOBJ.AddProcess(subloggyOBJ.getSLprocess())
-
+        '''
         if status == 'success':
             if RHash.Format() == 'ISIS3':
+                last_output = list(processes.items())[-1][-1]['to']
                 finalfile = workarea + RHash.getMAPname() + '.cub'
-                shutil.move(infile, finalfile)
+                shutil.move(last_output, finalfile)
             if RHash.getStatus() != 'ERROR':
                 RHash.Status('SUCCESS')
 

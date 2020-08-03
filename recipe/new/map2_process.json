@@ -2,13 +2,13 @@
     "inst": "MAP",
     "map": {
 	"recipe": {
-	    "cubeatt-band": {
-		"from_": "value",
-		"to": "value"
+	    "isis.cubeatt": {
+		"from_": "{{inputfile}}",
+		"to": "{{process_props.no_extension_inputfile}}.cubeatt.cub"
 	    }, 
-	    "map2map": {
-		"from_": "value",
-		"to": "value",
+	    "isis.map2map": {
+		"from_": "{{process_props.no_extension_inputfile}}.cubeatt.cub",
+		"to": "{{process_props.no_extension_inputfile}}.reproj.cub",
 		"map": "value",
 		"matchmap": "no",
 		"pixres": "value",
