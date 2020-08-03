@@ -1,7 +1,10 @@
 import os
 import jinja2
+import json
+from pds_pipelines.available_modules import *
+from pysis.exceptions import ProcessError
 
-def generate_processes(inputfile, recipe_string, logger, kwargs):
+def generate_processes(inputfile, recipe_string, logger, **kwargs):
     logger.info('Starting Process: %s', inputfile)
 
     # Working directory for processing should be same as inputfile
@@ -43,6 +46,8 @@ def process(processes, workarea_pwd, logger):
         except ProcessError as e:
             logger.debug("%s", e)
             logger.debug("%s", e.stderr)
+            print(e)
+            print(e.stderr)
             failing_command = command
             break
 

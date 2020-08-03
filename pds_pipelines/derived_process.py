@@ -6,6 +6,7 @@ import json
 import datetime
 import pytz
 import logging
+import errno
 from pysis import isis
 from pysis.exceptions import ProcessError
 from sqlalchemy.orm.attributes import flag_modified
@@ -18,9 +19,9 @@ from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.recipe import Recipe
 from pds_pipelines.process import Process
 from pds_pipelines.db import db_connect
-from pds_pipelines.models.upc_models import MetaString, DataFiles
+from pds_pipelines.models.upc_models import DataFiles, SearchTerms
 from pds_pipelines.models.pds_models import ProcessRuns
-from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db, lock_obj, upc_error_queue
+from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db, lock_obj, upc_error_queue, recipe_base, archive_base, derived_base
 from pds_pipelines.utils import generate_processes, process
 
 def getISISid(infile):
@@ -97,7 +98,8 @@ def main():
     pds_session_maker, pds_session = db_connect(pds_db)
     upc_session_maker, upc_session = db_connect(upc_db)
 
-    if (int(RQ_thumbnail.QueueSize()) > 0 or int(RQ_browse.QueueSize())) and RQ_lock.available(RQ_main.id_name):
+    # Only checks lock for browse.  Not sure of a better wayt o handle this.
+    if (int(RQ_thumbnail.QueueSize()) > 0 or int(RQ_browse.QueueSize())) and RQ_lock.available(RQ_browse.id_name):
         if int(RQ_thumbnail.QueueSize()) > 0:
             proc = "thumbnail"
             item = literal_eval(RQ_thumbnail.QueueGet())
@@ -111,12 +113,12 @@ def main():
         if os.path.isfile(inputfile):
             recipe_file = recipe_base + "/" + archive + '.json'
             with open(recipe_file) as fp:
-                recipe = json.load(fp)['upc']
-                recipe_string = json.dumps(upc_json['recipe'])
+                recipe = json.load(fp)['reduced']
+                recipe_string = json.dumps(recipe['recipe'])
 
             logger.info('Starting Process: %s', inputfile)
 
-            final_path = makedir(inputfile)
+            final_path = makedir(f"{workarea}/{inputfile}")
 
             width = recipe[proc]['width']
             height = recipe[proc]['height']
@@ -127,8 +129,9 @@ def main():
                                                                        width=width,
                                                                        height=height,
                                                                        proc=proc,
-                                                                       final_path=final_path)
-            failing_command = process(processes, workarea_pwd, logger)
+                                                                       final_path=final_path,
+                                                                       workarea=workarea)
+            failing_command = process(processes, workarea, logger)
             # "infile" is "no_extension_inputfile"
             derived_image = f"{final_path}{infile}.{proc}.jpg"
             if failing_command is None:
@@ -136,19 +139,19 @@ def main():
                 isis_id = getISISid(infile)
                 datafile = upc_session.query(DataFiles).filter(DataFiles.isisid.like(f"%{isisid}%")).first()
                 upc_id = datafile.upcid
+                print(upc_id)
                 add_url(derived_image, upc_id, proc, upc_session_maker)
                 upc_session.close()
-                os.remove(infile)
+                #os.remove(infile)
                 logger.info(f'{proc} Process Success: %s', inputfile)
 
                 AddProcessDB(pds_session_maker, fid, 't')
+            else:
+                print(failing_command)
+
         else:
             RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during {proc} processing')
             logger.error('File %s Not Found', inputfile)
-
-    # Close all database connections
-    pds_engine.dispose()
-    upc_engine.dispose()
 
 
 if __name__ == "__main__":
