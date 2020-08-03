@@ -71,7 +71,7 @@ def main():
                                              Files.upc_required == 't')
 
 
-    if search:
+    if args.search:
         qf = '%' + search + '%'
         qOBJ = qOBJ.filter(Files.filename.like(qf))
 
