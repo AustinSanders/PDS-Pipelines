@@ -84,12 +84,6 @@ def main(user_args):
         else:
             inputFile = jobFile
 
-        # infile = workarea + \
-        #     os.path.splitext(os.path.basename(jobFile))[0] + '.input.cub'
-        # outfile = workarea + \
-        #     os.path.splitext(os.path.basename(jobFile))[0] + '.output.cub'
-
-
         status = 'success'
         recipe_string = RQ_recipe.QueueGet()
         label = pvl.load(inputFile)
@@ -309,7 +303,6 @@ def main(user_args):
                         subloggyOBJ.errorOut('Process GDAL translate :: Error')
                         loggyOBJ.AddProcess(subloggyOBJ.getSLprocess())
         '''
-        print(status)
         if status == 'success':
 
             final_process, args = list(processes.items())[-1]

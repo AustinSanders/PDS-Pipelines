@@ -630,6 +630,7 @@ def generate_pow_recipe(xmlOBJ, pds_label, MAPfile):
             recipeOBJ['isis.cam2map']['defaultrange'] = 'CAMERA'
             recipeOBJ['isis.cam2map']['trim'] = 'YES'
 
+    pds_label = pvl.load(Input_file)
     if 'isis.ctxevenodd' in recipe_processes:
         spatial_summing = pds_label.get('SAMPLING_FACTOR')
         if spatial_summing != 1:
@@ -648,9 +649,9 @@ def generate_pow_recipe(xmlOBJ, pds_label, MAPfile):
     return recipeOBJ
 
 def generate_map2_recipe(xmlOBJ, isis_label, MAPfile):
+
     with open(recipe_base + 'map2_process.json', 'r') as json_file:
             recipeOBJ = json.load(json_file)['map']['recipe']
-
     if xmlOBJ.getOutBit() == 'input':
         testBitType = str(isis_label['IsisCube']['Core']['Pixels']['Type']).upper()
     else:
@@ -899,14 +900,14 @@ def main(user_args):
                 tempFile = tempsplit[0]
             else:
                 tempFile = Input_file
-            label = pvl.load(tempFile)
-    # Output final file naming
+
+            # Output final file naming
             Tbasename = os.path.splitext(os.path.basename(tempFile))[0]
             splitBase = Tbasename.split('_')
 
             labP = xmlOBJ.getProjection()
             if labP == 'INPUT':
-                lab_proj = label['IsisCube']['Mapping']['ProjectionName'][0:4]
+                lab_proj = isis_label['IsisCube']['Mapping']['ProjectionName'][0:4]
             else:
                 lab_proj = labP[0:4]
 
@@ -926,7 +927,6 @@ def main(user_args):
             RedisH.MAPname(basefinal)
 
         try:
-            label = pvl.load(Input_file)
             basename = os.path.splitext(os.path.basename(Input_file))[0]
             RQ_file.QueueAdd(Input_file)
             logger.info('File %s Added to Redis Queue', Input_file)
@@ -941,7 +941,7 @@ def main(user_args):
     mapOBJ = MakeMap()
 
     if xmlOBJ.getProcess() == 'MAP2' and xmlOBJ.getProjection() == 'INPUT':
-        proj = label['IsisCube']['Mapping']['ProjectionName']
+        proj = isis_label['IsisCube']['Mapping']['ProjectionName']
         mapOBJ.Projection(proj)
     else:
         mapOBJ.Projection(xmlOBJ.getProjection())
