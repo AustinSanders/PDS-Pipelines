@@ -602,10 +602,14 @@ def generate_pow_recipe(xmlOBJ, pds_label, MAPfile):
         recipeOBJ['sigmastretch'] = stretch_dict
 
     if xmlOBJ.getOutBit().upper() == 'UNSIGNEDBYTE' or xmlOBJ.getOutBit().upper() == 'SIGNEDWORD':
-        cubeatt_dict = {}
-        last_out_file = list(recipeOBJ.items())[-1][-1]['to']
-        cubeatt_dict['from_'] = last_out_file
-        cubeatt_dict['to'] = '{{process_props.no_extension_inputfile}}.cubeatt.cub'
+        print(recipeOBJ.keys())
+        if "isis.cubeatt" not in recipeOBJ.keys():
+            cubeatt_dict = {}
+            last_out_file = list(recipeOBJ.items())[-1][-1]['to']
+            cubeatt_dict['from_'] = last_out_file
+            cubeatt_dict['to'] = '{{process_props.no_extension_inputfile}}.cubeatt.cub'
+        else:
+            cubeatt_dict = recipeOBJ['isis.cubeatt']
 
         if xmlOBJ.getOutBit().lower() == 'unsignedbyte':
             cubeatt_dict['to'] += '+lsb+tile+attached+unsignedbyte+1:254'
@@ -711,9 +715,12 @@ def generate_map2_recipe(xmlOBJ, isis_label, MAPfile):
     if output_bit_type != 'INPUT':
         if output_bit_type == 'UNSIGNEDBYTE' or output_bit_type == 'SIGNEDWORD':
             if str(isis_label['IsisCube']['Core']['Pixels']['Type']).upper() != output_bit_type:
-                cubeatt_dict = {}
-                cubeatt_dict['from_'] = list(recipeOBJ.items())[-1][-1]['to']
-                cubeatt_dict['to'] = '{{process_props.no_extension_inputfile}}.cubeatt.cub'
+                if 'isis.cubeatt' not in recipeOBJ.keys():
+                    cubeatt_dict = {}
+                    cubeatt_dict['from_'] = list(recipeOBJ.items())[-1][-1]['to']
+                    cubeatt_dict['to'] = '{{process_props.no_extension_inputfile}}.cubeatt.cub'
+                else:
+                    cubeatt_dict = recipeOBJ['isis.cubeatt']
 
                 if output_bit_type.lower() == 'unsignedbyte':
                     cubeatt_dict['to'] += '+lsb+tile+attached+unsignedbyte+1:254'
@@ -906,6 +913,7 @@ def main(user_args):
             splitBase = Tbasename.split('_')
 
             labP = xmlOBJ.getProjection()
+            isis_label = pvl.load(tempFile)
             if labP == 'INPUT':
                 lab_proj = isis_label['IsisCube']['Mapping']['ProjectionName'][0:4]
             else:
@@ -999,8 +1007,7 @@ def main(user_args):
         recipeOBJ = generate_pow_recipe(xmlOBJ, pds_label, MAPfile)
 
     elif xmlOBJ.getProcess() == 'MAP2':
-        isis_label = pvl.load(tempFile)
-        recipeOBJ = generate_map_recipe(xmlOBJ, isis_label, MAPfile)
+        recipeOBJ = generate_map2_recipe(xmlOBJ, isis_label, MAPfile)
 
     # OUTPUT FORMAT
     # Test for GDAL and add to recipe
