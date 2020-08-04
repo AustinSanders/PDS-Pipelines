@@ -1,6 +1,7 @@
 import sqlalchemy
 
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
+from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy_utils import database_exists, create_database
 from sqlalchemy import (Column, Integer, Float, Time, String, Boolean,
                         ForeignKey, CHAR, DateTime)
@@ -138,7 +139,7 @@ class SearchTerms(BaseMixin, Base):
 class JsonKeywords(BaseMixin, Base):
     __tablename__ = "json_keywords"
     upcid = Column(Integer, ForeignKey('datafiles.upcid'), primary_key=True)
-    jsonkeywords = Column(JSONB)
+    jsonkeywords = Column(MutableDict.as_mutable(JSONB))
 
 class_map = {
     'datafiles': DataFiles,
