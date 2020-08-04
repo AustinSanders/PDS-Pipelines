@@ -1,6 +1,7 @@
 import os
 import jinja2
 import json
+import pds_pipelines
 from pds_pipelines.available_modules import *
 from pysis.exceptions import ProcessError
 
