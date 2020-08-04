@@ -19,7 +19,7 @@ from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.recipe import Recipe
 from pds_pipelines.process import Process
 from pds_pipelines.db import db_connect
-from pds_pipelines.models.upc_models import DataFiles, SearchTerms
+from pds_pipelines.models.upc_models import DataFiles, SearchTerms, JsonKeywords
 from pds_pipelines.models.pds_models import ProcessRuns
 from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db, lock_obj, upc_error_queue, recipe_base, archive_base, derived_base
 from pds_pipelines.utils import generate_processes, process
@@ -33,7 +33,7 @@ def getISISid(infile):
 
 def makedir(inputfile):
     temppath = os.path.dirname(inputfile).lower()
-    finalpath = temppath.replace(archive_base, derived_base)
+    finalpath = temppath.replace(workarea, derived_base)
 
     if not os.path.exists(finalpath):
         try:
@@ -48,12 +48,17 @@ def makedir(inputfile):
 def add_url(input_file, upc_id, proc, session_maker):
     session = session_maker()
     outputfile = input_file.replace(derived_base, f'${proc}_server/')
-    search_terms_qobj = session.query(SearchTerms).filter(SearchTerms.upcid==upc_id)
-    search_terms_qobj.jsonkeywords[proc] = outputfile
+    q_record = session.query(JsonKeywords).filter(JsonKeywords.upcid==upc_id)
+    params = {}
+    old_json = q_record.first().jsonkeywords
+    old_json[proc] = outputfile
+    params['jsonkeywords'] = old_json
+    
+    #record.jsonkeywords = json.loads(json.dumps(params, indent=4))
+    q_record.update(params, False)
     # By default, SQLAlchemy does not track changes to json, so we have
     # to manually flag that the data were changed.
-    flag_modified(search_terms_qobj, 'jsonkeywords')
-    session.add(search_terms_qobj)
+    #flag_modified(record, 'jsonkeywords')
     session.commit()
     session.close()
 
@@ -105,7 +110,7 @@ def main():
             item = literal_eval(RQ_thumbnail.QueueGet())
         else:
             proc = "browse"
-            item = literal_eval(RQ_thumbnail.QueueGet())
+            item = literal_eval(RQ_browse.QueueGet())
 
         inputfile = item[0]
         fid = item[1]
@@ -118,7 +123,9 @@ def main():
 
             logger.info('Starting Process: %s', inputfile)
 
-            final_path = makedir(f"{workarea}/{inputfile}")
+            final_path = makedir(inputfile)
+            derived_product = os.path.join(final_path, os.path.splitext(os.path.basename(inputfile))[0] + "." + proc + ".jpg")
+
 
             width = recipe[proc]['width']
             height = recipe[proc]['height']
@@ -129,18 +136,18 @@ def main():
                                                                        width=width,
                                                                        height=height,
                                                                        proc=proc,
-                                                                       final_path=final_path,
+                                                                       derived_product=derived_product,
                                                                        workarea=workarea)
             failing_command = process(processes, workarea, logger)
             # "infile" is "no_extension_inputfile"
-            derived_image = f"{final_path}{infile}.{proc}.jpg"
-            if failing_command is None:
-                ups_session = ups_session_maker()
+            if os.path.exists(derived_product):
+                print(derived_product)
+                upc_session = upc_session_maker()
                 isis_id = getISISid(infile)
-                datafile = upc_session.query(DataFiles).filter(DataFiles.isisid.like(f"%{isisid}%")).first()
+                datafile = upc_session.query(DataFiles).filter(DataFiles.isisid.like(f"%{isis_id}%")).first()
                 upc_id = datafile.upcid
                 print(upc_id)
-                add_url(derived_image, upc_id, proc, upc_session_maker)
+                add_url(derived_product, upc_id, proc, upc_session_maker)
                 upc_session.close()
                 #os.remove(infile)
                 logger.info(f'{proc} Process Success: %s', inputfile)
