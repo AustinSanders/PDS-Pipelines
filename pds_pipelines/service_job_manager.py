@@ -16,7 +16,7 @@ from pds_pipelines.process import Process
 from pds_pipelines.make_map import MakeMap
 from pds_pipelines.hpc_job import HPCjob
 from pds_pipelines.redis_lock import RedisLock
-from pds_pipelines.config import recipe_base, pds_log, scratch, archive_base, default_namespace, slurm_log, cmd_dir, pds_info, lock_obj, workarea
+from pds_pipelines.config import recipe_base, pds_log, archive_base, default_namespace, slurm_log, cmd_dir, pds_info, lock_obj, workarea
 
 
 class jobXML(object):
@@ -602,7 +602,6 @@ def generate_pow_recipe(xmlOBJ, pds_label, MAPfile):
         recipeOBJ['sigmastretch'] = stretch_dict
 
     if xmlOBJ.getOutBit().upper() == 'UNSIGNEDBYTE' or xmlOBJ.getOutBit().upper() == 'SIGNEDWORD':
-        print(recipeOBJ.keys())
         if "isis.cubeatt" not in recipeOBJ.keys():
             cubeatt_dict = {}
             last_out_file = list(recipeOBJ.items())[-1][-1]['to']
@@ -661,23 +660,31 @@ def generate_map2_recipe(xmlOBJ, isis_label, MAPfile):
     else:
         testBitType = xmlOBJ.getOutBit().upper()
 
+    
     strType = xmlOBJ.STR_Type()
-    stretch_dict = {}
-    stretch_dict['from_'] = list(recipeOBJ.items())[-1][-1]['to']
-    stretch_dict['to'] = '{{process_props.no_extension_inputfile}}.stretch.cub'
-
     if xmlOBJ.getProcess() == 'MAP2' and strType is None:
         isis_pixel_type = str(isis_label['IsisCube']['Core']['Pixels']['Type']).upper()
         if isis_pixel_type != xmlOBJ.getOutBit().upper() and \
            isis_pixel_type != 'REAL':
-            if isis_pixel_type == 'SIGNEDWORD':
-                strpairs = '0:-32765 0:-32765 100:32765 100:32765'
-            elif isis_pixel_type == 'UNSIGNEDBYTE':
-                strpairs = '0:1 0:1 100:254 100:254'
 
-            stretch_dict['usepercentages'] = 'yes'
-            stretch_dict['pairs'] = strpairs
-            recipeOBJ['isis.stretch'] = stretch_dict
+            if isis_pixel_type == 'SIGNEDWORD':
+                recipeOBJ['isis.map2map']['to'] = recipeOBJ['isis.map2map']['to'] + '+lsb+tile+attached+signedword+-32765:32765'
+            elif isis_pixel_type == 'UNSIGNEDBYTE':
+                recipeOBJ['isis.map2map']['to'] = recipeOBJ['isis.map2map']['to'] + '+lsb+tile+attached+unsignedbyte+1:254'
+
+    stretch_dict = {}
+    stretch_dict['from_'] = list(recipeOBJ.items())[-1][-1]['to']
+    stretch_dict['to'] = '{{process_props.no_extension_inputfile}}.stretch.cub'
+
+    output_bit_type = xmlOBJ.getOutBit().upper()
+    if output_bit_type != 'INPUT':
+        if output_bit_type == 'UNSIGNEDBYTE' or output_bit_type == 'SIGNEDWORD':
+            if str(isis_label['IsisCube']['Core']['Pixels']['Type']).upper() != output_bit_type:
+                if output_bit_type.lower() == 'unsignedbyte':
+                    stretch_dict['to'] += '+lsb+tile+attached+unsignedbyte+1:254'
+                elif output_bit_type.lower() == 'signedword':
+                    stretch_dict['to'] += '+lsb+tile+attached+signedword+-32765:32765'
+
 
     if strType == 'StretchPercent' and xmlOBJ.STR_PercentMin() is not None and xmlOBJ.STR_PercentMax() is not None and testBitType != 'REAL':
         if float(xmlOBJ.STR_PercentMin()) != 0 and float(xmlOBJ.STR_PercentMax()) != 100:
@@ -709,25 +716,7 @@ def generate_map2_recipe(xmlOBJ, isis_label, MAPfile):
 
     elif strType == 'SigmaStretch':
         stretch_dict['variance'] = xmlOBJ.STR_SigmaVariance()
-        recipeOBJ['sigmastretch'] = stretch_dict
-
-    output_bit_type = xmlOBJ.getOutBit().upper()
-    if output_bit_type != 'INPUT':
-        if output_bit_type == 'UNSIGNEDBYTE' or output_bit_type == 'SIGNEDWORD':
-            if str(isis_label['IsisCube']['Core']['Pixels']['Type']).upper() != output_bit_type:
-                if 'isis.cubeatt' not in recipeOBJ.keys():
-                    cubeatt_dict = {}
-                    cubeatt_dict['from_'] = list(recipeOBJ.items())[-1][-1]['to']
-                    cubeatt_dict['to'] = '{{process_props.no_extension_inputfile}}.cubeatt.cub'
-                else:
-                    cubeatt_dict = recipeOBJ['isis.cubeatt']
-
-                if output_bit_type.lower() == 'unsignedbyte':
-                    cubeatt_dict['to'] += '+lsb+tile+attached+unsignedbyte+1:254'
-                elif output_bit_type.lower() == 'signedword':
-                    cubeatt_dict['to'] += '+lsb+tile+attached+signedword+-32765:32765'
-
-                recipeOBJ['isis.cubeatt'] = cubeatt_dict
+        recipeOBJ['isis.sigmastretch'] = stretch_dict
 
     if xmlOBJ.getGridInterval() is not None:
         grid_dict = {}
@@ -823,7 +812,7 @@ def main(user_args):
     xmlOBJ = jobXML(DBQO.jobXML4Key(key))
 
     # Make directory if it doesn't exist
-    directory = scratch + key
+    directory = os.path.join(workarea, key)
     if not os.path.exists(directory):
         os.makedirs(directory)
 

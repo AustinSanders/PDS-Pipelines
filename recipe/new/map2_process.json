@@ -2,12 +2,8 @@
     "inst": "MAP",
     "map": {
 	"recipe": {
-	    "isis.cubeatt": {
-		"from_": "{{inputfile}}",
-		"to": "{{process_props.no_extension_inputfile}}.cubeatt.cub"
-	    }, 
 	    "isis.map2map": {
-		"from_": "{{process_props.no_extension_inputfile}}.cubeatt.cub",
+		"from_": "{{inputfile}}",
 		"to": "{{process_props.no_extension_inputfile}}.reproj.cub",
 		"map": "value",
 		"matchmap": "no",

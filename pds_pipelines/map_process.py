@@ -10,7 +10,7 @@ import argparse
 from pysis import isis
 from pysis.exceptions import ProcessError
 
-from pds_pipelines.config import lock_obj, scratch, pds_log, default_namespace
+from pds_pipelines.config import lock_obj, pds_log, default_namespace, workarea
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.redis_hash import RedisHash
@@ -41,7 +41,7 @@ def main(user_args):
     if namespace is None:
         namespace = default_namespace
 
-    workarea = scratch + key + '/'
+    work_dir = os.path.join(workarea, key)
     RQ_file = RedisQueue(key + '_FileQueue', namespace)
     RQ_work = RedisQueue(key + '_WorkQueue', namespace)
     RQ_zip = RedisQueue(key + '_ZIP', namespace)
@@ -76,24 +76,24 @@ def main(user_args):
         loggyOBJ = Loggy(basename)
 
         # File Naming
-        infile = workarea + \
-            os.path.splitext(os.path.basename(jobFile))[0] + '.input.cub'
-        outfile = workarea + \
-            os.path.splitext(os.path.basename(jobFile))[0] + '.output.cub'
+        infile = os.path.join(work_dir, \
+            os.path.splitext(os.path.basename(jobFile))[0] + '.input.cub')
+        outfile = os.path.join(work_dir,
+            os.path.splitext(os.path.basename(jobFile))[0] + '.output.cub')
 
         # Recipe Stuff
 
 
         status = 'success'
         recipe_string = RQ_recipe.QueueGet()
-        no_extension_inputfile = workarea + os.path.splitext(os.path.basename(jobFile))[0]
+        no_extension_inputfile = os.path.join(work_dir, os.path.splitext(os.path.basename(jobFile))[0])
         print(no_extension_inputfile)
         process_props = {'no_extension_inputfile': no_extension_inputfile}
         print(jobFile)
         processes, workarea_pwd = generate_processes(jobFile, recipe_string, None, process_props = process_props)
         print(processes)
         
-        failing_command = process(processes, workarea, logger)
+        failing_command = process(processes, work_dir, logger)
         if failing_command:
             status = 'error'
         '''
@@ -224,8 +224,9 @@ def main(user_args):
         if status == 'success':
             if RHash.Format() == 'ISIS3':
                 last_output = list(processes.items())[-1][-1]['to']
-                finalfile = workarea + RHash.getMAPname() + '.cub'
+                finalfile = os.path.join(work_dirm, RHash.getMAPname() + '.cub')
                 shutil.move(last_output, finalfile)
+
             if RHash.getStatus() != 'ERROR':
                 RHash.Status('SUCCESS')
 
