@@ -7,11 +7,11 @@ import json
 import pathlib
 import glob
 from shutil import copy2, disk_usage
-from os.path import getsize, dirname, splitext, exists
+from os.path import getsize, dirname, splitext, exists, basename, join
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files
-from pds_pipelines.config import pds_info, pds_log, pds_db, workarea, disk_usage_ratio
+from pds_pipelines.config import pds_info, pds_log, pds_db, workarea, disk_usage_ratio, archive_base
 
 class Args:
     def __init__(self):
@@ -99,13 +99,13 @@ def main():
 
             try:
                 dest_path = dirname(fname)
-                dest_path = dest_path.replace(path, workarea)
+                dest_path = dest_path.replace(archive_base, workarea)
                 pathlib.Path(dest_path).mkdir(parents=True, exist_ok=True)
                 for f in glob.glob(splitext(fname)[0] + r'.*'):
                     if not exists(f'{dest_path}{f}'):
                         copy2(f, dest_path)
 
-                RQ.QueueAdd((workarea+element.filename, fid, args.archive))
+                RQ.QueueAdd((join(dest_path,basename(element.filename)), fid, args.archive))
                 addcount = addcount + 1
             except Exception as e:
                 error_queue.QueueAdd(f'Unable to copy / queue {fname}: {e}')
