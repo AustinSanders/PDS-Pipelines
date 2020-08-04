@@ -110,8 +110,6 @@ def main(user_args):
                 error_queue.QueueAdd(f'Unable to copy / queue {fname}: {e}')
                 logger.error('Unable to copy / queue %s: %s', fname, e)
 
-            addcount = addcount + 1
-
         logger.info('Files Added to Browse Queue: %s', addcount)
 
 if __name__ == "__main__":
