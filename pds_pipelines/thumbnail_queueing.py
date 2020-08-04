@@ -4,11 +4,14 @@ import sys
 import logging
 import argparse
 import json
+import pathlib
+import glob
 from shutil import copy2, disk_usage
+from os.path import getsize, dirname, splitext, exists
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files
-from pds_pipelines.config import pds_info, pds_log, pds_db
+from pds_pipelines.config import pds_info, pds_log, pds_db, workarea, disk_usage_ratio
 
 class Args:
     def __init__(self):
@@ -53,6 +56,7 @@ def main():
     archiveID = PDSinfoDICT[args.archive]['archiveid']
 
     RQ = RedisQueue('Thumbnail_ReadyQueue')
+    error_queue = RedisQueue('UPC_ErrorQueue')
 
     try:
         Session, _ = db_connect(pds_db)
@@ -72,11 +76,11 @@ def main():
 
 
     if args.search:
-        qf = '%' + search + '%'
+        qf = '%' + args.search + '%'
         qOBJ = qOBJ.filter(Files.filename.like(qf))
 
     if qOBJ:
-        path = PDSinfoDICT[archive]['path']
+        path = PDSinfoDICT[args.archive]['path']
         addcount = 0
         size = 0
         for element in qOBJ:
@@ -90,7 +94,7 @@ def main():
             exit()
 
         for element in qOBJ:
-            fname = PDSinfoDICT[args.archive]['path'] + element.filename
+            fname = path + element.filename
             fid = element.fileid
 
             try:
@@ -98,18 +102,14 @@ def main():
                 dest_path = dest_path.replace(path, workarea)
                 pathlib.Path(dest_path).mkdir(parents=True, exist_ok=True)
                 for f in glob.glob(splitext(fname)[0] + r'.*'):
-                    if not os.path.exists(f'{dest_path}{f}'):
+                    if not exists(f'{dest_path}{f}'):
                         copy2(f, dest_path)
 
-                RQ.QueueAdd((workarea+element.filename, fid, archive))
+                RQ.QueueAdd((workarea+element.filename, fid, args.archive))
                 addcount = addcount + 1
             except Exception as e:
                 error_queue.QueueAdd(f'Unable to copy / queue {fname}: {e}')
                 logger.error('Unable to copy / queue %s: %s', fname, e)
-
-
-            RQ.QueueAdd((fname, fid, args.archive))
-            addcount = addcount + 1
 
         logger.info('Files Added to Thumbnail Queue: %s', addcount)
 
