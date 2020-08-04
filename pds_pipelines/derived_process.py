@@ -21,7 +21,7 @@ from pds_pipelines.process import Process
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.upc_models import DataFiles, SearchTerms, JsonKeywords
 from pds_pipelines.models.pds_models import ProcessRuns
-from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db, lock_obj, upc_error_queue, recipe_base, archive_base, derived_base
+from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db, lock_obj, upc_error_queue, recipe_base, archive_base, derived_base, derived_url
 from pds_pipelines.utils import generate_processes, process
 
 def getISISid(infile):
@@ -47,7 +47,7 @@ def makedir(inputfile):
 
 def add_url(input_file, upc_id, proc, session_maker):
     session = session_maker()
-    outputfile = input_file.replace(derived_base, f'${proc}_server/')
+    outputfile = input_file.replace(derived_base, derived_url)
     q_record = session.query(JsonKeywords).filter(JsonKeywords.upcid==upc_id)
     params = {}
     old_json = q_record.first().jsonkeywords
