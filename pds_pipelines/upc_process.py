@@ -508,8 +508,9 @@ def main(user_args):
         if not persist:
             # Remove all files file from the workarea except for the copied
             # source file
-            workarea_files = glob(workarea_pwd + '/*')
-            workarea_files.remove(inputfile)
+            file_prefix = os.path.splitext(inputfile)[0]
+            workarea_files = glob(file_prefix + '*')
+            os.remove(os.path.join(workarea_pwd, 'print.prt'))
             for file in workarea_files:
                 os.remove(file)
 
