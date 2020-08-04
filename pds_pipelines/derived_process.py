@@ -103,7 +103,7 @@ def main():
     pds_session_maker, pds_session = db_connect(pds_db)
     upc_session_maker, upc_session = db_connect(upc_db)
 
-    # Only checks lock for browse.  Not sure of a better wayt o handle this.
+    # Only checks lock for browse.  Not sure of a better way to handle this.
     if (int(RQ_thumbnail.QueueSize()) > 0 or int(RQ_browse.QueueSize())) and RQ_lock.available(RQ_browse.id_name):
         if int(RQ_thumbnail.QueueSize()) > 0:
             proc = "thumbnail"
@@ -139,22 +139,19 @@ def main():
                                                                        derived_product=derived_product,
                                                                        workarea=workarea)
             failing_command = process(processes, workarea, logger)
-            # "infile" is "no_extension_inputfile"
+            # Ideally we could check for failing_command is None, but warnings count as errors
             if os.path.exists(derived_product):
-                print(derived_product)
                 upc_session = upc_session_maker()
                 isis_id = getISISid(infile)
                 datafile = upc_session.query(DataFiles).filter(DataFiles.isisid.like(f"%{isis_id}%")).first()
                 upc_id = datafile.upcid
-                print(upc_id)
                 add_url(derived_product, upc_id, proc, upc_session_maker)
                 upc_session.close()
                 #os.remove(infile)
                 logger.info(f'{proc} Process Success: %s', inputfile)
-
                 AddProcessDB(pds_session_maker, fid, 't')
             else:
-                print(failing_command)
+                logger.error('Error: %s', failing_command)
 
         else:
             RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during {proc} processing')
