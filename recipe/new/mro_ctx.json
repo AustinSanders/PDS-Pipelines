@@ -73,25 +73,25 @@
         "recipe": {
             "isis.mroctx2isis": {
                 "from_": "{{inputfile}}",
-                "to": "{{workarea}}{{no_extension_inputfile}}.cub"
+                "to": "{{no_extension_inputfile}}.cub"
             },
             "isis.spiceinit": {
-                "from_": "{{workarea}}{{no_extension_inputfile}}.cub",
+                "from_": "{{no_extension_inputfile}}.cub",
                 "cknadir": "yes",
                 "cksmithed": "yes"
             },
             "isis.ctxcal": {
-                "from_": "{{workarea}}{{no_extension_inputfile}}.cub",
-                "to": "{{workarea}}{{no_extension_inputfile}}.cal.cub"
+                "from_": "{{no_extension_inputfile}}.cub",
+                "to": "{{no_extension_inputfile}}.cal.cub"
             },
-            "gdal.gdal_translate": {
-            		"outputType": "gdal.GDT_Byte",
+            "gdal_translate": {
+            		"outputType": "Byte",
             		"format" : "JPEG",
-            		"scaleParams": "",
+                        "scaleParams": [[]],
             		"width" : "{{width}}" ,
             		"height" : "{{height}}",
-            		"src" : "{{workarea}}{{no_extension_inputfile}}.cal.cub",
-            		"dest": "{{final_path}}{{no_extension_inputfile}}.{{proc}}.jpg"
+            		"src" : "{{no_extension_inputfile}}.cal.cub",
+            		"dest": "{{derived_product}}"
       	    }
         },
 	"browse": {
