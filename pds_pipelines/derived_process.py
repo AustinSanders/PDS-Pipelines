@@ -13,6 +13,7 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from pysis.isis import getsn
 from ast import literal_eval
+from json import JSONDecoder
 
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.redis_lock import RedisLock
@@ -22,7 +23,7 @@ from pds_pipelines.db import db_connect
 from pds_pipelines.models.upc_models import DataFiles, SearchTerms, JsonKeywords
 from pds_pipelines.models.pds_models import ProcessRuns
 from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db, lock_obj, upc_error_queue, recipe_base, archive_base, derived_base, derived_url
-from pds_pipelines.utils import generate_processes, process
+from pds_pipelines.utils import generate_processes, process, parse_pairs
 
 def getISISid(infile):
     serial_num = getsn(from_=infile)
@@ -48,18 +49,16 @@ def makedir(inputfile):
 def add_url(input_file, upc_id, session_maker):
     session = session_maker()
     outputfile = input_file.replace(derived_base, derived_url)
+    thumb = outputfile + '.thumbnail.jpg'
+    browse = outputfile + '.browse.jpg'
     q_record = session.query(JsonKeywords).filter(JsonKeywords.upcid==upc_id)
     params = {}
     old_json = q_record.first().jsonkeywords
-    old_json['browse'] = outputfile
-    old_json['thumbnail'] = outputfile
+    old_json['browse'] = thumb
+    old_json['thumbnail'] = browse
     params['jsonkeywords'] = old_json
 
-    #record.jsonkeywords = json.loads(json.dumps(params, indent=4))
     q_record.update(params, False)
-    # By default, SQLAlchemy does not track changes to json, so we have
-    # to manually flag that the data were changed.
-    #flag_modified(record, 'jsonkeywords')
     session.commit()
     session.close()
 
@@ -95,8 +94,7 @@ def main():
     RQ_derived = RedisQueue('Derived_ReadyQueue')
     RQ_error = RedisQueue(upc_error_queue)
     RQ_lock = RedisLock(lock_obj)
-    RQ_lock.add({RQ_thumbnail.id_name: '1'})
-    RQ_lock.add({RQ_browse.id_name: '1'})
+    RQ_lock.add({RQ_derived.id_name: '1'})
 
     PDSinfoDICT = json.load(open(pds_info, 'r'))
 
@@ -105,7 +103,7 @@ def main():
 
     # Only checks lock for browse.  Not sure of a better way to handle this.
     if int(RQ_derived.QueueSize()) and RQ_lock.available(RQ_derived.id_name):
-        item = literal_eval(RQ_thumbnail.QueueGet())
+        item = literal_eval(RQ_derived.QueueGet())
 
         inputfile = item[0]
         fid = item[1]
@@ -113,7 +111,7 @@ def main():
         if os.path.isfile(inputfile):
             recipe_file = recipe_base + "/" + archive + '.json'
             with open(recipe_file) as fp:
-                recipe = json.load(fp)['reduced']
+                recipe = json.load(fp, object_pairs_hook = parse_pairs)['reduced']
                 recipe_string = json.dumps(recipe['recipe'])
 
             logger.info('Starting Process: %s', inputfile)
@@ -133,7 +131,7 @@ def main():
                 isis_id = getISISid(infile)
                 datafile = upc_session.query(DataFiles).filter(DataFiles.isisid.like(f"%{isis_id}%")).first()
                 upc_id = datafile.upcid
-                add_url(derived_product, upc_id, proc, upc_session_maker)
+                add_url(derived_product, upc_id, upc_session_maker)
                 upc_session.close()
                 #os.remove(infile)
                 logger.info(f'Derived Process Success: %s', inputfile)

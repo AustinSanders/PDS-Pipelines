@@ -4,10 +4,33 @@ import json
 import pds_pipelines
 from pds_pipelines.available_modules import *
 from pysis.exceptions import ProcessError
+from collections import defaultdict
+
+class MultiDict(dict):
+    """ Helper object for parse_pairs.  Normal dictionary, but adds values to list instead of overwriting duplicate keys.
+    """
+    def __setitem__(self, key, value):
+        if key in self:
+            try:
+                self[key].append(value)
+            except AttributeError:
+                super().__setitem__(key, [self[key], value])
+        else:
+            super().__setitem__(key, value)
+
+"""
+JSON object_pairs_hook target.  Necessary to allow duplicate key specification from JSON documents to Python.
+Uses the MultiDict defined above instead of default python dictionary.
+"""
+def parse_pairs(pairs):
+    dct = MultiDict()
+    for k, v in pairs:
+        dct[k] = v
+    return dct
+
 
 def generate_processes(inputfile, recipe_string, logger, **kwargs):
     logger.info('Starting Process: %s', inputfile)
-
     # Working directory for processing should be same as inputfile
     workarea_pwd = os.path.dirname(inputfile)
 
@@ -23,7 +46,6 @@ def generate_processes(inputfile, recipe_string, logger, **kwargs):
                                  footprint_file=footprint_file,
                                  **kwargs)
     processes = json.loads(recipe_str)
-
     return processes, no_extension_inputfile, cam_info_file, footprint_file, workarea_pwd
 
 
@@ -42,13 +64,14 @@ def process(processes, workarea_pwd, logger):
             os.chdir(workarea_pwd)
             # execute function
             logger.debug("Running %s", process)
-            func(**keywargs)
+            if type(keywargs) is list:
+                [func(**parameterization) for parameterization in keywargs]
+            else:
+                func(**keywargs)
 
         except ProcessError as e:
             logger.debug("%s", e)
             logger.debug("%s", e.stderr)
-            print(e)
-            print(e.stderr)
             failing_command = command
             break
 

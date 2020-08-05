@@ -84,33 +84,25 @@
                 "from_": "{{no_extension_inputfile}}.cub",
                 "to": "{{no_extension_inputfile}}.cal.cub"
             },
-            "gdal.gdal_translate": {
-            		"outputType": "Byte",
-            		"format" : "JPEG",
-            		"scaleParams": [[]],
-            		"width" : "0",
-            		"height" : "300",
-            		"src" : "{{no_extension_inputfile}}.cal.cub",
-            		"dest": "{{derived_product}}.thumbnail.jpg"
+            "gdal_translate": {
+		"outputType": "Byte",
+		"format" : "JPEG",
+		"scaleParams": [[]],
+		"width" : "0",
+		"height" : "300",
+		"src" : "{{no_extension_inputfile}}.cal.cub",
+		"dest": "{{derived_product}}.thumbnail.jpg"
       	    },
-            "gdal.gdal_translate": {
+            "gdal_translate": {
                 "outputType": "Byte",
                 "format" : "JPEG",
-                "scaleParams": "",
+                "scaleParams": [[]],
                 "width" : "0",
                 "height" : "900",
                 "src" : "{{no_extension_inputfile}}.cal.cub",
                 "dest": "{{derived_product}}.browse.jpg"
             }
-        },
-	"browse": {
-	    "width": "0",
-	    "height": "900",
-	},
-	"thumbnail": {
-	    "width": "0"
-	    "height": "300",
-	}
+        }
     },
     "projected": {
         "recipe": {
