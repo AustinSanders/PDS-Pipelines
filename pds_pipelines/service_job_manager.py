@@ -678,17 +678,6 @@ def generate_map2_recipe(xmlOBJ, isis_label, MAPfile):
             stretch_dict['usepercentages'] = 'yes'
             recipeOBJ['isis.stretch'] = stretch_dict
 
-    output_bit_type = xmlOBJ.getOutBit().upper()
-    if output_bit_type != 'INPUT':
-        if output_bit_type == 'UNSIGNEDBYTE' or output_bit_type == 'SIGNEDWORD':
-            if str(isis_label['IsisCube']['Core']['Pixels']['Type']).upper() != output_bit_type:
-                last_process = list(recipeOBJ.items())[-1][0]
-                if output_bit_type.lower() == 'unsignedbyte':
-                    recipeOBJ[last_process]['to'] += '+lsb+tile+attached+unsignedbyte+1:254'
-                elif output_bit_type.lower() == 'signedword':
-                    recipeOBJ[last_process]['to'] += '+lsb+tile+attached+signedword+-32765:32765'
-
-
     if strType == 'StretchPercent' and xmlOBJ.STR_PercentMin() is not None and xmlOBJ.STR_PercentMax() is not None and testBitType != 'REAL':
         if float(xmlOBJ.STR_PercentMin()) != 0 and float(xmlOBJ.STR_PercentMax()) != 100:
             if testBitType == 'UNSIGNEDBYTE':
@@ -731,6 +720,16 @@ def generate_map2_recipe(xmlOBJ, isis_label, MAPfile):
         grid_dict['boundary'] = 'yes'
         grid_dict['linewidth'] = '3'
         recipeOBJ['isis.grid'] = grid_dict
+
+    output_bit_type = xmlOBJ.getOutBit().upper()
+    if output_bit_type != 'INPUT':
+        if output_bit_type == 'UNSIGNEDBYTE' or output_bit_type == 'SIGNEDWORD':
+            if str(isis_label['IsisCube']['Core']['Pixels']['Type']).upper() != output_bit_type:
+                last_process = list(recipeOBJ.items())[-1][0]
+                if output_bit_type.lower() == 'unsignedbyte':
+                    recipeOBJ[last_process]['to'] += '+lsb+tile+attached+unsignedbyte+1:254'
+                elif output_bit_type.lower() == 'signedword':
+                    recipeOBJ[last_process]['to'] += '+lsb+tile+attached+signedword+-32765:32765'
     
     if 'isis.map2map' in recipeOBJ.keys():
         recipeOBJ['isis.map2map']['map'] = MAPfile
