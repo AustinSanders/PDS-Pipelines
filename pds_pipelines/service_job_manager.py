@@ -563,18 +563,18 @@ def generate_pow_recipe(xmlOBJ, pds_label, MAPfile):
     with open(recipe_base + xmlOBJ.getCleanName() + '.json', 'r') as json_file:
             recipeOBJ = json.load(json_file)['pow']['recipe']
 
-    testBitType = xmlOBJ.getOutBit().upper()
+    bit_type = xmlOBJ.getOutBit().upper()
 
     strType = xmlOBJ.STR_Type()
     stretch_dict = {}
     stretch_dict['from_'] = list(recipeOBJ.items())[-1][-1]['to']
     stretch_dict['to'] = '{{process_props.no_extension_inputfile}}.stretch.cub'
-    if strType == 'StretchPercent' and xmlOBJ.STR_PercentMin() is not None and xmlOBJ.STR_PercentMax() is not None and testBitType != 'REAL':
+    if strType == 'StretchPercent' and xmlOBJ.STR_PercentMin() is not None and xmlOBJ.STR_PercentMax() is not None and bit_type != 'REAL':
         if float(xmlOBJ.STR_PercentMin()) != 0 and float(xmlOBJ.STR_PercentMax()) != 100:
-            if testBitType == 'UNSIGNEDBYTE':
+            if bit_type == 'UNSIGNEDBYTE':
                 strpairs = '0:1 ' + xmlOBJ.STR_PercentMin() + ':1 ' + \
                     xmlOBJ.STR_PercentMax() + ':254 100:254'
-            elif testBitType == 'SIGNEDWORD':
+            elif bit_type == 'SIGNEDWORD':
                 strpairs = '0:-32765 ' + xmlOBJ.STR_PercentMin() + ':-32765 ' + \
                     xmlOBJ.STR_PercentMax() + ':32765 100:32765'
 
@@ -601,11 +601,11 @@ def generate_pow_recipe(xmlOBJ, pds_label, MAPfile):
         stretch_dict['variance'] = xmlOBJ.STR_SigmaVariance()
         recipeOBJ['sigmastretch'] = stretch_dict
 
-    if xmlOBJ.getOutBit().upper() == 'UNSIGNEDBYTE' or xmlOBJ.getOutBit().upper() == 'SIGNEDWORD':
+    if bit_type == 'UNSIGNEDBYTE' or bit_type == 'SIGNEDWORD':
         last_process = list(recipeOBJ.items())[-1][0]
-        if xmlOBJ.getOutBit().lower()  == 'unsignedbyte':
+        if bit_type  == 'UNSIGNEDBYTE':
             recipeOBJ[last_process]['to'] += '+lsb+tile+attached+unsignedbyte+1:254'
-        elif xmlOBJ.getOutBit().lower() == 'signedword':
+        elif bit_type == 'SIGNEDWORD':
             recipeOBJ[last_process]['to'] += '+lsb+tile+attached+signedword+-32765:32765'
 
     recipe_processes = recipeOBJ.keys()
@@ -645,10 +645,12 @@ def generate_map2_recipe(xmlOBJ, isis_label, MAPfile):
 
     with open(recipe_base + 'map2_process.json', 'r') as json_file:
             recipeOBJ = json.load(json_file)['map']['recipe']
+
     if xmlOBJ.getOutBit() == 'input':
-        testBitType = str(isis_label['IsisCube']['Core']['Pixels']['Type']).upper()
+        bit_type = str(isis_label['IsisCube']['Core']['Pixels']['Type']).upper()
     else:
-        testBitType = xmlOBJ.getOutBit().upper()
+        bit_type = xmlOBJ.getOutBit().upper()
+    isis_pixel_type = str(isis_label['IsisCube']['Core']['Pixels']['Type']).upper()
 
     stretch_dict = {}
     stretch_dict['from_'] = list(recipeOBJ.items())[-1][-1]['to']
@@ -656,13 +658,11 @@ def generate_map2_recipe(xmlOBJ, isis_label, MAPfile):
 
     strType = xmlOBJ.STR_Type()
     if xmlOBJ.getProcess() == 'MAP2' and strType is None:
-        isis_pixel_type = str(isis_label['IsisCube']['Core']['Pixels']['Type']).upper()
-        if isis_pixel_type != xmlOBJ.getOutBit().upper() and \
-           isis_pixel_type != 'REAL':
+        if bit_type != isis_pixel_type and isis_pixel_type != 'REAL':
 
-            if isis_pixel_type == 'SIGNEDWORD':
+            if bit_type == 'SIGNEDWORD':
                 stretch_pairs = '0:-32765 0:-32765 100:32765 100:32765'
-            elif isis_pixel_type == 'UNSIGNEDBYTE':
+            elif bit_type == 'UNSIGNEDBYTE':
                 stretch_pairs = '0:1 0:1 100:254 100:254'
             stretch_dict['pairs'] = stretch_pairs
             stretch_dict['usepercentages'] = 'yes'
@@ -670,10 +670,10 @@ def generate_map2_recipe(xmlOBJ, isis_label, MAPfile):
 
     if strType == 'StretchPercent' and xmlOBJ.STR_PercentMin() is not None and xmlOBJ.STR_PercentMax() is not None and testBitType != 'REAL':
         if float(xmlOBJ.STR_PercentMin()) != 0 and float(xmlOBJ.STR_PercentMax()) != 100:
-            if testBitType == 'UNSIGNEDBYTE':
+            if bit_type == 'UNSIGNEDBYTE':
                 strpairs = '0:1 ' + xmlOBJ.STR_PercentMin() + ':1 ' + \
                     xmlOBJ.STR_PercentMax() + ':254 100:254'
-            elif testBitType == 'SIGNEDWORD':
+            elif bit_type == 'SIGNEDWORD':
                 strpairs = '0:-32765 ' + xmlOBJ.STR_PercentMin() + ':-32765 ' + \
                     xmlOBJ.STR_PercentMax() + ':32765 100:32765'
 
@@ -711,14 +711,13 @@ def generate_map2_recipe(xmlOBJ, isis_label, MAPfile):
         grid_dict['linewidth'] = '3'
         recipeOBJ['isis.grid'] = grid_dict
 
-    output_bit_type = xmlOBJ.getOutBit().upper()
-    if output_bit_type != 'INPUT':
-        if output_bit_type == 'UNSIGNEDBYTE' or output_bit_type == 'SIGNEDWORD':
-            if str(isis_label['IsisCube']['Core']['Pixels']['Type']).upper() != output_bit_type:
+    if bit_type != 'INPUT':
+        if bit_type == 'UNSIGNEDBYTE' or bit_type == 'SIGNEDWORD':
+            if bit_type != isis_pixel_type:
                 last_process = list(recipeOBJ.items())[-1][0]
-                if output_bit_type.lower() == 'unsignedbyte':
+                if bit_type == 'UNSIGNEDBYTE':
                     recipeOBJ[last_process]['to'] += '+lsb+tile+attached+unsignedbyte+1:254'
-                elif output_bit_type.lower() == 'signedword':
+                elif bit_type == 'SIGNEDWORD':
                     recipeOBJ[last_process]['to'] += '+lsb+tile+attached+signedword+-32765:32765'
     
     if 'isis.map2map' in recipeOBJ.keys():

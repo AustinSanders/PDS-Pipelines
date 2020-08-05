@@ -7,9 +7,6 @@ import logging
 import shutil
 import argparse
 
-from pysis import isis
-from pysis.exceptions import ProcessError
-
 from pds_pipelines.config import lock_obj, pds_log, default_namespace, workarea
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.redis_lock import RedisLock
@@ -53,9 +50,7 @@ def main(user_args):
     RQ_lock = RedisLock(lock_obj)
     RQ_lock.add({'MAP':'1'})
 
-    if int(RQ_file.QueueSize()) == 0:
-        print("No Files Found in Redis Queue")
-    elif RQ_lock.available('MAP'):
+    if int(RQ_file.QueueSize()) > 0 and RQ_lock.available('MAP'):
         jobFile = RQ_file.Qfile2Qwork(RQ_file.getQueueName(),
                                       RQ_work.getQueueName())
 
@@ -99,10 +94,9 @@ def main(user_args):
                 last_output = last_output.split('+')[0]
                 finalfile = os.path.join(work_dir, RHash.getMAPname() + '.cub')
             else:
-                last_output = list(processes.items())[-1][-1]['dest']
                 img_format = RHash.Format()
 
-                if img_format == 'GeoTiff-BigTiff':
+                if img_format == 'GeoTiff-BigTiff' or img_format == 'GTiff':
                     fileext = 'tif'
                 elif img_format == 'GeoJPEG-2000':
                     fileext = 'jp2'
@@ -113,7 +107,11 @@ def main(user_args):
                 elif img_format == 'GIF':
                     fileext = 'gif'
 
+                last_output = list(processes.items())[-1][-1]['dest']
+                last_output_msk = last_output + '.msk'
                 finalfile = os.path.join(work_dir, RHash.getMAPname() + '.' + fileext)
+                finalfile_msk = os.path.join(work_dir, RHash.getMAPname() + '.' + fileext + '.msk')
+                shutil.move(last_output_msk, finalfile_msk)
             shutil.move(last_output, finalfile)
 
             if RHash.getStatus() != 'ERROR':
