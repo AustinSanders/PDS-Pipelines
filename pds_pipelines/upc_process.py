@@ -589,16 +589,16 @@ def main(user_args):
                          'cam_info_file': cam_info_file,
                          'footprint_file': footprint_file}
 
-        processes, infile, caminfoOUT, footprint_file, workarea_pwd = generate_processes(inputfile, recipe_string, logger, process_props=process_props)
+        processes, workarea_pwd = generate_processes(inputfile, recipe_string, logger, process_props=process_props)
         failing_command = process(processes, workarea_pwd, logger)
 
         pds_label = pvl.load(inputfile)
 
         ######## Generate DataFiles Record ########
-        upc_id = create_datafiles_record(pds_label, edr_source, infile + '.cub', upc_session_maker)
+        upc_id = create_datafiles_record(pds_label, edr_source, no_extension_inputfile + '.cub', upc_session_maker)
 
         ######## Generate SearchTerms Record ########
-        create_search_terms_record(pds_label, caminfoOUT, upc_id, infile + '.cub', footprint_file, search_term_mapping, upc_session_maker)
+        create_search_terms_record(pds_label, caminfoOUT, upc_id, no_extension_inputfile + '.cub', footprint_file, search_term_mapping, upc_session_maker)
 
         ######## Generate JsonKeywords Record ########
         create_json_keywords_record(caminfoOUT, upc_id, inputfile, failing_command, upc_session_maker, logger)
