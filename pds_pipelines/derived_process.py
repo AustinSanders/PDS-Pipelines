@@ -33,7 +33,7 @@ def getISISid(infile):
     return newisisSerial
 
 def makedir(inputfile):
-    temppath = os.path.dirname(inputfile).lower()
+    temppath = os.path.dirname(inputfile)
     finalpath = temppath.replace(workarea, derived_base)
 
     if not os.path.exists(finalpath):
