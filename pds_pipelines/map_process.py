@@ -82,147 +82,17 @@ def main(user_args):
             os.path.splitext(os.path.basename(jobFile))[0] + '.output.cub')
 
         # Recipe Stuff
-
-
         status = 'success'
         recipe_string = RQ_recipe.QueueGet()
         no_extension_inputfile = os.path.join(work_dir, os.path.splitext(os.path.basename(jobFile))[0])
-        print(no_extension_inputfile)
         process_props = {'no_extension_inputfile': no_extension_inputfile}
-        print(jobFile)
         processes, workarea_pwd = generate_processes(jobFile, recipe_string, logger, process_props = process_props)
-        print(processes)
         
         failing_command = process(processes, work_dir, logger)
         if failing_command:
             status = 'error'
-        '''
-        for element in RQ_recipe.RecipeGet():
-
-            if status == 'error':
-                break
-            elif status == 'success':
-                processOBJ = Process()
-                process = processOBJ.JSON2Process(element)
-                if 'gdal_translate' not in processOBJ.getProcessName():
-                    if 'cubeatt-band' in processOBJ.getProcessName():
-                        if '+' in jobFile:
-                            processOBJ.updateParameter('from_', jobFile)
-                            processOBJ.updateParameter('to', outfile)
-                            processOBJ.ChangeProcess('cubeatt')
-                        else:
-                            continue
-
-                    elif 'map2map' in processOBJ.getProcessName():
-                        if '+' in jobFile:
-                            processOBJ.updateParameter('from_', infile)
-                        else:
-                            processOBJ.updateParameter('from_', jobFile)
-                        processOBJ.updateParameter('to', outfile)
-
-                    elif 'cubeatt-bit' in processOBJ.getProcessName():
-                        if RHash.OutBit() == 'unsignedbyte':
-                            temp_outfile = outfile + '+lsb+tile+attached+unsignedbyte+1:254'
-                        elif RHash.OutBit() == 'signedword':
-                            temp_outfile = outfile + '+lsb+tile+attached+signedword+-32765:32765'
-                        processOBJ.updateParameter('from_', infile)
-                        processOBJ.updateParameter('to', temp_outfile)
-                        processOBJ.ChangeProcess('cubeatt')
-
-                    elif 'isis2pds' in processOBJ.getProcessName():
-                        # finalfile = infile.replace('.input.cub', '_final.img')
-                        finalfile = workarea + RHash.getMAPname() + '.img'
-                        processOBJ.updateParameter('from_', infile)
-                        processOBJ.updateParameter('to', finalfile)
-
-                    else:
-                        processOBJ.updateParameter('from_', infile)
-                        processOBJ.updateParameter('to', outfile)
-
-                    print(processOBJ.getProcess())
-
-                    for k, v in processOBJ.getProcess().items():
-                        func = getattr(isis, k)
-                        subloggyOBJ = SubLoggy(k)
-                        try:
-                            func(**v)
-                            logger.info('Process %s :: Success', k)
-                            subloggyOBJ.setStatus('SUCCESS')
-                            subloggyOBJ.setCommand(processOBJ.LogCommandline())
-                            subloggyOBJ.setHelpLink(processOBJ.LogHelpLink())
-                            loggyOBJ.AddProcess(subloggyOBJ.getSLprocess())
-
-                            if os.path.isfile(outfile):
-                                os.rename(outfile, infile)
-                            status = 'success'
-
-                        except ProcessError as e:
-                            logger.error('Process %s :: Error', k)
-                            logger.error(e)
-                            status = 'error'
-                            eSTR = 'Error Executing ' + k + \
-                                ' Standard Error: ' + str(e)
-                            RHerror.addError(os.path.splitext(
-                                os.path.basename(jobFile))[0], eSTR)
-                            subloggyOBJ.setStatus('ERROR')
-                            subloggyOBJ.setCommand(processOBJ.LogCommandline())
-                            subloggyOBJ.setHelpLink(processOBJ.LogHelpLink())
-                            subloggyOBJ.errorOut(eSTR)
-                            loggyOBJ.AddProcess(subloggyOBJ.getSLprocess())
-                            RQ_work.QueueRemove(jobFile)
-                            break
-
-                else:
-
-                    GDALcmd = ""
-                    for process, v, in processOBJ.getProcess().items():
-                        subloggyOBJ = SubLoggy(process)
-                        GDALcmd += process
-                        for dict_key, value in v.items():
-                            GDALcmd += ' ' + dict_key + ' ' + value
-
-                    img_format = RHash.Format()
-
-                    if img_format == 'GeoTiff-BigTiff':
-                        fileext = 'tif'
-                    elif img_format == 'GeoJPEG-2000':
-                        fileext = 'jp2'
-                    elif img_format == 'JPEG':
-                        fileext = 'jpg'
-                    elif img_format == 'PNG':
-                        fileext = 'png'
-                    elif img_format == 'GIF':
-                        fileext = 'gif'
-
-                    logGDALcmd = GDALcmd + ' ' + basename + '.input.cub ' + RHash.getMAPname() + '.' + fileext
-                    finalfile = workarea + RHash.getMAPname() + '.' + fileext
-                    GDALcmd += ' ' + infile + ' ' + finalfile
-                    print(GDALcmd)
-                    try:
-                        subprocess.call(GDALcmd, shell=True)
-                        logger.info('Process GDAL translate :: Success')
-                        status = 'success'
-                        subloggyOBJ.setStatus('SUCCESS')
-                        subloggyOBJ.setCommand(logGDALcmd)
-                        subloggyOBJ.setHelpLink(
-                            'www.gdal.org/gdal_translate.html')
-                        loggyOBJ.AddProcess(subloggyOBJ.getSLprocess())
-                        os.remove(infile)
-                    except OSError as e:
-                        logger.error('Process GDAL translate :: Error')
-                        logger.error(e)
-                        status = 'error'
-                        RHerror.addError(os.path.splitext(os.path.basename(jobFile))[0],
-                                         'Process GDAL translate :: Error')
-                        subloggyOBJ.setStatus('ERROR')
-                        subloggyOBJ.setCommand(logGDALcmd)
-                        subloggyOBJ.setHelpLink(
-                            'http://www.gdal.org/gdal_translate.html')
-                        subloggyOBJ.errorOut(e)
-                        loggyOBJ.AddProcess(subloggyOBJ.getSLprocess())
-        '''
+        
         if status == 'success':
-
 
             if RHash.Format() == 'ISIS3':
                 last_output = list(processes.items())[-1][-1]['to']
