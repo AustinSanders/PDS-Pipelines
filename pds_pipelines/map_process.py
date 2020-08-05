@@ -90,7 +90,7 @@ def main(user_args):
         print(no_extension_inputfile)
         process_props = {'no_extension_inputfile': no_extension_inputfile}
         print(jobFile)
-        processes, workarea_pwd = generate_processes(jobFile, recipe_string, None, process_props = process_props)
+        processes, workarea_pwd = generate_processes(jobFile, recipe_string, logger, process_props = process_props)
         print(processes)
         
         failing_command = process(processes, work_dir, logger)
@@ -222,10 +222,29 @@ def main(user_args):
                         loggyOBJ.AddProcess(subloggyOBJ.getSLprocess())
         '''
         if status == 'success':
+
+
             if RHash.Format() == 'ISIS3':
                 last_output = list(processes.items())[-1][-1]['to']
-                finalfile = os.path.join(work_dirm, RHash.getMAPname() + '.cub')
-                shutil.move(last_output, finalfile)
+                last_output = last_output.split('+')[0]
+                finalfile = os.path.join(work_dir, RHash.getMAPname() + '.cub')
+            else:
+                last_output = list(processes.items())[-1][-1]['dest']
+                img_format = RHash.Format()
+
+                if img_format == 'GeoTiff-BigTiff':
+                    fileext = 'tif'
+                elif img_format == 'GeoJPEG-2000':
+                    fileext = 'jp2'
+                elif img_format == 'JPEG':
+                    fileext = 'jpg'
+                elif img_format == 'PNG':
+                    fileext = 'png'
+                elif img_format == 'GIF':
+                    fileext = 'gif'
+
+                finalfile = os.path.join(work_dir, RHash.getMAPname() + '.' + fileext)
+            shutil.move(last_output, finalfile)
 
             if RHash.getStatus() != 'ERROR':
                 RHash.Status('SUCCESS')
