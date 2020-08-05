@@ -12,7 +12,7 @@ import json
 from pysis import isis
 from pysis.exceptions import ProcessError
 
-from pds_pipelines.config import lock_obj, scratch, pds_log, default_namespace, upc_error_queue
+from pds_pipelines.config import lock_obj, scratch, pds_log, default_namespace, upc_error_queue, workarea
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.redis_hash import RedisHash
@@ -43,7 +43,7 @@ def main(user_args):
     if namespace is None:
         namespace = default_namespace
 
-    workarea = scratch + key + '/'
+    work_dir = os.path.join(workarea, key)
     RQ_file = RedisQueue(key + '_FileQueue', namespace)
     RQ_work = RedisQueue(key + '_WorkQueue', namespace)
     RQ_zip = RedisQueue(key + '_ZIP', namespace)
@@ -87,10 +87,11 @@ def main(user_args):
         status = 'success'
         recipe_string = RQ_recipe.QueueGet()
         label = pvl.load(inputFile)
-        no_extension_inputfile = workarea + os.path.splitext(os.path.basename(jobFile))[0]
+        no_extension_inputfile = os.path.join(work_dir, os.path.splitext(os.path.basename(jobFile))[0])
         process_props = {'no_extension_inputfile': no_extension_inputfile}
         processes, workarea_pwd = generate_processes(jobFile, recipe_string, None, process_props = process_props)
-        failing_command = process(processes, workarea, logger)
+        print(processes)
+        failing_command = process(processes, work_dir, logger)
         if failing_command:
             status = 'error'
         '''

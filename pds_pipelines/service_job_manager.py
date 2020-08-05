@@ -602,20 +602,11 @@ def generate_pow_recipe(xmlOBJ, pds_label, MAPfile):
         recipeOBJ['sigmastretch'] = stretch_dict
 
     if xmlOBJ.getOutBit().upper() == 'UNSIGNEDBYTE' or xmlOBJ.getOutBit().upper() == 'SIGNEDWORD':
-        if "isis.cubeatt" not in recipeOBJ.keys():
-            cubeatt_dict = {}
-            last_out_file = list(recipeOBJ.items())[-1][-1]['to']
-            cubeatt_dict['from_'] = last_out_file
-            cubeatt_dict['to'] = '{{process_props.no_extension_inputfile}}.cubeatt.cub'
-        else:
-            cubeatt_dict = recipeOBJ['isis.cubeatt']
-
-        if xmlOBJ.getOutBit().lower() == 'unsignedbyte':
-            cubeatt_dict['to'] += '+lsb+tile+attached+unsignedbyte+1:254'
+        last_process = list(recipeOBJ.items())[-1][0]
+        if xmlOBJ.getOutBit().lower()  == 'unsignedbyte':
+            recipeOBJ[last_process]['to'] += '+lsb+tile+attached+unsignedbyte+1:254'
         elif xmlOBJ.getOutBit().lower() == 'signedword':
-            cubeatt_dict['to'] += '+lsb+tile+attached+signedword+-32765:32765'
-
-        recipeOBJ['isis.cubeatt'] = cubeatt_dict
+            recipeOBJ[last_process]['to'] += '+lsb+tile+attached+signedword+-32765:32765'
 
     recipe_processes = recipeOBJ.keys()
 
@@ -633,7 +624,6 @@ def generate_pow_recipe(xmlOBJ, pds_label, MAPfile):
             recipeOBJ['isis.cam2map']['defaultrange'] = 'CAMERA'
             recipeOBJ['isis.cam2map']['trim'] = 'YES'
 
-    pds_label = pvl.load(Input_file)
     if 'isis.ctxevenodd' in recipe_processes:
         spatial_summing = pds_label.get('SAMPLING_FACTOR')
         if spatial_summing != 1:
@@ -994,7 +984,7 @@ def main(user_args):
 
     logger.info('Building Recipe')
     if xmlOBJ.getProcess() == 'POW':
-        pds_label = pvl.load(Input_file)
+        pds_label = pvl.load(Input_file.split('+')[0])
         recipeOBJ = generate_pow_recipe(xmlOBJ, pds_label, MAPfile)
 
     elif xmlOBJ.getProcess() == 'MAP2':
