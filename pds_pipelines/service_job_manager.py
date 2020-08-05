@@ -660,7 +660,10 @@ def generate_map2_recipe(xmlOBJ, isis_label, MAPfile):
     else:
         testBitType = xmlOBJ.getOutBit().upper()
 
-    
+    stretch_dict = {}
+    stretch_dict['from_'] = list(recipeOBJ.items())[-1][-1]['to']
+    stretch_dict['to'] = '{{process_props.no_extension_inputfile}}.stretch.cub'
+
     strType = xmlOBJ.STR_Type()
     if xmlOBJ.getProcess() == 'MAP2' and strType is None:
         isis_pixel_type = str(isis_label['IsisCube']['Core']['Pixels']['Type']).upper()
@@ -668,22 +671,22 @@ def generate_map2_recipe(xmlOBJ, isis_label, MAPfile):
            isis_pixel_type != 'REAL':
 
             if isis_pixel_type == 'SIGNEDWORD':
-                recipeOBJ['isis.map2map']['to'] = recipeOBJ['isis.map2map']['to'] + '+lsb+tile+attached+signedword+-32765:32765'
+                stretch_pairs = '0:-32765 0:-32765 100:32765 100:32765'
             elif isis_pixel_type == 'UNSIGNEDBYTE':
-                recipeOBJ['isis.map2map']['to'] = recipeOBJ['isis.map2map']['to'] + '+lsb+tile+attached+unsignedbyte+1:254'
-
-    stretch_dict = {}
-    stretch_dict['from_'] = list(recipeOBJ.items())[-1][-1]['to']
-    stretch_dict['to'] = '{{process_props.no_extension_inputfile}}.stretch.cub'
+                stretch_pairs = '0:1 0:1 100:254 100:254'
+            stretch_dict['pairs'] = stretch_pairs
+            stretch_dict['usepercentages'] = 'yes'
+            recipeOBJ['isis.stretch'] = stretch_dict
 
     output_bit_type = xmlOBJ.getOutBit().upper()
     if output_bit_type != 'INPUT':
         if output_bit_type == 'UNSIGNEDBYTE' or output_bit_type == 'SIGNEDWORD':
             if str(isis_label['IsisCube']['Core']['Pixels']['Type']).upper() != output_bit_type:
+                last_process = list(recipeOBJ.items())[-1][0]
                 if output_bit_type.lower() == 'unsignedbyte':
-                    stretch_dict['to'] += '+lsb+tile+attached+unsignedbyte+1:254'
+                    recipeOBJ[last_process]['to'] += '+lsb+tile+attached+unsignedbyte+1:254'
                 elif output_bit_type.lower() == 'signedword':
-                    stretch_dict['to'] += '+lsb+tile+attached+signedword+-32765:32765'
+                    recipeOBJ[last_process]['to'] += '+lsb+tile+attached+signedword+-32765:32765'
 
 
     if strType == 'StretchPercent' and xmlOBJ.STR_PercentMin() is not None and xmlOBJ.STR_PercentMax() is not None and testBitType != 'REAL':
