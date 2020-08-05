@@ -313,7 +313,7 @@ def test_generate_processes():
         original_recipe = json.load(fp)['upc']['recipe']
         recipe_string = json.dumps(original_recipe)
 
-    processes, inputfile, caminfoOUT, footprint_file, pwd = generate_processes(inputfile, recipe_string, logger)
+    processes, pwd = generate_processes(inputfile, recipe_string, logger, process_props={})
 
     for k, v in processes.items():
         assert original_recipe[k].keys() == v.keys()
