@@ -1,49 +1,50 @@
 #!/usr/bin/env python
-
 import sys
 import logging
 import argparse
 import json
 import pathlib
 import glob
-from os.path import getsize, dirname, splitext, exists, join, basename
 from shutil import copy2, disk_usage
+from os.path import getsize, dirname, splitext, exists, basename, join
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files
 from pds_pipelines.config import pds_info, pds_log, pds_db, workarea, disk_usage_ratio, archive_base
 
-def parse_args():
+class Args:
+    def __init__(self):
+        pass
 
-    parser = argparse.ArgumentParser(description='PDS DI Data Integrity')
+    def parse_args(self):
 
-    parser.add_argument('--archive', '-a', dest="archive", required=True,
-                        help="Enter archive - archive to ingest")
+        parser = argparse.ArgumentParser(description='PDS DI Data Integrity')
 
-    parser.add_argument('--volume', '-v', dest="volume",
-                        help="Enter voluem to Ingest")
+        parser.add_argument('--archive', '-a', dest="archive", required=True,
+                          help="Enter archive - archive to ingest")
 
-    parser.add_argument('--search', '-s', dest="search",
-                        help="Enter string to search for")
+        parser.add_argument('--volume', '-v', dest="volume",
+                          help="Enter voluem to Ingest")
 
-    parser.add_argument('--log', '-l', dest="log_level",
-                        choices=['DEBUG', 'INFO', 'WARNING',
-                                'ERROR', 'CRITICAL'],
-                        help="Set the log level.", default='INFO')
+        parser.add_argument('--search', '-s', dest="search",
+                          help="Enter string to search for")
 
-    args = parser.parse_args()
-    return args
+        args = parser.parse_args()
 
-def main(user_args):
-    archive = user_args.archive
-    volume = user_args.volume
-    search = user_args.search
-    log_level = user_args.log_level
+        self.archive = args.archive
+        self.volume = args.volume
+        self.search = args.search
 
-    logger = logging.getLogger('Browse_Queueing.' + archive)
-    level = logging.getLevelName(log_level)
-    logger.setLevel(level)
-    logFileHandle = logging.FileHandler(pds_log+'Process.log')
+
+def main():
+
+#    pdb.set_trace()
+    args = Args()
+    args.parse_args()
+
+    logger = logging.getLogger('Derived_Queueing.' + args.archive)
+    logger.setLevel(logging.INFO)
+    logFileHandle = logging.FileHandler(pds_log + 'Process.log')
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s, %(message)s')
     logFileHandle.setFormatter(formatter)
     logger.addHandler(logFileHandle)
@@ -51,11 +52,10 @@ def main(user_args):
     logger.info('Starting Process')
 
     PDSinfoDICT = json.load(open(pds_info, 'r'))
-    archiveID = PDSinfoDICT[archive]['archiveid']
+    archiveID = PDSinfoDICT[args.archive]['archiveid']
 
-    RQ = RedisQueue('Browse_ReadyQueue')
+    RQ = RedisQueue('Derived_ReadyQueue')
     error_queue = RedisQueue('UPC_ErrorQueue')
-    logger.info("Browse Queue: %s", RQ.id_name)
 
     try:
         Session, _ = db_connect(pds_db)
@@ -63,23 +63,23 @@ def main(user_args):
         logger.info('Database Connection Success')
     except:
         logger.error('Database Connection Error')
-        return 1
 
-    if volume:
-        volstr = '%' + volume + '%'
+    if args.volume:
+        volstr = '%' + args.volume + '%'
         qOBJ = session.query(Files).filter(Files.archiveid == archiveID,
-                                           Files.filename.like(volstr),
-                                           Files.upc_required == 't')
+                                                Files.filename.like(volstr),
+                                                Files.upc_required == 't')
     else:
         qOBJ = session.query(Files).filter(Files.archiveid == archiveID,
-                                           Files.upc_required == 't')
+                                             Files.upc_required == 't')
 
-    if search:
-        qf = '%' + search + '%'
+
+    if args.search:
+        qf = '%' + args.search + '%'
         qOBJ = qOBJ.filter(Files.filename.like(qf))
 
     if qOBJ:
-        path = PDSinfoDICT[archive]['path']
+        path = PDSinfoDICT[args.archive]['path']
         addcount = 0
         size = 0
         for element in qOBJ:
@@ -104,13 +104,13 @@ def main(user_args):
                     if not exists(f'{dest_path}{f}'):
                         copy2(f, dest_path)
 
-                RQ.QueueAdd((join(dest_path,basename(element.filename)), fid, archive))
+                RQ.QueueAdd((join(dest_path,basename(element.filename)), fid, args.archive))
                 addcount = addcount + 1
             except Exception as e:
                 error_queue.QueueAdd(f'Unable to copy / queue {fname}: {e}')
                 logger.error('Unable to copy / queue %s: %s', fname, e)
 
-        logger.info('Files Added to Browse Queue: %s', addcount)
+        logger.info('Files Added to Derived Queue: %s', addcount)
 
 if __name__ == "__main__":
-    sys.exit(main(parse_args()))
+    sys.exit(main())

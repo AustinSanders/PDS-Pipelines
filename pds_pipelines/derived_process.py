@@ -45,15 +45,16 @@ def makedir(inputfile):
     return finalpath
 
 
-def add_url(input_file, upc_id, proc, session_maker):
+def add_url(input_file, upc_id, session_maker):
     session = session_maker()
     outputfile = input_file.replace(derived_base, derived_url)
     q_record = session.query(JsonKeywords).filter(JsonKeywords.upcid==upc_id)
     params = {}
     old_json = q_record.first().jsonkeywords
-    old_json[proc] = outputfile
+    old_json['browse'] = outputfile
+    old_json['thumbnail'] = outputfile
     params['jsonkeywords'] = old_json
-    
+
     #record.jsonkeywords = json.loads(json.dumps(params, indent=4))
     q_record.update(params, False)
     # By default, SQLAlchemy does not track changes to json, so we have
@@ -91,8 +92,7 @@ def main():
     logFileHandle.setFormatter(formatter)
     logger.addHandler(logFileHandle)
 
-    RQ_thumbnail= RedisQueue('Thumbnail_ReadyQueue')
-    RQ_browse = RedisQueue('Browse_ReadyQueue')
+    RQ_derived = RedisQueue('Derived_ReadyQueue')
     RQ_error = RedisQueue(upc_error_queue)
     RQ_lock = RedisLock(lock_obj)
     RQ_lock.add({RQ_thumbnail.id_name: '1'})
@@ -104,13 +104,8 @@ def main():
     upc_session_maker, upc_session = db_connect(upc_db)
 
     # Only checks lock for browse.  Not sure of a better way to handle this.
-    if (int(RQ_thumbnail.QueueSize()) > 0 or int(RQ_browse.QueueSize())) and RQ_lock.available(RQ_browse.id_name):
-        if int(RQ_thumbnail.QueueSize()) > 0:
-            proc = "thumbnail"
-            item = literal_eval(RQ_thumbnail.QueueGet())
-        else:
-            proc = "browse"
-            item = literal_eval(RQ_browse.QueueGet())
+    if int(RQ_derived.QueueSize()) and RQ_lock.available(RQ_derived.id_name):
+        item = literal_eval(RQ_thumbnail.QueueGet())
 
         inputfile = item[0]
         fid = item[1]
@@ -124,23 +119,16 @@ def main():
             logger.info('Starting Process: %s', inputfile)
 
             final_path = makedir(inputfile)
-            derived_product = os.path.join(final_path, os.path.splitext(os.path.basename(inputfile))[0] + "." + proc + ".jpg")
-
-
-            width = recipe[proc]['width']
-            height = recipe[proc]['height']
+            derived_product = os.path.join(final_path, os.path.splitext(os.path.basename(inputfile))[0])
 
             processes, infile, _, _, workarea_pwd = generate_processes(inputfile,
                                                                        recipe_string,
                                                                        logger,
-                                                                       width=width,
-                                                                       height=height,
-                                                                       proc=proc,
                                                                        derived_product=derived_product,
                                                                        workarea=workarea)
             failing_command = process(processes, workarea, logger)
             # Ideally we could check for failing_command is None, but warnings count as errors
-            if os.path.exists(derived_product):
+            if os.path.exists(derived_product+'.browse.jpg'):
                 upc_session = upc_session_maker()
                 isis_id = getISISid(infile)
                 datafile = upc_session.query(DataFiles).filter(DataFiles.isisid.like(f"%{isis_id}%")).first()
@@ -148,13 +136,13 @@ def main():
                 add_url(derived_product, upc_id, proc, upc_session_maker)
                 upc_session.close()
                 #os.remove(infile)
-                logger.info(f'{proc} Process Success: %s', inputfile)
+                logger.info(f'Derived Process Success: %s', inputfile)
                 AddProcessDB(pds_session_maker, fid, 't')
             else:
                 logger.error('Error: %s', failing_command)
 
         else:
-            RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during {proc} processing')
+            RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during derived processing')
             logger.error('File %s Not Found', inputfile)
 
 
