@@ -166,7 +166,7 @@ def test_bad_spacecraftname_instrument_insert(session, session_maker):
     with pytest.raises(sqlalchemy.orm.exc.NoResultFound):
         session.query(models.Instruments).filter(models.Instruments.instrumentid == instrument_id).one()
 
-@patch('pds_pipelines.upc_process.getISISid', return_value = 'ISISSERIAL')
+@patch('pds_pipelines.utils.get_isis_id', return_value = 'ISISSERIAL')
 @patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
 def test_datafiles_insert(mocked_pds_id, mocked_isis_id, session, session_maker, pds_label):
     input_cube = '/Path/to/my/cube.cub'
@@ -177,7 +177,7 @@ def test_datafiles_insert(mocked_pds_id, mocked_isis_id, session, session_maker,
     resp = session.query(models.DataFiles).filter(models.DataFiles.isisid=='ISISSERIAL').first()
     assert upc_id == resp.upcid
 
-@patch('pds_pipelines.upc_process.getISISid', return_value = 'ISISSERIAL')
+@patch('pds_pipelines.utils.get_isis_id', return_value = 'ISISSERIAL')
 @patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
 def test_datafiles_no_label(mocked_pds_id, mocked_isis_id, session, session_maker, pds_label):
     pds_label['^IMAGE'] = 1
@@ -195,7 +195,7 @@ def test_datafiles_no_isisid(mocked_pds_id, session, session_maker, pds_label):
     resp = session.query(models.DataFiles).filter(models.DataFiles.upcid==upc_id).first()
     assert resp.isisid == None
 
-@patch('pds_pipelines.upc_process.getISISid', return_value = 'ISISSERIAL')
+@patch('pds_pipelines.utils.get_isis_id', return_value = 'ISISSERIAL')
 def test_datafiles_no_pdsid(mocked_isis_id, session, session_maker, pds_label):
     # Since we mock getkey above, make it throw an exception here so we can test
     # when there is no PDS ID.
