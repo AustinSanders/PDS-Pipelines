@@ -1,36 +1,19 @@
 #!/usr/bin/env python
 import os
 import sys
-import pvl
 import json
-import datetime
-import pytz
 import logging
 import errno
-from pysis import isis
-from pysis.exceptions import ProcessError
-from sqlalchemy.orm.attributes import flag_modified
 
-from pysis.isis import getsn
 from ast import literal_eval
 from json import JSONDecoder
 
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.redis_lock import RedisLock
-from pds_pipelines.recipe import Recipe
-from pds_pipelines.process import Process
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.upc_models import DataFiles, SearchTerms, JsonKeywords
-from pds_pipelines.models.pds_models import ProcessRuns
 from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db, lock_obj, upc_error_queue, recipe_base, archive_base, derived_base, derived_url
-from pds_pipelines.utils import generate_processes, process, parse_pairs
-
-def getISISid(infile):
-    serial_num = getsn(from_=infile)
-    if isinstance(serial_num, bytes):
-        serial_num = serial_num.decode()
-    newisisSerial = serial_num.replace('\n', '')
-    return newisisSerial
+from pds_pipelines.utils import generate_processes, process, parse_pairs, add_process_db, get_isis_id
 
 def makedir(inputfile):
     temppath = os.path.dirname(inputfile)
@@ -61,25 +44,6 @@ def add_url(input_file, upc_id, session_maker):
     q_record.update(params, False)
     session.commit()
     session.close()
-
-
-def AddProcessDB(session_maker, fid, outvalue):
-    session = session_maker()
-    date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
-
-    processDB = ProcessRuns(fileid=fid,
-                            process_date=date,
-                            process_typeid='5',
-                            process_out=outvalue)
-
-    try:
-        session.merge(processDB)
-        session.commit()
-        session.close()
-        return 'SUCCESS'
-    except:
-        session.close()
-        return 'ERROR'
 
 
 def main():
@@ -128,14 +92,14 @@ def main():
             # Ideally we could check for failing_command is None, but warnings count as errors
             if os.path.exists(derived_product+'.browse.jpg'):
                 upc_session = upc_session_maker()
-                isis_id = getISISid(infile)
+                isis_id = get_isis_id(infile)
                 datafile = upc_session.query(DataFiles).filter(DataFiles.isisid.like(f"%{isis_id}%")).first()
                 upc_id = datafile.upcid
                 add_url(derived_product, upc_id, upc_session_maker)
                 upc_session.close()
                 #os.remove(infile)
                 logger.info(f'Derived Process Success: %s', inputfile)
-                AddProcessDB(pds_session_maker, fid, 't')
+                add_process_db(pds_session_maker, fid, 't')
             else:
                 logger.error('Error: %s', failing_command)
 
