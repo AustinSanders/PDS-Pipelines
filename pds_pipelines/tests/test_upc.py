@@ -34,9 +34,11 @@ import pds_pipelines
 from pds_pipelines.process import Process
 from pds_pipelines.db import db_connect
 from pds_pipelines import upc_process
+from pds_pipelines import utils
 from pds_pipelines.upc_process import *
 
-from pds_pipelines.upc_process import create_datafiles_record, create_search_terms_record, create_json_keywords_record, get_target_id, getISISid, process, generate_processes
+from pds_pipelines.upc_process import create_datafiles_record, create_search_terms_record, create_json_keywords_record, get_target_id
+from pds_pipelines.utils import process, generate_processes, get_isis_id
 from pds_pipelines.models import upc_models as models
 from pds_pipelines.config import recipe_base
 
@@ -116,7 +118,7 @@ def test_get_pds_id():
 
 def test_get_isis_id():
     cube_path = '/Path/to/my/cube.cub'
-    serial = getISISid(cube_path)
+    serial = get_isis_id(cube_path)
     assert serial == 'ISISSERIAL'
     assert isinstance(serial, str)
 
@@ -165,7 +167,7 @@ def test_bad_spacecraftname_instrument_insert(session, session_maker):
     with pytest.raises(sqlalchemy.orm.exc.NoResultFound):
         session.query(models.Instruments).filter(models.Instruments.instrumentid == instrument_id).one()
 
-@patch('pds_pipelines.upc_process.getISISid', return_value = 'ISISSERIAL')
+@patch('pds_pipelines.upc_process.get_isis_id', return_value = 'ISISSERIAL')
 @patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
 def test_datafiles_insert(mocked_pds_id, mocked_isis_id, session, session_maker, pds_label):
     input_cube = '/Path/to/my/cube.cub'
@@ -176,7 +178,7 @@ def test_datafiles_insert(mocked_pds_id, mocked_isis_id, session, session_maker,
     resp = session.query(models.DataFiles).filter(models.DataFiles.isisid=='ISISSERIAL').first()
     assert upc_id == resp.upcid
 
-@patch('pds_pipelines.upc_process.getISISid', return_value = 'ISISSERIAL')
+@patch('pds_pipelines.upc_process.get_isis_id', return_value = 'ISISSERIAL')
 @patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
 def test_datafiles_no_label(mocked_pds_id, mocked_isis_id, session, session_maker, pds_label):
     pds_label['^IMAGE'] = 1
@@ -194,7 +196,7 @@ def test_datafiles_no_isisid(mocked_pds_id, session, session_maker, pds_label):
     resp = session.query(models.DataFiles).filter(models.DataFiles.upcid==upc_id).first()
     assert resp.isisid == None
 
-@patch('pds_pipelines.upc_process.getISISid', return_value = 'ISISSERIAL')
+@patch('pds_pipelines.upc_process.get_isis_id', return_value = 'ISISSERIAL')
 def test_datafiles_no_pdsid(mocked_isis_id, session, session_maker, pds_label):
     # Since we mock getkey above, make it throw an exception here so we can test
     # when there is no PDS ID.
@@ -313,7 +315,7 @@ def test_generate_processes():
         original_recipe = json.load(fp)['upc']['recipe']
         recipe_string = json.dumps(original_recipe)
 
-    processes, pwd = generate_processes(inputfile, recipe_string, logger, process_props={})
+    processes = generate_processes(inputfile, recipe_string, logger)
 
     for k, v in processes.items():
         assert original_recipe[k].keys() == v.keys()

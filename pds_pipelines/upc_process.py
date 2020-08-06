@@ -30,6 +30,7 @@ from pds_pipelines.db import db_connect
 from pds_pipelines.models import pds_models
 from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, DataFiles, JsonKeywords, BaseMixin
 from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj, upc_error_queue, web_base, archive_base, recipe_base
+from pds_pipelines.utils import generate_processes, process, add_process_db, get_isis_id
 
 
 def getPDSid(infile):
@@ -67,68 +68,7 @@ def getPDSid(infile):
     prod_id = prod_id.replace('\n', '')
     return prod_id
 
-def getISISid(infile):
-    """ Use ISIS to get the serial number of a file.
 
-    Parameters
-    ----------
-    infile : str
-        A string file path for which the serial number will be calculated.
-
-
-    Returns
-    -------
-    newisisSerial : str
-        The serial number of the input file.
-    """
-    try:
-        serial_num = isis.getsn(from_=infile)
-    except (ProcessError, KeyError):
-        # If either isis was not imported or a serial number could not be
-        # generated from the infile set the serial number to an empty string
-        return None
-
-    # in later versions of getsn, serial_num is returned as bytes
-    if isinstance(serial_num, bytes):
-        serial_num = serial_num.decode()
-    newisisSerial = serial_num.replace('\n', '')
-    return newisisSerial
-
-def AddProcessDB(session, fid, outvalue):
-    """ Add a process run to the database.
-
-    Parameters
-    ----------
-    session : Session
-        The database session to which the process will be added.
-
-    fid : str
-        The file id.
-
-    outvalue : str
-        The return value / output of the process that will be added to the database.
-
-    Returns
-    -------
-    : str
-        "SUCCESS" on success, "ERROR" on failure
-
-    """
-
-    # pdb.set_trace()
-    date = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
-
-    processDB = pds_models.ProcessRuns(fileid=fid,
-                                       process_date=date,
-                                       process_typeid='5',
-                                       process_out=outvalue)
-
-    try:
-        session.merge(processDB)
-        session.commit()
-        return 'SUCCESS'
-    except:
-        return 'ERROR'
 
 def get_target_id(label, session_maker):
     """
@@ -282,7 +222,7 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
     datafile_attributes['detached_label'] = d_label
 
     # Attempt to get the ISIS serial from the cube
-    datafile_attributes['isisid'] = getISISid(input_cube)
+    datafile_attributes['isisid'] = get_isis_id(input_cube)
 
     # Attempt to get the product id from the original label
     product_id = getPDSid(input_cube)
@@ -461,45 +401,6 @@ def create_json_keywords_record(cam_info_pvl, upc_id, input_file, failing_comman
         session.commit()
     session.close()
 
-def generate_processes(inputfile, recipe_string, logger = None, process_props = {}):
-    # logger.info('Starting Process: %s', inputfile)
-
-    # Working directory for processing should be same as inputfile
-    workarea_pwd = os.path.dirname(inputfile)
-
-    # logger.debug("Beginning processing on %s\n", inputfile)
-    template = jinja2.Template(recipe_string)
-    recipe_str = template.render(inputfile=inputfile,
-                                 process_props=process_props)
-    processes = json.loads(recipe_str)
-
-    return processes, workarea_pwd
-
-def process(processes, workarea_pwd, logger):
-    # iterate through functions from the processes dictionary
-    failing_command = ''
-    for process, keywargs in processes.items():
-        try:
-            module, command = process.split('.')
-            # load a function into func
-            func = getattr(available_modules[module], command)
-        except ValueError:
-            func = getattr(pds_pipelines.available_modules, process)
-            command = process
-        try:
-            os.chdir(workarea_pwd)
-            # execute function
-            logger.debug("Running %s", process)
-            func(**keywargs)
-
-        except ProcessError as e:
-            logger.debug("%s", e)
-            logger.debug("%s", e.stderr)
-            failing_command = command
-            break
-
-    return failing_command
-
 def parse_args():
     parser = argparse.ArgumentParser(description='UPC Processing')
     parser.add_argument('--persist', '-p', dest="persist",
@@ -585,12 +486,12 @@ def main(user_args):
         cam_info_file = no_extension_inputfile + '_caminfo.pvl'
         footprint_file = no_extension_inputfile + '_footprint.json'
 
-        process_props = {'no_extension_inputfile': no_extension_inputfile,
-                         'cam_info_file': cam_info_file,
-                         'footprint_file': footprint_file}
-
-        processes, workarea_pwd = generate_processes(inputfile, recipe_string, logger, process_props=process_props)
-        failing_command = process(processes, workarea_pwd, logger)
+        processes = generate_processes(inputfile,
+                                       recipe_string, logger,
+                                       no_extension_inputfile=no_extension_inputfile,
+                                       cam_info_file=cam_info_file,
+                                       footprint_file=footprint_file)
+        failing_command = process(processes, workarea, logger)
 
         pds_label = pvl.load(inputfile)
 
@@ -598,10 +499,10 @@ def main(user_args):
         upc_id = create_datafiles_record(pds_label, edr_source, no_extension_inputfile + '.cub', upc_session_maker)
 
         ######## Generate SearchTerms Record ########
-        create_search_terms_record(pds_label, caminfoOUT, upc_id, no_extension_inputfile + '.cub', footprint_file, search_term_mapping, upc_session_maker)
+        create_search_terms_record(pds_label, cam_info_file, upc_id, no_extension_inputfile + '.cub', footprint_file, search_term_mapping, upc_session_maker)
 
         ######## Generate JsonKeywords Record ########
-        create_json_keywords_record(caminfoOUT, upc_id, inputfile, failing_command, upc_session_maker, logger)
+        create_json_keywords_record(cam_info_file, upc_id, inputfile, failing_command, upc_session_maker, logger)
 
         try:
             pds_session = pds_session_maker()
@@ -609,7 +510,7 @@ def main(user_args):
         except:
             logger.debug("Unable to flush database connection")
 
-        AddProcessDB(pds_session, fid, True)
+        add_process_db(pds_session, fid, True)
         pds_session.close()
 
         if not persist:
@@ -617,7 +518,7 @@ def main(user_args):
             # source file
             file_prefix = os.path.splitext(inputfile)[0]
             workarea_files = glob(file_prefix + '*')
-            os.remove(os.path.join(workarea_pwd, 'print.prt'))
+            os.remove(os.path.join(workarea, 'print.prt'))
             for file in workarea_files:
                 os.remove(file)
 
