@@ -486,12 +486,12 @@ def main(user_args):
         cam_info_file = no_extension_inputfile + '_caminfo.pvl'
         footprint_file = no_extension_inputfile + '_footprint.json'
 
-        processes, workarea_pwd = generate_processes(inputfile,
-                                                     recipe_string, logger,
-                                                     no_extension_inputfile=no_extension_inputfile,
-                                                     cam_info_file=cam_info_file,
-                                                     footprint_file=footprint_file)
-        failing_command = process(processes, workarea_pwd, logger)
+        processes = generate_processes(inputfile,
+                                       recipe_string, logger,
+                                       no_extension_inputfile=no_extension_inputfile,
+                                       cam_info_file=cam_info_file,
+                                       footprint_file=footprint_file)
+        failing_command = process(processes, workarea, logger)
 
         pds_label = pvl.load(inputfile)
 
@@ -518,7 +518,7 @@ def main(user_args):
             # source file
             file_prefix = os.path.splitext(inputfile)[0]
             workarea_files = glob(file_prefix + '*')
-            os.remove(os.path.join(workarea_pwd, 'print.prt'))
+            os.remove(os.path.join(workarea, 'print.prt'))
             for file in workarea_files:
                 os.remove(file)
 

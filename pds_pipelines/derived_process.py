@@ -84,11 +84,11 @@ def main():
             derived_product = os.path.join(final_path, os.path.splitext(os.path.basename(inputfile))[0])
 
             no_extension_inputfile = os.path.splitext(inputfile)[0]
-            processes, workarea_pwd = generate_processes(inputfile,
-                                                         recipe_string,
-                                                         logger,
-                                                         no_extension_inputfile = no_extension_inputfile, 
-                                                         derived_product=derived_product)
+            processes = generate_processes(inputfile,
+                                           recipe_string,
+                                           logger,
+                                           no_extension_inputfile=no_extension_inputfile, 
+                                           derived_product=derived_product)
             failing_command = process(processes, workarea, logger)
             # Ideally we could check for failing_command is None, but warnings count as errors
             if os.path.exists(derived_product+'.browse.jpg'):

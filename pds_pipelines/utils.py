@@ -37,14 +37,13 @@ def parse_pairs(pairs):
 def generate_processes(inputfile, recipe_string, logger, **kwargs):
     logger.info('Starting Process: %s', inputfile)
     # Working directory for processing should be same as inputfile
-    workarea_pwd = os.path.dirname(inputfile)
 
     logger.debug("Beginning processing on %s\n", inputfile)
     template = jinja2.Template(recipe_string)
     recipe_str = template.render(inputfile=inputfile,
                                  **kwargs)
     processes = json.loads(recipe_str)
-    return processes, workarea_pwd
+    return processes
 
 
 def process(processes, workarea_pwd, logger):
