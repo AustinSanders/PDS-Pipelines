@@ -1,14 +1,16 @@
 #!/usr/bin/env python
-
 import sys
 import logging
 import argparse
 import json
-
+import pathlib
+import glob
+from shutil import copy2, disk_usage
+from os.path import getsize, dirname, splitext, exists, basename, join
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.pds_models import Files
-from pds_pipelines.config import pds_info, pds_log, pds_db
+from pds_pipelines.config import pds_info, pds_log, pds_db, workarea, disk_usage_ratio, archive_base
 
 class Args:
     def __init__(self):
@@ -40,7 +42,7 @@ def main():
     args = Args()
     args.parse_args()
 
-    logger = logging.getLogger('Thumbnail_Queueing.' + args.archive)
+    logger = logging.getLogger('Derived_Queueing.' + args.archive)
     logger.setLevel(logging.INFO)
     logFileHandle = logging.FileHandler(pds_log + 'Process.log')
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s, %(message)s')
@@ -52,7 +54,8 @@ def main():
     PDSinfoDICT = json.load(open(pds_info, 'r'))
     archiveID = PDSinfoDICT[args.archive]['archiveid']
 
-    RQ = RedisQueue('Thumbnail_ReadyQueue')
+    RQ = RedisQueue('Derived_ReadyQueue')
+    error_queue = RedisQueue('UPC_ErrorQueue')
 
     try:
         Session, _ = db_connect(pds_db)
@@ -69,15 +72,45 @@ def main():
     else:
         qOBJ = session.query(Files).filter(Files.archiveid == archiveID,
                                              Files.upc_required == 't')
-    if qOBJ:
-        addcount = 0
-        for element in qOBJ:
-            fname = PDSinfoDICT[args.archive]['path'] + element.filename
-            fid = element.fileid
-            RQ.QueueAdd((fname, fid, args.archive))
-            addcount = addcount + 1
 
-        logger.info('Files Added to Thumbnail Queue: %s', addcount)
+
+    if args.search:
+        qf = '%' + args.search + '%'
+        qOBJ = qOBJ.filter(Files.filename.like(qf))
+
+    if qOBJ:
+        path = PDSinfoDICT[args.archive]['path']
+        addcount = 0
+        size = 0
+        for element in qOBJ:
+            fname = path + element.filename
+            size += getsize(fname)
+
+        size_free = disk_usage(workarea).free
+        if size >= (disk_usage_ratio * size_free):
+            logger.error("Unable to process %s: size %d exceeds %d",
+                         volume, size, (size_free * disk_usage_ratio))
+            exit()
+
+        for element in qOBJ:
+            fname = path + element.filename
+            fid = element.fileid
+
+            try:
+                dest_path = dirname(fname)
+                dest_path = dest_path.replace(archive_base, workarea)
+                pathlib.Path(dest_path).mkdir(parents=True, exist_ok=True)
+                for f in glob.glob(splitext(fname)[0] + r'.*'):
+                    if not exists(f'{dest_path}{f}'):
+                        copy2(f, dest_path)
+
+                RQ.QueueAdd((join(dest_path,basename(element.filename)), fid, args.archive))
+                addcount = addcount + 1
+            except Exception as e:
+                error_queue.QueueAdd(f'Unable to copy / queue {fname}: {e}')
+                logger.error('Unable to copy / queue %s: %s', fname, e)
+
+        logger.info('Files Added to Derived Queue: %s', addcount)
 
 if __name__ == "__main__":
     sys.exit(main())
