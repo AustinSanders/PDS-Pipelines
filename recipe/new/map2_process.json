@@ -4,7 +4,7 @@
 	"recipe": {
 	    "isis.map2map": {
 		"from_": "{{inputfile}}",
-		"to": "{{process_props.no_extension_inputfile}}.reproj.cub",
+		"to": "{{no_extension_inputfile}}.reproj.cub",
 		"map": "value",
 		"matchmap": "no",
 		"pixres": "value",

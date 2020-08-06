@@ -568,7 +568,7 @@ def generate_pow_recipe(xmlOBJ, pds_label, MAPfile):
     strType = xmlOBJ.STR_Type()
     stretch_dict = {}
     stretch_dict['from_'] = list(recipeOBJ.items())[-1][-1]['to']
-    stretch_dict['to'] = '{{process_props.no_extension_inputfile}}.stretch.cub'
+    stretch_dict['to'] = '{{no_extension_inputfile}}.stretch.cub'
     if strType == 'StretchPercent' and xmlOBJ.STR_PercentMin() is not None and xmlOBJ.STR_PercentMax() is not None and bit_type != 'REAL':
         if float(xmlOBJ.STR_PercentMin()) != 0 and float(xmlOBJ.STR_PercentMax()) != 100:
             if bit_type == 'UNSIGNEDBYTE':
@@ -654,7 +654,7 @@ def generate_map2_recipe(xmlOBJ, isis_label, MAPfile):
 
     stretch_dict = {}
     stretch_dict['from_'] = list(recipeOBJ.items())[-1][-1]['to']
-    stretch_dict['to'] = '{{process_props.no_extension_inputfile}}.stretch.cub'
+    stretch_dict['to'] = '{{no_extension_inputfile}}.stretch.cub'
 
     strType = xmlOBJ.STR_Type()
     if xmlOBJ.getProcess() == 'MAP2' and strType is None:
@@ -703,7 +703,7 @@ def generate_map2_recipe(xmlOBJ, isis_label, MAPfile):
     if xmlOBJ.getGridInterval() is not None:
         grid_dict = {}
         grid_dict['from_'] = list(recipeOBJ.items())[-1][-1]['to'].split('+')[0]
-        grid_dict['to'] = '{{process_props.no_extension_inputfile}}.grid.cub'
+        grid_dict['to'] = '{{no_extension_inputfile}}.grid.cub'
         grid_dict['latinc'] = xmlOBJ.getGridInterval()
         grid_dict['loninc'] = xmlOBJ.getGridInterval()
         grid_dict['outline'] = 'yes'
@@ -1040,14 +1040,14 @@ def main(user_args):
             fileext = 'gif'
 
         gdal_translate_dict['src'] = list(recipeOBJ.items())[-1][-1]['to'].split('+')[0]
-        gdal_translate_dict['dest'] = "{{process_props.no_extension_inputfile}}_final." + fileext
+        gdal_translate_dict['dest'] = "{{no_extension_inputfile}}_final." + fileext
 
         recipeOBJ['gdal_translate'] = gdal_translate_dict
     # set up pds2isis and add to recipe
     elif Oformat == 'PDS':
         isis2pds_dict = {}
         isis2pds_dict['from_'] = list(recipeOBJ.items())[-1][-1]['to']
-        isis2pds_dict['to'] = "{{process_props.no_extension_inputfile}}_final.img"
+        isis2pds_dict['to'] = "{{no_extension_inputfile}}_final.img"
         if xmlOBJ.getOutBit() == 'unsignedbyte':
             isis2pds_dict['bittype'] = '8bit'
         elif xmlOBJ.getOutBit() == 'signedword':

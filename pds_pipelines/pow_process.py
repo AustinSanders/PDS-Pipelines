@@ -60,7 +60,7 @@ def main(user_args):
         # Setup system logging
         basename = os.path.splitext(os.path.basename(jobFile))[0]
         logger = logging.getLogger(key + '.' + basename)
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.INFO)
 
         logFileHandle = logging.FileHandler(pds_log + '/Service.log')
         formatter = logging.Formatter(
