@@ -83,16 +83,17 @@ def main():
             final_path = makedir(inputfile)
             derived_product = os.path.join(final_path, os.path.splitext(os.path.basename(inputfile))[0])
 
-            processes, infile, _, _, workarea_pwd = generate_processes(inputfile,
-                                                                       recipe_string,
-                                                                       logger,
-                                                                       derived_product=derived_product,
-                                                                       workarea=workarea)
+            no_extension_inputfile = os.path.splitext(inputfile)[0]
+            processes, workarea_pwd = generate_processes(inputfile,
+                                                         recipe_string,
+                                                         logger,
+                                                         no_extension_inputfile = no_extension_inputfile, 
+                                                         derived_product=derived_product)
             failing_command = process(processes, workarea, logger)
             # Ideally we could check for failing_command is None, but warnings count as errors
             if os.path.exists(derived_product+'.browse.jpg'):
                 upc_session = upc_session_maker()
-                isis_id = get_isis_id(infile)
+                isis_id = get_isis_id(no_extension_inputfile)
                 datafile = upc_session.query(DataFiles).filter(DataFiles.isisid.like(f"%{isis_id}%")).first()
                 upc_id = datafile.upcid
                 add_url(derived_product, upc_id, upc_session_maker)

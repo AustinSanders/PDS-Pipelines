@@ -40,18 +40,11 @@ def generate_processes(inputfile, recipe_string, logger, **kwargs):
     workarea_pwd = os.path.dirname(inputfile)
 
     logger.debug("Beginning processing on %s\n", inputfile)
-    no_extension_inputfile = os.path.splitext(inputfile)[0]
-    cam_info_file = no_extension_inputfile + '_caminfo.pvl'
-    footprint_file = no_extension_inputfile + '_footprint.json'
-
     template = jinja2.Template(recipe_string)
     recipe_str = template.render(inputfile=inputfile,
-                                 no_extension_inputfile=no_extension_inputfile,
-                                 cam_info_file=cam_info_file,
-                                 footprint_file=footprint_file,
                                  **kwargs)
     processes = json.loads(recipe_str)
-    return processes, no_extension_inputfile, cam_info_file, footprint_file, workarea_pwd
+    return processes, workarea_pwd
 
 
 def process(processes, workarea_pwd, logger):
