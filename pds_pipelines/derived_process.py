@@ -90,8 +90,7 @@ def main():
                                            no_extension_inputfile=no_extension_inputfile, 
                                            derived_product=derived_product)
             failing_command = process(processes, workarea, logger)
-            # Ideally we could check for failing_command is None, but warnings count as errors
-            if os.path.exists(derived_product+'.browse.jpg'):
+            if not failing_command:
                 upc_session = upc_session_maker()
                 isis_id = get_isis_id(no_extension_inputfile)
                 datafile = upc_session.query(DataFiles).filter(DataFiles.isisid.like(f"%{isis_id}%")).first()
