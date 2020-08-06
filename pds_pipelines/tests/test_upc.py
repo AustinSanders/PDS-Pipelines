@@ -167,7 +167,7 @@ def test_bad_spacecraftname_instrument_insert(session, session_maker):
     with pytest.raises(sqlalchemy.orm.exc.NoResultFound):
         session.query(models.Instruments).filter(models.Instruments.instrumentid == instrument_id).one()
 
-@patch('pds_pipelines.utils.get_isis_id', return_value = 'ISISSERIAL')
+@patch('pds_pipelines.upc_process.get_isis_id', return_value = 'ISISSERIAL')
 @patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
 def test_datafiles_insert(mocked_pds_id, mocked_isis_id, session, session_maker, pds_label):
     input_cube = '/Path/to/my/cube.cub'
@@ -178,7 +178,7 @@ def test_datafiles_insert(mocked_pds_id, mocked_isis_id, session, session_maker,
     resp = session.query(models.DataFiles).filter(models.DataFiles.isisid=='ISISSERIAL').first()
     assert upc_id == resp.upcid
 
-@patch('pds_pipelines.utils.get_isis_id', return_value = 'ISISSERIAL')
+@patch('pds_pipelines.upc_process.get_isis_id', return_value = 'ISISSERIAL')
 @patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
 def test_datafiles_no_label(mocked_pds_id, mocked_isis_id, session, session_maker, pds_label):
     pds_label['^IMAGE'] = 1
