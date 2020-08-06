@@ -196,7 +196,7 @@ def test_datafiles_no_isisid(mocked_pds_id, session, session_maker, pds_label):
     resp = session.query(models.DataFiles).filter(models.DataFiles.upcid==upc_id).first()
     assert resp.isisid == None
 
-@patch('pds_pipelines.utils.get_isis_id', return_value = 'ISISSERIAL')
+@patch('pds_pipelines.upc_process.get_isis_id', return_value = 'ISISSERIAL')
 def test_datafiles_no_pdsid(mocked_isis_id, session, session_maker, pds_label):
     # Since we mock getkey above, make it throw an exception here so we can test
     # when there is no PDS ID.
