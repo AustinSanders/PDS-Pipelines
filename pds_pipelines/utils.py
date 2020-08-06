@@ -9,7 +9,8 @@ from pds_pipelines.models import pds_models
 from pysis.exceptions import ProcessError
 
 class MultiDict(dict):
-    """ Helper object for parse_pairs.  Normal dictionary, but adds values to list instead of overwriting duplicate keys.
+    """ Helper object for parse_pairs.  Normal dictionary, but adds values to
+        list instead of overwriting duplicate keys.
     """
     def __setitem__(self, key, value):
         if key in self:
@@ -21,7 +22,9 @@ class MultiDict(dict):
             super().__setitem__(key, value)
 
 """
-JSON object_pairs_hook target.  Necessary to allow duplicate key specification from JSON documents to Python.
+JSON object_pairs_hook target.  Necessary to allow duplicate key specification
+from JSON documents to Python.
+
 Uses the MultiDict defined above instead of default python dictionary.
 """
 def parse_pairs(pairs):
@@ -80,7 +83,7 @@ def process(processes, workarea_pwd, logger):
     return failing_command
 
 
-def getISISid(infile):
+def get_isis_id(infile):
     """ Use ISIS to get the serial number of a file.
 
     Parameters
@@ -109,7 +112,7 @@ def getISISid(infile):
 
 
 
-def AddProcessDB(session, fid, outvalue):
+def add_process_db(session, fid, outvalue):
     """ Add a process run to the database.
 
     Parameters
