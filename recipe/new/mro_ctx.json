@@ -42,26 +42,26 @@
     },
     "pow": {
         "recipe": {
-            "mroctx2isis": {
-                "from_": "value",
-                "to": "value"
+            "isis.mroctx2isis": {
+                "from_": "{{inputfile}}",
+                "to": "{{no_extension_inputfile}}.cub"
             },
-            "spiceinit": {
-                "from_": "value",
+            "isis.spiceinit": {
+                "from_": "{{no_extension_inputfile}}.cub",
                 "cknadir": "yes",
                 "cksmithed": "yes"
             },
-            "ctxcal": {
-                "from_": "value",
-                "to": "value"
+            "isis.ctxcal": {
+                "from_": "{{no_extension_inputfile}}.cub",
+                "to": "{{no_extension_inputfile}}.cal.cub"
             },
-            "ctxevenodd": {
-                "from_": "value",
-                "to": "value"
+            "isis.ctxevenodd": {
+                "from_": "{{no_extension_inputfile}}.cal.cub",
+                "to": "{{no_extension_inputfile}}.cal.eo.cub"
             },
-            "cam2map": {
-                "from": "value",
-                "to": "value",
+            "isis.cam2map": {
+                "from": "{{no_extension_inputfile}}.cal.eo.cub",
+                "to": "{{no_extension_inputfile}}.proj.cub",
                 "map": "value",
                 "matchmap": "no",
                 "pixres": "value",

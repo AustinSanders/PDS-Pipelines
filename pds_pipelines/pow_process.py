@@ -7,17 +7,15 @@ import logging
 import shutil
 import argparse
 import pvl
+import json
 
-from pysis import isis
-from pysis.exceptions import ProcessError
-
-from pds_pipelines.config import lock_obj, scratch, pds_log, default_namespace, upc_error_queue
+from pds_pipelines.config import lock_obj, pds_log, default_namespace, upc_error_queue, workarea
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.redis_hash import RedisHash
-from pds_pipelines.process import Process
 from pds_pipelines.pds_logging import Loggy
 from pds_pipelines.pds_process_logging import SubLoggy
+from pds_pipelines.utils import generate_processes, process
 
 
 def parse_args():
@@ -38,12 +36,11 @@ def parse_args():
 def main(user_args):
     key = user_args.key
     namespace = user_args.namespace
-    print(namespace)
 
     if namespace is None:
         namespace = default_namespace
 
-    workarea = scratch + key + '/'
+    work_dir = os.path.join(workarea, key)
     RQ_file = RedisQueue(key + '_FileQueue', namespace)
     RQ_work = RedisQueue(key + '_WorkQueue', namespace)
     RQ_zip = RedisQueue(key + '_ZIP', namespace)
@@ -56,10 +53,7 @@ def main(user_args):
     RQ_lock = RedisLock(lock_obj)
     RQ_lock.add({'POW':'1'})
 
-    if int(RQ_file.QueueSize()) == 0:
-        print("No Files Found in Redis Queue")
-    elif RQ_lock.available('POW'):
-        print(RQ_file.getQueueName())
+    if int(RQ_file.QueueSize()) > 0 and RQ_lock.available('POW'):
         jobFile = RQ_file.Qfile2Qwork(RQ_file.getQueueName(),
                                       RQ_work.getQueueName())
 
@@ -87,229 +81,23 @@ def main(user_args):
         else:
             inputFile = jobFile
 
-        infile = workarea + \
-            os.path.splitext(os.path.basename(jobFile))[0] + '.input.cub'
-        outfile = workarea + \
-            os.path.splitext(os.path.basename(jobFile))[0] + '.output.cub'
-
-
         status = 'success'
-        for element in RQ_recipe.RecipeGet():
-            if status == 'error':
-                break
-            elif status == 'success':
-                processOBJ = Process()
-                process = processOBJ.JSON2Process(element)
+        recipe_string = RQ_recipe.QueueGet()
+        no_extension_inputfile = os.path.join(work_dir, os.path.splitext(os.path.basename(jobFile))[0])
+        processes = generate_processes(jobFile, recipe_string, logger, no_extension_inputfile=no_extension_inputfile)
+        failing_command = process(processes, work_dir, logger)
 
-                if 'gdal_translate' not in processOBJ.getProcessName():
-                    print(processOBJ.getProcessName())
-                    if '2isis' in processOBJ.getProcessName():
-                        processOBJ.updateParameter('from_', inputFile)
-                        processOBJ.updateParameter('to', outfile)
-                    elif 'cubeatt-band' in processOBJ.getProcessName():
-                        if '+' in jobFile:
-                            infileB = infile + '+' + bandSplit[1]
-                            processOBJ.updateParameter('from_', infileB)
-                            processOBJ.updateParameter('to', outfile)
-                            processOBJ.ChangeProcess('cubeatt')
-                        else:
-                            continue
-                    elif 'cubeatt-bit' in processOBJ.getProcessName():
-                        if RHash.OutBit() == 'unsignedbyte':
-                            temp_outfile = outfile + '+lsb+tile+attached+unsignedbyte+1:254'
-                        elif RHash.OutBit() == 'signedword':
-                            temp_outfile = outfile + '+lsb+tile+attached+signedword+-32765:32765'
-                        processOBJ.updateParameter('from_', infile)
-                        processOBJ.updateParameter('to', temp_outfile)
-                        processOBJ.ChangeProcess('cubeatt')
-
-                    elif 'spice' in processOBJ.getProcessName():
-                        processOBJ.updateParameter('from_', infile)
-
-                    elif 'ctxevenodd' in processOBJ.getProcessName():
-                        label = pvl.load(infile)
-                        SS = label['IsisCube']['Instrument']['SpatialSumming']
-                        print(SS)
-                        if SS != 1:
-                            continue
-                        else:
-                            processOBJ.updateParameter('from_', infile)
-                            processOBJ.updateParameter('to', outfile)
-
-                    elif 'mocevenodd' in processOBJ.getProcessName():
-                        label = pvl.load(infile)
-                        CTS = label['IsisCube']['Instrument']['CrosstrackSumming']
-                        print(CTS)
-                        if CTS != 1:
-                            continue
-                        else:
-                            processOBJ.updateParameter('from_', infile)
-                            processOBJ.updateParameter('to', outfile)
-                    elif 'mocnoise50' in processOBJ.getProcessName():
-                        label = pvl.load(infile)
-                        CTS = label['IsisCube']['Instrument']['CrosstrackSumming']
-                        if CTS != 1:
-                            continue
-                        else:
-                            processOBJ.updateParameter('from_', infile)
-                            processOBJ.updateParameter('to', outfile)
-                    elif 'cam2map' in processOBJ.getProcessName():
-                        processOBJ.updateParameter('from', infile)
-                        processOBJ.updateParameter('to', outfile)
-
-                        if RHash.getGRtype() == 'smart' or RHash.getGRtype() == 'fill':
-                            subloggyOBJ = SubLoggy('cam2map')
-                            camrangeOUT = workarea + basename + '_camrange.txt'
-                            isis.camrange(from_=infile,
-                                          to=camrangeOUT)
-
-                            cam = pvl.load(camrangeOUT)
-
-                            if cam['UniversalGroundRange']['MaximumLatitude'] < float(RHash.getMinLat()) or \
-                               cam['UniversalGroundRange']['MinimumLatitude'] > float(RHash.getMaxLat()) or \
-                               cam['UniversalGroundRange']['MaximumLongitude'] < float(RHash.getMinLon()) or \
-                               cam['UniversalGroundRange']['MinimumLongitude'] > float(RHash.getMaxLon()):
-
-                                status = 'error'
-                                eSTR = "Error Ground Range Outside Extent Range"
-                                RHerror.addError(os.path.splitext(
-                                    os.path.basename(jobFile))[0], eSTR)
-                                subloggyOBJ.setStatus('ERROR')
-                                subloggyOBJ.errorOut(eSTR)
-                                loggyOBJ.AddProcess(subloggyOBJ.getSLprocess())
-                                break
-
-                            elif RHash.getGRtype() == 'smart':
-                                if cam['UniversalGroundRange']['MinimumLatitude'] > float(RHash.getMinLat()):
-                                    minlat = cam['UniversalGroundRange']['MinimumLatitude']
-                                else:
-                                    minlat = RHash.getMinLat()
-
-                                if cam['UniversalGroundRange']['MaximumLatitude'] < float(RHash.getMaxLat()):
-                                    maxlat = cam['UniversalGroundRange']['MaximumLatitude']
-                                else:
-                                    maxlat = RHash.getMaxLat()
-
-                                if cam['UniversalGroundRange']['MinimumLongitude'] > float(RHash.getMinLon()):
-                                    minlon = cam['UniversalGroundRange']['MinimumLongitude']
-                                else:
-                                    minlon = RHash.getMinLon()
-
-                                if cam['UniversalGroundRange']['MaximumLongitude'] < float(RHash.getMaxLon()):
-                                    maxlon = cam['UniversalGroundRange']['MaximumLongitude']
-                                else:
-                                    maxlon = RHash.getMaxLon()
-                            elif RHash.getGRtype() == 'fill':
-                                minlat = RHash.getMinLat()
-                                maxlat = RHash.getMaxLat()
-                                minlon = RHash.getMinLon()
-                                maxlon = RHash.getMaxLon()
-
-                            processOBJ.AddParameter('minlat', minlat)
-                            processOBJ.AddParameter('maxlat', maxlat)
-                            processOBJ.AddParameter('minlon', minlon)
-                            processOBJ.AddParameter('maxlon', maxlon)
-
-                            #os.remove(camrangeOUT)
-
-                    elif 'isis2pds' in processOBJ.getProcessName():
-                        finalfile = infile.replace('.input.cub', '_final.img')
-                        processOBJ.updateParameter('from_', infile)
-                        processOBJ.updateParameter('to', finalfile)
-
-                    else:
-                        processOBJ.updateParameter('from_', infile)
-                        processOBJ.updateParameter('to', outfile)
-
-                    print(processOBJ.getProcess())
-
-                    for k, v in processOBJ.getProcess().items():
-                        func = getattr(isis, k)
-                        subloggyOBJ = SubLoggy(k)
-                        try:
-                            func(**v)
-                            logger.info('Process %s :: Success', k)
-                            subloggyOBJ.setStatus('SUCCESS')
-                            subloggyOBJ.setCommand(processOBJ.LogCommandline())
-                            subloggyOBJ.setHelpLink(processOBJ.LogHelpLink())
-                            loggyOBJ.AddProcess(subloggyOBJ.getSLprocess())
-
-                            if os.path.isfile(outfile):
-                                os.rename(outfile, infile)
-                            status = 'success'
-
-                        except ProcessError as e:
-                            RQ_error.QueueAdd(f'Process {k} failed for {jobFile}')
-                            logger.error('Process %s :: Error', k)
-                            logger.error(e)
-                            status = 'error'
-                            eSTR = 'Error Executing ' + k + \
-                                ' Standard Error: ' + str(e)
-                            RHerror.addError(os.path.splitext(
-                                os.path.basename(jobFile))[0], eSTR)
-                            subloggyOBJ.setStatus('ERROR')
-                            subloggyOBJ.setCommand(processOBJ.LogCommandline())
-                            subloggyOBJ.setHelpLink(processOBJ.LogHelpLink())
-                            subloggyOBJ.errorOut(eSTR)
-                            loggyOBJ.AddProcess(subloggyOBJ.getSLprocess())
-                            RQ_work.QueueRemove(jobFile)
-                            break
-
-                else:
-                    GDALcmd = ""
-                    for process, v, in processOBJ.getProcess().items():
-                        subloggyOBJ = SubLoggy(process)
-                        GDALcmd += process
-                        for dict_key, value in v.items():
-                            GDALcmd += ' ' + dict_key + ' ' + value
-
-                    frmt = RHash.Format()
-                    if frmt == 'GeoTiff-BigTiff':
-                        fileext = 'tif'
-                    elif frmt == 'GeoJPEG-2000':
-                        fileext = 'jp2'
-                    elif frmt == 'JPEG':
-                        fileext = 'jpg'
-                    elif frmt == 'PNG':
-                        fileext = 'png'
-                    elif frmt == 'GIF':
-                        fileext = 'gif'
-
-                    logGDALcmd = GDALcmd + ' ' + basename + \
-                        '.input.cub ' + basename + '_final.' + fileext
-                    finalfile = infile.replace(
-                        '.input.cub', '_final.' + fileext)
-                    GDALcmd += ' ' + infile + ' ' + finalfile
-                    print(GDALcmd)
-
-                    result = subprocess.call(GDALcmd, shell=True)
-                    if result == 0:
-                        logger.info('Process GDAL translate :: Success')
-                        status = 'success'
-                        subloggyOBJ.setStatus('SUCCESS')
-                        subloggyOBJ.setCommand(logGDALcmd)
-                        subloggyOBJ.setHelpLink(
-                            'http://www.gdal.org/gdal_translate.html')
-                        loggyOBJ.AddProcess(subloggyOBJ.getSLprocess())
-                        #os.remove(infile)
-                    else:
-                        errmsg = 'Error Executing GDAL translate: Error'
-                        logger.error(errmsg)
-                        status = 'error'
-                        RHerror.addError(os.path.splitext(
-                            os.path.basename(jobFile))[0], errmsg)
-                        subloggyOBJ.setStatus('ERROR')
-                        subloggyOBJ.setCommand(logGDALcmd)
-                        subloggyOBJ.setHelpLink(
-                            'http://www.gdal.org/gdal_translate.html')
-                        subloggyOBJ.errorOut('Process GDAL translate :: Error')
-                        loggyOBJ.AddProcess(subloggyOBJ.getSLprocess())
+        if failing_command:
+            status = 'error'
 
         if status == 'success':
 
-            if RHash.Format() == 'ISIS3':
-                finalfile = infile.replace('.input.cub', '_final.cub')
-                shutil.move(infile, finalfile)
+            final_process, args = list(processes.items())[-1]
+            if final_process == 'gdal_translate':
+                finalfile = args['dest']
+            else:
+                finalfile = args['to']
+
             if RHash.getStatus() != 'ERROR':
                 RHash.Status('SUCCESS')
 

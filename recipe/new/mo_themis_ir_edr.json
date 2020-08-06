@@ -35,22 +35,18 @@
     },
     "pow": {
         "recipe": {
-            "thm2isis": {
-                "from_": "value",
-                "to": "value"
+            "isis.thm2isis": {
+                "from_": "{{inputfile}}",
+                "to": "{{no_extension_inputfile}}.cub"
             },
-            "cubeatt": {
-                "from_": "value",
-                "to": "value"
-            },
-            "spiceinit": {
-                "from_": "value",
+            "isis.spiceinit": {
+                "from_": "{{no_extension_inputfile}}.cub",
                 "cknadir": "yes",
                 "cksmithed": "yes"
             },
-            "cam2map": {
-                "from": "value",
-                "to": "value",
+            "isis.cam2map": {
+                "from": "{{no_extension_inputfile}}.cub",
+                "to": "{{no_extension_inputfile}}.proj.cub",
                 "map": "value",
                 "matchmap": "no",
                 "pixres": "value",
