@@ -36,7 +36,8 @@ from pds_pipelines.db import db_connect
 from pds_pipelines import upc_process
 from pds_pipelines.upc_process import *
 
-from pds_pipelines.upc_process import create_datafiles_record, create_search_terms_record, create_json_keywords_record, get_target_id, getISISid, process, generate_processes
+from pds_pipelines.upc_process import create_datafiles_record, create_search_terms_record, create_json_keywords_record, get_target_id
+from pds_pipelines.utils import process, generate_processes, get_isis_id
 from pds_pipelines.models import upc_models as models
 from pds_pipelines.config import recipe_base
 
@@ -116,7 +117,7 @@ def test_get_pds_id():
 
 def test_get_isis_id():
     cube_path = '/Path/to/my/cube.cub'
-    serial = getISISid(cube_path)
+    serial = get_isis_id(cube_path)
     assert serial == 'ISISSERIAL'
     assert isinstance(serial, str)
 
