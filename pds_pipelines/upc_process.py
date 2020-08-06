@@ -30,7 +30,7 @@ from pds_pipelines.db import db_connect
 from pds_pipelines.models import pds_models
 from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, DataFiles, JsonKeywords, BaseMixin
 from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj, upc_error_queue, web_base, archive_base, recipe_base
-from pds_pipelines.utils import generate_processes, process, AddProcessDB, getISISid
+from pds_pipelines.utils import generate_processes, process, add_process_db, get_isis_id
 
 
 def getPDSid(infile):
@@ -222,7 +222,7 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
     datafile_attributes['detached_label'] = d_label
 
     # Attempt to get the ISIS serial from the cube
-    datafile_attributes['isisid'] = getISISid(input_cube)
+    datafile_attributes['isisid'] = get_isis_id(input_cube)
 
     # Attempt to get the product id from the original label
     product_id = getPDSid(input_cube)
@@ -502,7 +502,7 @@ def main(user_args):
         except:
             logger.debug("Unable to flush database connection")
 
-        AddProcessDB(pds_session, fid, True)
+        add_process_db(pds_session, fid, True)
         pds_session.close()
 
         if not persist:
