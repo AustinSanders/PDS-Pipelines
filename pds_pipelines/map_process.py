@@ -14,7 +14,7 @@ from pds_pipelines.redis_hash import RedisHash
 from pds_pipelines.pds_logging import Loggy
 from pds_pipelines.pds_process_logging import SubLoggy
 from pds_pipelines.process import Process
-from pds_pipelines.upc_process import generate_processes, process
+from pds_pipelines.utils import generate_processes, process
 
 
 def parse_args():
@@ -80,13 +80,12 @@ def main(user_args):
         status = 'success'
         recipe_string = RQ_recipe.QueueGet()
         no_extension_inputfile = os.path.join(work_dir, os.path.splitext(os.path.basename(jobFile))[0])
-        process_props = {'no_extension_inputfile': no_extension_inputfile}
-        processes, workarea_pwd = generate_processes(jobFile, recipe_string, logger, process_props = process_props)
-        
+        processes = generate_processes(jobFile, recipe_string, logger, no_extension_inputfile=no_extension_inputfile)
+
         failing_command = process(processes, work_dir, logger)
         if failing_command:
             status = 'error'
-        
+
         if status == 'success':
 
             if RHash.Format() == 'ISIS3':
