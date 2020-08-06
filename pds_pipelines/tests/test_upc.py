@@ -34,6 +34,7 @@ import pds_pipelines
 from pds_pipelines.process import Process
 from pds_pipelines.db import db_connect
 from pds_pipelines import upc_process
+from pds_pipelines import utils
 from pds_pipelines.upc_process import *
 
 from pds_pipelines.upc_process import create_datafiles_record, create_search_terms_record, create_json_keywords_record, get_target_id
