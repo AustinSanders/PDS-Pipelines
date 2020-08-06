@@ -37,16 +37,16 @@
         "recipe": {
             "isis.thm2isis": {
                 "from_": "{{inputfile}}",
-                "to": "{{process_props.no_extension_inputfile}}.cub"
+                "to": "{{no_extension_inputfile}}.cub"
             },
             "isis.spiceinit": {
-                "from_": "{{process_props.no_extension_inputfile}}.cub",
+                "from_": "{{no_extension_inputfile}}.cub",
                 "cknadir": "yes",
                 "cksmithed": "yes"
             },
             "isis.cam2map": {
-                "from": "{{process_props.no_extension_inputfile}}.cub",
-                "to": "{{process_props.no_extension_inputfile}}.proj.cub",
+                "from": "{{no_extension_inputfile}}.cub",
+                "to": "{{no_extension_inputfile}}.proj.cub",
                 "map": "value",
                 "matchmap": "no",
                 "pixres": "value",
