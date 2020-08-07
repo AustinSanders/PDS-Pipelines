@@ -91,8 +91,8 @@ class RedisQueue(object):
         -------
         recipe : str
         """
-        recipe = self._db.lrange(self.id_name, 0, -1)
-        return recipe
+        recipe = self._db.lrange(self.id_name, 0, -1)[0]
+        return conditional_decode(recipe)
 
 
     def QueueRemove(self, element):

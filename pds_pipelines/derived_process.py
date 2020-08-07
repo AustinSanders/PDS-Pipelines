@@ -37,8 +37,8 @@ def add_url(input_file, upc_id, session_maker):
     q_record = session.query(JsonKeywords).filter(JsonKeywords.upcid==upc_id)
     params = {}
     old_json = q_record.first().jsonkeywords
-    old_json['browse'] = thumb
-    old_json['thumbnail'] = browse
+    old_json['browse'] = browse
+    old_json['thumbnail'] = thumb
     params['jsonkeywords'] = old_json
 
     q_record.update(params, False)
