@@ -45,7 +45,7 @@
                 "cksmithed": "yes"
             },
             "isis.cam2map": {
-                "from": "{{no_extension_inputfile}}.cub",
+                "from": "{{no_extension_inputfile}}.cub{{out_bands}}",
                 "to": "{{no_extension_inputfile}}.proj.cub",
                 "map": "value",
                 "matchmap": "no",
