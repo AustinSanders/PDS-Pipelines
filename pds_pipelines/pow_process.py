@@ -78,13 +78,15 @@ def main(user_args):
         if '+' in jobFile:
             bandSplit = jobFile.split('+')
             inputFile = bandSplit[0]
+            out_bands = '+' + bandSplit[1]
         else:
             inputFile = jobFile
+            out_bands = ''
 
         status = 'success'
         recipe_string = RQ_recipe.RecipeGet()
         no_extension_inputfile = os.path.join(work_dir, os.path.splitext(os.path.basename(jobFile))[0])
-        processes = generate_processes(jobFile, recipe_string, logger, no_extension_inputfile=no_extension_inputfile)
+        processes = generate_processes(jobFile, recipe_string, logger, no_extension_inputfile=no_extension_inputfile, out_bands=out_bands)
         failing_command = process(processes, work_dir, logger)
 
         if failing_command:
