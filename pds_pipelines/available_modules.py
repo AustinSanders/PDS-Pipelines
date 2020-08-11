@@ -66,3 +66,47 @@ def ogr2ogr(dest, src, *args, **kwargs):
     # Dataset isn't written until dataset is closed and dereferenced
     # https://gis.stackexchange.com/questions/255586/gdal-vectortranslate-returns-empty-object
     del ds
+
+def get_single_band_cube(cube,out_cube,band_list,keyname):
+    """
+    Convenience function to extract a single band from an ISIS cube based on a prioritized list of band numbers,
+    and the name of a keyword to search for in the BandBin group of the cube.
+    This is necessary for generating browse/thumbnail images from multiband images where certain bands are preferred
+    over others for use in the output, but there is no way of knowing whether the preferred band is present without
+    inspecting the ingested ISIS cube.
+
+    Parameters
+    ----------
+    cube : str
+             A string file path to the input cube.
+
+    out_cube : str
+             A string file path to the desired output cube.
+
+    band_list : list
+             A list of ints representing band numbers to search for in cube, in decreasing order of priority
+
+    keyname : str
+             The name of the keyword to look for in the BandBin group of the input cube.
+
+    Returns
+    -------
+    isis.cubeatt() : function
+        Calls the ISIS function, cubeatt, in order to write out a single band cube
+
+
+    """
+    bands_in_cube = isis.getkey(from_=cube, objname="IsisCube", grpname="BandBin", keyword=keyname)
+    if isinstance(bands_in_cube, bytes):
+        bands_in_cube = bands_in_cube.decode()
+    bands_in_cube = bands_in_cube.replace('\n', '').replace(' ', '').split(',')
+    bands_in_cube = [int(x) for x in bands_in_cube]
+    
+    for band in band_list:
+        if band in bands_in_cube:
+            isis.cubeatt(from_=cube + '+' + str(band), to=out_cube)
+            break
+        else:
+            continue
+
+    return
