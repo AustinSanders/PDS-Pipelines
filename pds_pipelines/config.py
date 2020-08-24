@@ -28,6 +28,7 @@ pow_map2_base = '/pds_san/PDS_Services/'
 web_base = 'https://pdsimage.wr.usgs.gov/Missions/'
 archive_base = '/pds_san/PDS_Archive/'
 derived_base = '/pds_san/PDS_Derived/UPC/images/'
+derived_url = 'https://upcimages.wr.usgs.gov/'
 link_dest = '/pds_san/PDS_Archive_Links/'
 
 # Recipe base path
