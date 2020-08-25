@@ -45,12 +45,12 @@
     },
     "pow": {
         "recipe": {
-            "thmproc": {
-                "from_": "value",
-                "to": "value",
+            "isis.thmproc": {
+                "from_": "{{inputfile}}",
+                "to": "{{no_extension_inputfile}}.cub",
                 "remove": "no"
             },
-            "handmos": {
+            "isis.handmos": {
                 "from_": "value",
                 "mosaic": "value",
                 "priority": "beneath"
@@ -59,46 +59,41 @@
     },
     "reduced": {
         "recipe": {
-            "thmproc": {
-                "from_": "value",
-                "to": "value",
+            "isis.thmproc": {
+                "from_": "{{inputfile}}",
+                "to": "{{no_extension_inputfile}}.cub",
                 "remove": "no"
             },
             "handmos": {
-                "from_": "value",
+                "from_": "{{no_extension_inputfile}}.cub",
                 "mosaic": "value",
                 "priority": "beneath"
             },
-            "reduce": {
-                "from_": "value",
-                "to": "value",
-                "algorithm": "average",
-                "mode": "scale",
-                "sscale": "value",
-                "lscale": "value",
-                "validper": "1",
-                "vper_replace": "nearest"
+            "get_single_band_cube": {
+                "cube": "{{no_extension_inputfile}}.cub",
+                "out_cube": "{{no_extension_inputfile}}.singleband.cub",
+                "band_list": [3,2,5,4,1],
+                "keyname": "FilterNumber"
             },
-            "isis2std": {
-                "from_": "value",
-                "to": "value",
-                "format": "jpeg",
-                "quality": "60",
-                "stretch": "linear"
+            "gdal_translate": {
+	    	"outputType": "Byte",
+	    	"format" : "JPEG",
+	    	"scaleParams": [[]],
+	    	"width" : "50",
+	    	"height" : "0",
+	    	"src" : "{{no_extension_inputfile}}.singleband.cub",
+	    	"dest": "{{derived_product}}.thumbnail.jpg"
+      	    },
+            "gdal_translate": {
+                "outputType": "Byte",
+                "format" : "JPEG",
+                "scaleParams": [[]],
+                "width" : "200",
+                "height" : "0",
+                "src" : "{{no_extension_inputfile}}.singleband.cub",
+                "dest": "{{derived_product}}.browse.jpg"
             }
-        },
-	"browse": {
-	    "minlines": "200",
-	    "minsamples": "200",
-	    "maxlines": "900",
-	    "maxsamples": "900"
-	},
-	"thumbnail": {
-	    "minlines": "50",
-	    "minsamples": "50",
-	    "maxlines": "300",
-	    "maxsamples": "300"
-	}
+        }
     },
     "projected": {
         "recipe": {
