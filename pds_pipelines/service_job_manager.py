@@ -633,6 +633,8 @@ def generate_pow_recipe(xmlOBJ, pds_label, MAPfile):
         cross_track_summing = pds_label.get('CROSSTRACK_SUMMING')
         if cross_track_summing != 1:
             recipeOBJ.pop('isis.mocevenodd')
+        else:
+            recipeOBJ.pop('cube_rename')
 
     if 'isis.mocnoise50' in recipe_processes:
         cross_track_summing = pds_label.get('CROSSTRACK_SUMMING')
