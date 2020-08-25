@@ -1,4 +1,5 @@
 import warnings
+from os import rename
 available_modules = {}
 
 try:
@@ -109,4 +110,20 @@ def get_single_band_cube(cube,out_cube,band_list,keyname):
         else:
             continue
 
+    return
+
+
+def cube_rename(src, dest):
+    """ Thin wrapper to make os.rename available in recipes.
+
+    Parameters
+    ----------
+    src : str
+             A string file path to the file that will be renamed.
+
+    dest : str
+             A string file path that serves as the new file path.
+
+    """
+    rename(src, dest)
     return
