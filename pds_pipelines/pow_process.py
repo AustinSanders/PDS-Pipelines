@@ -15,7 +15,7 @@ from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.redis_hash import RedisHash
 from pds_pipelines.pds_logging import Loggy
 from pds_pipelines.pds_process_logging import SubLoggy
-from pds_pipelines.utils import generate_processes, process
+from pds_pipelines.utils import generate_processes, process, generate_log_json
 
 
 def parse_args():
@@ -87,7 +87,8 @@ def main(user_args):
         recipe_string = RQ_recipe.RecipeGet()
         no_extension_inputfile = os.path.join(work_dir, os.path.splitext(os.path.basename(jobFile))[0])
         processes = generate_processes(jobFile, recipe_string, logger, no_extension_inputfile=no_extension_inputfile, out_bands=out_bands)
-        failing_command = process(processes, work_dir, logger)
+        failing_command, error = process(processes, work_dir, logger)
+        process_log = generate_log_json(processes, basename, failing_command, error)
 
         if failing_command:
             status = 'error'
@@ -111,12 +112,9 @@ def main(user_args):
 
         elif status == 'error':
             RHash.Status('ERROR')
-            if os.path.isfile(infile):
-                #os.remove(infile)
-                pass
 
         try:
-            RQ_loggy.QueueAdd(loggyOBJ.Loggy2json())
+            RQ_loggy.QueueAdd(process_log)
             RQ_work.QueueRemove(jobFile)
             logger.info('JSON Added to Loggy Queue')
         except:

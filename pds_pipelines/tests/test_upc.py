@@ -27,7 +27,7 @@ pysis.isis.getkey = getkey
 
 # Stub in the getsn function for testing
 def spiceinit(from_):
-    raise ProcessError(1, ['spiceinit'], '', '')
+    raise ProcessError(1, ['spiceinit'], b'Could not spiceinit', b'Could not spiceinit')
 pysis.isis.spiceinit = spiceinit
 
 import pds_pipelines
@@ -325,13 +325,15 @@ def test_process_isis():
 
     processes = {'isis.getsn': {'from_': '/Path/to/some/cube.cub'}}
 
-    failing_command = process(processes, '/', logger)
+    failing_command, error = process(processes, '/', logger)
     assert failing_command == ''
+    assert error == ''
 
 def test_bad_process_isis():
     logger = logging.getLogger('UPC_Process')
 
     processes = {'isis.spiceinit': {'from_': '/Path/to/some/cube.cub'}}
 
-    failing_command = process(processes, '/', logger)
+    failing_command, error = process(processes, '/', logger)
     assert failing_command == 'spiceinit'
+    assert error != ''

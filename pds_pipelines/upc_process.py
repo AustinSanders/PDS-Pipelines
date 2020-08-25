@@ -491,7 +491,7 @@ def main(user_args):
                                        no_extension_inputfile=no_extension_inputfile,
                                        cam_info_file=cam_info_file,
                                        footprint_file=footprint_file)
-        failing_command = process(processes, workarea, logger)
+        failing_command, _ = process(processes, workarea, logger)
 
         pds_label = pvl.load(inputfile)
 
