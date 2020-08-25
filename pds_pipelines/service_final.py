@@ -15,7 +15,7 @@ from collections import OrderedDict
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.redis_hash import RedisHash
 from pds_pipelines.pds_db_query import PDS_DBquery
-from pds_pipelines.config import pds_log, pow_map2_base, scratch
+from pds_pipelines.config import pds_log, pow_map2_base, workarea, default_namespace
 from pysis import ISIS_VERSION as isis_version
 
 
@@ -55,6 +55,10 @@ def parse_args():
 def main(user_args):
     key = user_args.key
     namespace = user_args.namespace
+
+    if namespace is None:
+        namespace = default_namespace
+
     log_level = user_args.log_level
 
 #***************** Setup Logging **************
@@ -113,8 +117,8 @@ def main(user_args):
             logger.error('Adding Error XML to JOBS DB: Error')
         print(errorxml)
 
-    Fdir = pow_map2_base + infoHash.Service() + '/' + key
-    Wpath = scratch + key
+    Fdir = os.path.join(pow_map2_base, infoHash.Service(), key)
+    Wpath = os.path.join(workarea, key)
 
     # Make final directory
     if not os.path.exists(Fdir):
@@ -168,9 +172,9 @@ def main(user_args):
                     if k == 'status':
                         logOBJ.write(
                             "               STATUS:     " + val + "\n")
-                    elif k == 'command':
+                    elif k == 'parameters':
                         logOBJ.write(
-                            "               COMMAND:    " + val + "\n")
+                            "               PARAMETERS: " + val + "\n")
                     elif k == 'helplink':
                         logOBJ.write(
                             "               HELP LINK:  " + val + "\n\n")
@@ -182,7 +186,7 @@ def main(user_args):
     logOBJ.close()
 
 #******** Block for to copy and zip files to final directory ******
-    Zfile = Wpath + '/' + key + '.zip'
+    Zfile = os.path.join(Wpath, key + '.zip')
     logger.info('Making Zip File %s', Zfile)
 
 # log file stuff
@@ -194,8 +198,8 @@ def main(user_args):
         (stdout, stderr) = process.communicate()
 #        zOBJ.write(outputLOG, arcname=Lfile)
         logger.info('Log file %s Added to Zip File: Success', Lfile)
-        logger.info('zip stdout: ' + stdout)
-        logger.info('zip stderr: ' + stderr)
+        logger.info('zip stdout: ' + stdout.decode('utf-8'))
+        logger.info('zip stderr: ' + stderr.decode('utf-8'))
     except:
         logger.error('Log File %s NOT Added to Zip File', Lfile)
 
@@ -216,8 +220,8 @@ def main(user_args):
         (stdout, stderr) = process.communicate()
 
         logger.info('Map file %s added to zip file: Success', map_file)
-        logger.info('zip stdout: ' + stdout)
-        logger.info('zip stderr: ' + stderr)
+        logger.info('zip stdout: ' + stdout.decode('utf-8'))
+        logger.info('zip stderr: ' + stderr.decode('utf-8'))
     except:
         logger.error('Map File %s NOT added to Zip File', map_file)
 

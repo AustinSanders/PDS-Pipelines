@@ -2,6 +2,7 @@
 
 import os
 import sys
+import json
 import subprocess
 import logging
 import shutil
@@ -14,7 +15,7 @@ from pds_pipelines.redis_hash import RedisHash
 from pds_pipelines.pds_logging import Loggy
 from pds_pipelines.pds_process_logging import SubLoggy
 from pds_pipelines.process import Process
-from pds_pipelines.utils import generate_processes, process
+from pds_pipelines.utils import generate_processes, process, generate_log_json
 
 
 def parse_args():
@@ -68,8 +69,6 @@ def main(user_args):
 
         logger.info('Starting MAP Processing')
 
-        loggyOBJ = Loggy(basename)
-
         # File Naming
         infile = os.path.join(work_dir, \
             os.path.splitext(os.path.basename(jobFile))[0] + '.input.cub')
@@ -81,8 +80,9 @@ def main(user_args):
         recipe_string = RQ_recipe.QueueGet()
         no_extension_inputfile = os.path.join(work_dir, os.path.splitext(os.path.basename(jobFile))[0])
         processes = generate_processes(jobFile, recipe_string, logger, no_extension_inputfile=no_extension_inputfile)
+        failing_command, error = process(processes, work_dir, logger)
+        process_log = generate_log_json(processes, basename, failing_command, error)
 
-        failing_command = process(processes, work_dir, logger)
         if failing_command:
             status = 'error'
 
@@ -123,10 +123,10 @@ def main(user_args):
                 logger.error('File NOT Added to ZIP Queue')
 
             try:
-                RQ_loggy.QueueAdd(loggyOBJ.Loggy2json())
+                RQ_loggy.QueueAdd(process_log)
                 logger.info('JSON Added to Loggy Queue')
-            except:
-                logger.error('JSON NOT Added to Loggy Queue')
+            except Exception as e:
+                logger.error(f'JSON NOT Added to Loggy Queue with error: {e}')
 
             RQ_work.QueueRemove(jobFile)
         elif status == 'error':
