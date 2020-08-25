@@ -42,22 +42,22 @@
     },
     "pow": {
         "recipe": {
-            "ciss2isis": {
-                "from_": "value",
-                "to": "value"
+            "isis.ciss2isis": {
+                "from_": "{{inputfile}}",
+                "to": "{{no_extension_inputfile}}.cub"
             },
-            "spiceinit": {
-                "from_": "value",
+            "isis.spiceinit": {
+                "from_": "{{no_extension_inputfile}}.cub",
                 "cknadir": "yes",
                 "cksmithed": "yes"
             },
-            "cisscal": {
-                "from_": "value",
-                "to": "value"
+            "isis.cisscal": {
+                "from_": "{{no_extension_inputfile}}.cub",
+                "to": "{{no_extension_inputfile}}.cal.cub"
             },
-            "cam2map": {
-                "from": "value",
-                "to": "value",
+            "isis.cam2map": {
+                "from": "{{no_extension_inputfile}}.cal.cub",
+                "to": "{{no_extension_inputfile}}.proj.cub",
                 "map": "value",
                 "matchmap": "no",
                 "pixres": "value",
@@ -67,49 +67,34 @@
     },
     "reduced": {
         "recipe": {
-            "ciss2isis": {
-                "from_": "value",
-                "to": "value"
+            "isis.ciss2isis": {
+                "from_": "{{inputfile}}",
+                "to": "{{no_extension_inputfile}}.cub"
             },
-            "spiceinit": {
-                "from_": "value",
+            "isis.spiceinit": {
+                "from_": "{{no_extension_inputfile}}.cub",
                 "cknadir": "yes",
                 "cksmithed": "yes"
             },
-            "cisscal": {
-                "from_": "value",
-                "to": "value"
-            },
-            "reduce": {
-                "from_": "value",
-                "to": "value",
-                "algorithm": "average",
-                "mode": "scale",
-                "sscale": "value",
-                "lscale": "value",
-                "validper": "1",
-                "vper_replace": "nearest"
-            },
-            "isis2std": {
-                "from_": "value",
-                "to": "value",
-                "format": "jpeg",
-                "quality": "60",
-                "stretch": "linear"
+            "gdal_translate": {
+		"outputType": "Byte",
+		"format" : "JPEG",
+		"scaleParams": [[]],
+		"width" : "0",
+		"height" : "300",
+		"src" : "{{no_extension_inputfile}}.cub",
+		"dest": "{{derived_product}}.thumbnail.jpg"
+      	    },
+            "gdal_translate": {
+                "outputType": "Byte",
+                "format" : "JPEG",
+                "scaleParams": [[]],
+                "width" : "0",
+                "height" : "900",
+                "src" : "{{no_extension_inputfile}}.cub",
+                "dest": "{{derived_product}}.browse.jpg"
             }
-        },
-	"browse": {
-	    "minlines": "200",
-	    "minsamples": "200",
-	    "maxlines": "900",
-	    "maxsamples": "900"
-	},
-	"thumbnail": {
-	    "minlines": "50",
-	    "minsamples": "50",
-	    "maxlines": "300",
-	    "maxsamples": "300"
-	}
+        }
     },
     "projected": {
         "recipe": {
