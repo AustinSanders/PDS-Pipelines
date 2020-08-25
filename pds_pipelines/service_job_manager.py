@@ -628,6 +628,8 @@ def generate_pow_recipe(xmlOBJ, pds_label, MAPfile):
         spatial_summing = pds_label.get('SAMPLING_FACTOR')
         if spatial_summing != 1:
             recipeOBJ.pop('isis.ctxevenodd')
+        else:
+            recipeOBJ.pop('cube_rename')
 
     if 'isis.mocevenodd' in recipe_processes:
         cross_track_summing = pds_label.get('CROSSTRACK_SUMMING')
