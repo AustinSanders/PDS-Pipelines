@@ -59,6 +59,10 @@
                 "from_": "{{no_extension_inputfile}}.cal.cub",
                 "to": "{{no_extension_inputfile}}.cal.eo.cub"
             },
+            "cube_rename": {
+                "src": "{{no_extension_inputfile}}.cal.cub",
+                "dest": "{{no_extension_inputfile}}.cal.eo.cub"
+            },
             "isis.cam2map": {
                 "from": "{{no_extension_inputfile}}.cal.eo.cub",
                 "to": "{{no_extension_inputfile}}.proj.cub",
