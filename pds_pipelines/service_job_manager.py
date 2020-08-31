@@ -662,7 +662,7 @@ def generate_map2_recipe(xmlOBJ, isis_label, MAPfile):
 
     strType = xmlOBJ.STR_Type()
     if xmlOBJ.getProcess() == 'MAP2' and strType is None:
-        if bit_type != isis_pixel_type and isis_pixel_type != 'REAL':
+        if bit_type != isis_pixel_type and bit_type != 'REAL':
 
             if bit_type == 'SIGNEDWORD':
                 stretch_pairs = '0:-32765 0:-32765 100:32765 100:32765'
@@ -672,17 +672,17 @@ def generate_map2_recipe(xmlOBJ, isis_label, MAPfile):
             stretch_dict['usepercentages'] = 'yes'
             recipeOBJ['isis.stretch'] = stretch_dict
 
-    if strType == 'StretchPercent' and xmlOBJ.STR_PercentMin() is not None and xmlOBJ.STR_PercentMax() is not None and testBitType != 'REAL':
+    if strType == 'StretchPercent' and xmlOBJ.STR_PercentMin() is not None and xmlOBJ.STR_PercentMax() is not None and bit_type != 'REAL':
         if float(xmlOBJ.STR_PercentMin()) != 0 and float(xmlOBJ.STR_PercentMax()) != 100:
             if bit_type == 'UNSIGNEDBYTE':
-                strpairs = '0:1 ' + xmlOBJ.STR_PercentMin() + ':1 ' + \
+                stretch_pairs = '0:1 ' + xmlOBJ.STR_PercentMin() + ':1 ' + \
                     xmlOBJ.STR_PercentMax() + ':254 100:254'
             elif bit_type == 'SIGNEDWORD':
-                strpairs = '0:-32765 ' + xmlOBJ.STR_PercentMin() + ':-32765 ' + \
+                stretch_pairs = '0:-32765 ' + xmlOBJ.STR_PercentMin() + ':-32765 ' + \
                     xmlOBJ.STR_PercentMax() + ':32765 100:32765'
 
             stretch_dict['usepercentages'] = 'yes'
-            stretch_dict['pairs'] = strpairs
+            stretch_dict['pairs'] = stretch_pairs
             recipeOBJ['isis.stretch'] = stretch_dict
 
     elif strType == 'GaussStretch':

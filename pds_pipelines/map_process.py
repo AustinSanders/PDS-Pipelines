@@ -109,8 +109,10 @@ def main(user_args):
                 last_output = list(processes.items())[-1][-1]['dest']
                 last_output_msk = last_output + '.msk'
                 finalfile = os.path.join(work_dir, RHash.getMAPname() + '.' + fileext)
-                finalfile_msk = os.path.join(work_dir, RHash.getMAPname() + '.' + fileext + '.msk')
-                shutil.move(last_output_msk, finalfile_msk)
+                last_output_msk = last_output + '.msk'
+                if os.path.isfile(last_output_msk):
+                    finalfile_msk = os.path.join(work_dir, RHash.getMAPname() + '.' + fileext + '.msk')
+                    shutil.move(last_output_msk, finalfile_msk)
             shutil.move(last_output, finalfile)
 
             if RHash.getStatus() != 'ERROR':
