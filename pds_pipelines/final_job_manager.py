@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
 import sys
+import os
 import argparse
 import logging
 
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.hpc_job import HPCjob
-from pds_pipelines.config import pds_log, slurm_log, cmd_dir, scratch, default_namespace
+from pds_pipelines.config import pds_log, slurm_log, cmd_dir, workarea, default_namespace
 
 
 def parse_args():
@@ -69,7 +70,7 @@ def main(user_args):
         logger.info('HPC Command: %s', cmd)
 
         #SBfile = '/scratch/pds_services/' + FKey + '/' + FKey + '_final.sbatch'
-        SBfile = scratch + FKey + '/' + FKey + '_final.sbatch'
+        SBfile = os.path.join(workarea, FKey, (FKey + '_final.sbatch'))
         jobOBJ.MakeJobFile(SBfile)
 
         try:
