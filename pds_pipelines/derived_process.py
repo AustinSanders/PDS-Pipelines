@@ -89,7 +89,7 @@ def main():
                                            logger,
                                            no_extension_inputfile=no_extension_inputfile, 
                                            derived_product=derived_product)
-            failing_command = process(processes, workarea, logger)
+            failing_command, _ = process(processes, workarea, logger)
             if not failing_command:
                 upc_session = upc_session_maker()
                 isis_id = get_isis_id(no_extension_inputfile)

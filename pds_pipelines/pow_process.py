@@ -104,11 +104,25 @@ def main(user_args):
             if RHash.getStatus() != 'ERROR':
                 RHash.Status('SUCCESS')
 
-            try:
-                RQ_zip.QueueAdd(finalfile)
-                logger.info('File Added to ZIP Queue')
-            except:
-                logger.error('File NOT Added to ZIP Queue')
+            # Add finalfile to a list (it may be the only item if there are no ancillary files)
+            final_file_list = [finalfile]
+            
+            # Possible ancillary files
+            finalfile_aux = finalfile + '.aux.xml'
+            finalfile_msk = finalfile + '.msk'
+
+            if os.path.isfile(finalfile_aux):
+                final_file_list.append(finalfile_aux)
+            if os.path.isfile(finalfile_msk):
+                final_file_list.append(finalfile_msk)
+
+            for item in final_file_list:
+                try:
+                    RQ_zip.QueueAdd(item)
+                    logger.info('File Added to ZIP Queue')
+                except:
+                    logger.error('File NOT Added to ZIP Queue')
+
 
         elif status == 'error':
             RHash.Status('ERROR')

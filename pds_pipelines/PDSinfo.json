@@ -89,6 +89,10 @@
         "archiveid": "78",
         "path": "/pds_san/PDS_Archive/Mars_Express/"
     },
+    "mars_science_laboratory": {
+        "archiveid": "129",
+        "path": "/pds_san/PDS_Archive/Mars_Science_Laboratory/"
+    },
     "messenger": {
         "archiveid": "14",
         "path": "/pds_san/PDS_Archive/MESSENGER/",
