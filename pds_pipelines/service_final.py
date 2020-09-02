@@ -8,6 +8,7 @@ import shutil
 import datetime
 import json
 import argparse
+import zipfile
 import xml.etree.ElementTree as ET
 
 from io import BytesIO
