@@ -8,6 +8,7 @@ import shutil
 import datetime
 import json
 import argparse
+import zipfile
 import xml.etree.ElementTree as ET
 
 from io import BytesIO
@@ -186,103 +187,40 @@ def main(user_args):
     logOBJ.close()
 
 #******** Block for to copy and zip files to final directory ******
+    map_file = os.path.join(Wpath, key + '.map')
     Zfile = os.path.join(Wpath, key + '.zip')
+
+    final_file_list = zipQueue.ListGet()
+    final_file_list.append(outputLOG)
+    final_file_list.append(map_file)
+
     logger.info('Making Zip File %s', Zfile)
+    with zipfile.ZipFile(Zfile, 'w') as out_zip:
+        for item in final_file_list:
+            try:
+                logger.info('File %s added to zip file: success', item)
+                out_zip.write(item,os.path.basename(item))
+            except:
+                logger.error('File %s NOT added to zip file', item)
 
-# log file stuff
-    try:
-        Lfile = key + '.log'
-        Zcmd = 'zip -j ' + Zfile + " -q " + outputLOG
-        process = subprocess.Popen(
-            Zcmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        (stdout, stderr) = process.communicate()
-#        zOBJ.write(outputLOG, arcname=Lfile)
-        logger.info('Log file %s Added to Zip File: Success', Lfile)
-        logger.info('zip stdout: ' + stdout.decode('utf-8'))
-        logger.info('zip stderr: ' + stderr.decode('utf-8'))
-    except:
-        logger.error('Log File %s NOT Added to Zip File', Lfile)
-
-    try:
-        shutil.copyfile(outputLOG, Fdir + "/" + Lfile)
-        logger.info('Copied Log File %s to Final Area: Success', Lfile)
-        os.remove(outputLOG)
-    except IOError as e:
-        logger.error('Log File %s NOT COPIED to Final Area', Lfile)
-        logger.error(e)
-
-    # Add map file to zip
-    try:
-        map_file = Wpath + "/" + key + '.map'
-        Zcmd = 'zip -j ' + Zfile + " -q " + map_file
-        process = subprocess.Popen(
-            Zcmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        (stdout, stderr) = process.communicate()
-
-        logger.info('Map file %s added to zip file: Success', map_file)
-        logger.info('zip stdout: ' + stdout.decode('utf-8'))
-        logger.info('zip stderr: ' + stderr.decode('utf-8'))
-    except:
-        logger.error('Map File %s NOT added to Zip File', map_file)
-
-    try:
-        shutil.copyfile(map_file, Fdir + "/" + key + '.map')
-        logger.info('Copied map file %s to final area: success', key + '.map')
-    except IOError as e:
-        logger.error('Map file %s NOT COPIED to final area', key + '.map')
-        logger.error(e)
-
-# file stuff
-    for Lelement in zipQueue.ListGet():
-        Pfile = os.path.basename(Lelement)
-#        auxfile = os.path.basename(Lelement) + '.aux.xml'
-        auxfile = Wpath + '/' + os.path.basename(Lelement) + '.aux.xml'
-
+    logger.info('Copying output files to %s', Fdir)
+    for item in final_file_list:
         try:
-            Zcmd = 'zip -j ' + Zfile + " -q " + Lelement
-            process = subprocess.Popen(
-                Zcmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            (stdout, stderr) = process.communicate()
-            logger.info('File %s Added to Zip File: Success', Pfile)
-            if os.path.isfile(auxfile):
-                Zcmd = 'zip -j ' + Zfile + " -q " + auxfile
-                process = subprocess.Popen(
-                    Zcmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                (stdout, stderr) = process.communicate()
-                logger.info('File %s Added to Zip File: Success',
-                            os.path.basename(Lelement) + '.aux.xml')
+            shutil.copyfile(item,os.path.join(Fdir, os.path.basename(item)))
+            logger.info('Copied file %s to download directory: Success', item)
         except:
-            logger.error('Error During Zip Operation')
-
-        try:
-            shutil.copyfile(Wpath + '/' + Pfile, Fdir + '/' + Pfile)
-            logger.info('Copy File %s : Success', Pfile)
-            os.remove(Wpath + "/" + Pfile)
-            if os.path.isfile(auxfile):
-                shutil.copyfile(auxfile, Fdir + '/' +
-                                os.path.basename(Lelement) + '.aux.xml')
-                logger.info('Copy File %s : Success',
-                            os.path.basename(Lelement) + '.aux.xml')
-                os.remove(auxfile)
-        except IOError as e:
-            logger.error('Error During File Copy Operation')
+            logger.error('File %s NOT COPIED to download directory', item)
             logger.error(e)
 
-#    zOBJ.close()
-
     try:
-        shutil.copy(Zfile, Fdir + '/' + key + '.zip')
-        os.remove(Zfile)
-        logger.info('Zip File Copied to Final Directory')
+        shutil.copy(Zfile,os.path.join(Fdir, os.path.basename(Zfile)))
+        logger.info('Copied zip file %s to download directory', Zfile)
     except IOError as e:
-        logger.error('Error During Zip File Copy Operation')
+        logger.error('Error while attempting to copy zip file %s to download area', Zfile)
         logger.error(e)
 
 #************** Clean up *******************
-    os.remove(Wpath + '/' + key + '.map')
-    os.remove(Wpath + '/' + key + '.sbatch')
     try:
-        #        os.rmdir(Wpath)
         shutil.rmtree(Wpath)
         logger.info('Working Directory Removed: Success')
     except:

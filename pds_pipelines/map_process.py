@@ -87,6 +87,7 @@ def main(user_args):
             status = 'error'
 
         if status == 'success':
+            final_file_list = []
 
             if RHash.Format() == 'ISIS3':
                 last_output = list(processes.items())[-1][-1]['to']
@@ -107,22 +108,36 @@ def main(user_args):
                     fileext = 'gif'
 
                 last_output = list(processes.items())[-1][-1]['dest']
-                last_output_msk = last_output + '.msk'
                 finalfile = os.path.join(work_dir, RHash.getMAPname() + '.' + fileext)
+
+                # Possible ancillary files
                 last_output_msk = last_output + '.msk'
+                last_output_aux = last_output + '.aux.xml'
+
                 if os.path.isfile(last_output_msk):
                     finalfile_msk = os.path.join(work_dir, RHash.getMAPname() + '.' + fileext + '.msk')
                     shutil.move(last_output_msk, finalfile_msk)
+                    final_file_list.append(finalfile_msk)
+
+                if os.path.isfile(last_output_aux):
+                    finalfile_aux = os.path.join(work_dir, RHash.getMAPname() + '.' + fileext + '.aux.xml')
+                    shutil.move(last_output_aux, finalfile_aux)
+                    final_file_list.append(finalfile_aux)
+                                    
             shutil.move(last_output, finalfile)
+            final_file_list.append(finalfile)
+
 
             if RHash.getStatus() != 'ERROR':
                 RHash.Status('SUCCESS')
 
-            try:
-                RQ_zip.QueueAdd(finalfile)
-                logger.info('File Added to ZIP Queue')
-            except:
-                logger.error('File NOT Added to ZIP Queue')
+            # Loop over the list of final output files and add them to RQ_zip
+            for item in final_file_list:
+                try:
+                    RQ_zip.QueueAdd(item)
+                    logger.info('File Added to ZIP Queue')
+                except:
+                    logger.error('File NOT Added to ZIP Queue')
 
             try:
                 RQ_loggy.QueueAdd(process_log)
