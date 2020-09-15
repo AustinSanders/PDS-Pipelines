@@ -27,7 +27,23 @@
     },
     "clementine": {
         "archiveid": "50",
-        "path": "/pds_san/PDS_Archive/Clementine/"
+        "path": "/pds_san/PDS_Archive/Clementine/",
+	"upc_reqs": ["This archive clean name is for DI only. It does not map to a POW recipe."]
+    },
+    "clementine_hires_edr": {
+        "archiveid": "50",
+        "path": "/pds_san/PDS_Archive/Clementine/",
+	"upc_reqs": ["cl_00","lhxxxxxx"]
+    },
+    "clementine_nir_edr": {
+        "archiveid": "50",
+        "path": "/pds_san/PDS_Archive/Clementine/",
+	"upc_reqs": ["cl_00","lnxxxxxx"]
+    },
+    "clementine_uvvis_edr": {
+        "archiveid": "50",
+        "path": "/pds_san/PDS_Archive/Clementine/",
+	"upc_reqs": ["cl_00","luxxxxxx"]
     },
     "dawn_ceres": {
         "archiveid": "123",
@@ -87,13 +103,14 @@
     },
     "mars_express": {
         "archiveid": "78",
-        "path": "/pds_san/PDS_Archive/Mars_Express/"
+        "path": "/pds_san/PDS_Archive/Mars_Express/",
+	"upc_reqs": ["mexhrsc_0001/data/"]
     },
     "mars_science_laboratory": {
         "archiveid": "129",
         "path": "/pds_san/PDS_Archive/Mars_Science_Laboratory/"
     },
-    "messenger": {
+    "messenger_mdis": {
         "archiveid": "14",
         "path": "/pds_san/PDS_Archive/MESSENGER/",
 	"upc_reqs": [".IMG"]
