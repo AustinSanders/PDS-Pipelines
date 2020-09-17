@@ -1,0 +1,37 @@
+{
+    "inst": "mariner_10",
+    "src": "/pds_san/PDS_Archive/Mariner_10/",
+    "upc": {
+        "recipe": {
+        }
+    },
+    "pow": {
+        "recipe": {
+            "isis.mar102isis": {
+                "from_": "{{inputfile}}",
+                "to": "{{no_extension_inputfile}}.cub"
+            },
+            "isis.spiceinit": {
+                "from_": "{{no_extension_inputfile}}.cub",
+                "cknadir": "yes",
+                "cksmithed": "yes"
+            },
+            "isis.mar10clean": {
+                "from_": "{{no_extension_inputfile}}.cub",
+                "to": "{{no_extension_inputfile}}.clean.cub"
+            },
+            "isis.cam2map": {
+                "from": "{{no_extension_inputfile}}.clean.cub",
+                "to": "{{no_extension_inputfile}}.proj.cub",
+                "map": "value",
+                "matchmap": "no",
+                "pixres": "value",
+                "defaultrange": "value"
+            }
+        }
+    },
+    "reduced": {
+        "recipe": {
+        }
+    }
+}

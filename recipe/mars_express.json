@@ -1,0 +1,71 @@
+{
+    "inst": "mars_express_rdr",
+    "src": "/pds_san/PDS_Archive/Mars_Express/",
+    "upc": {
+        "recipe": {
+            "hrsc2isis": {
+                "from_": "value",
+                "to": "value"
+            },
+            "spiceinit": {
+                "from_": "value",
+                "cksmithed": "yes",
+                "ckrecon": "yes",
+                "ckpredicted": "yes",
+                "cknadir": "no"
+            },
+            "footprintinit": {
+                "from_": "value",
+                "increaseprecision": "yes",
+                "inctype": "vertices",
+                "numvertices": "40",
+                "maxemission": "89.5",
+                "maxincidence": "120.0"
+            },
+            "caminfo": {
+                "from_": "value",
+                "to": "value",
+                "geometry": "yes",
+                "isislabel": "yes",
+                "originallabel": "no",
+                "statistics": "yes",
+                "camstats": "yes",
+                "linc": "100",
+                "sinc": "100",
+                "polygon": "yes",
+                "inctype": "vertices",
+                "numvertices": "40",
+                "maxemission": "89.5",
+                "maxincidence": "120.0",
+                "spice": "no"
+            }
+        }
+    },
+    "pow": {
+        "recipe": {
+            "isis.hrsc2isis": {
+                "from_": "{{inputfile}}",
+                "to": "{{no_extension_inputfile}}.cub"
+            },
+            "isis.spiceinit": {
+                "from_": "{{no_extension_inputfile}}.cub",
+                "cksmithed": "yes",
+                "ckrecon": "yes",
+                "ckpredicted": "yes",
+                "cknadir": "no"
+            },
+            "isis.cam2map": {
+                "from": "{{no_extension_inputfile}}.cub",
+                "to": "{{no_extension_inputfile}}.proj.cub",
+                "map": "value",
+                "matchmap": "no",
+                "pixres": "value",
+                "defaultrange": "value"
+            }
+        }
+    },
+    "reduced": {
+        "recipe": {
+        }
+    }
+}

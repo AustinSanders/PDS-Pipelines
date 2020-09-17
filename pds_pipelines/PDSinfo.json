@@ -33,17 +33,17 @@
     "clementine_hires_edr": {
         "archiveid": "50",
         "path": "/pds_san/PDS_Archive/Clementine/",
-	"upc_reqs": ["cl_00","lhxxxxxx"]
+	"upc_reqs": ["cl_00","/lhxxxxxx/lhxxxxx"]
     },
     "clementine_nir_edr": {
         "archiveid": "50",
         "path": "/pds_san/PDS_Archive/Clementine/",
-	"upc_reqs": ["cl_00","lnxxxxxx"]
+	"upc_reqs": ["cl_00","/lnxxxxxx/lnxxxxx"]
     },
     "clementine_uvvis_edr": {
         "archiveid": "50",
         "path": "/pds_san/PDS_Archive/Clementine/",
-	"upc_reqs": ["cl_00","luxxxxxx"]
+	"upc_reqs": ["cl_00","/luxxxxxx/luxxxxx"]
     },
     "dawn_ceres": {
         "archiveid": "123",
@@ -95,7 +95,8 @@
     },
     "mariner_10": {
         "archiveid": "46",
-        "path": "/pds_san/PDS_Archive/Mariner_10/"
+        "path": "/pds_san/PDS_Archive/Mariner_10/",
+	"upc_reqs": ["/images/"]
     },
     "mars_pathfinder": {
         "archiveid": "18",

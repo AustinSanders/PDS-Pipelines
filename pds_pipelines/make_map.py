@@ -182,4 +182,4 @@ class MakeMap(object):
         tempPVL = pvl.dumps(self.mapDICT)
 
         with open(filename, 'wb') as f:
-            f.write(tempPVL)
+            f.write(tempPVL.encode())
