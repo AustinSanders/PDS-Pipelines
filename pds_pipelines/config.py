@@ -34,7 +34,7 @@ link_dest = '/pds_san/PDS_Archive_Links/'
 # Recipe base path
 # Uses the root of the project to set the base path for all necessary files
 root = Path(__file__).parent.parent
-recipe_base = os.path.join(root, 'recipe/new/')
+recipe_base = os.path.join(root, 'recipe/')
 pds_info = os.path.join(root, 'pds_pipelines/PDSinfo.json')
 pds_log = os.path.join(root, 'logs/')
 slurm_log = os.path.join(root, 'output/')

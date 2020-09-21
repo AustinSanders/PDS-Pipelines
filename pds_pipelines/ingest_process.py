@@ -101,7 +101,7 @@ def main(user_args):
             try:
                 upcflag = all(req in inputfile for req in PDSinfoDICT[archive]['upc_reqs'])
             except KeyError:
-                logger.warn("No upc_reqs found for %s\nSetting upc eligibility False for all related files.", str(archive))
+                logger.debug("No upc_reqs found for %s\nSetting upc eligibility False for all related files.", str(archive))
                 upcflag = False
 
             filesize = os.path.getsize(inputfile)

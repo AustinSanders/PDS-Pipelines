@@ -1,9 +1,9 @@
 {
-    "inst": "mro_hirise_edr_psp",
-    "src": "/pds_san/PDS_Archive/Mars_Reconnaissance_Orbiter/HiRISE/",
+    "inst": "voyager_jupiter",
+    "src": "/pds_san/PDS_Archive/Voyager/",
     "upc": {
         "recipe": {
-            "hi2isis": {
+            "voy2isis": {
                 "from_": "value",
                 "to": "value"
             },
@@ -16,7 +16,7 @@
                 "from_": "value",
                 "increaseprecision": "yes",
                 "inctype": "vertices",
-                "numvertices": "40",
+                "numvertices": "20",
                 "maxemission": "89.5",
                 "maxincidence": "120.0"
             },
@@ -28,11 +28,11 @@
                 "originallabel": "yes",
                 "statistics": "yes",
                 "camstats": "yes",
-                "linc": "100",
-                "sinc": "100",
+                "linc": "50",
+                "sinc": "50",
                 "polygon": "yes",
                 "inctype": "vertices",
-                "numvertices": "40",
+                "numvertices": "20",
                 "maxemission": "89.5",
                 "maxincidence": "120.0",
                 "spice": "no"
@@ -41,20 +41,32 @@
     },
     "pow": {
         "recipe": {
-            "hi2isis": {
-                "from_": "value",
-                "to": "value"
+            "isis.voy2isis": {
+                "from_": "{{inputfile}}",
+                "to": "{{no_extension_inputfile}}.cub"
             },
-            "spiceinit": {
-                "from_": "value",
+            "isis.spiceinit": {
+                "from_": "{{no_extension_inputfile}}.cub",
                 "cknadir": "yes",
                 "cksmithed": "yes"
+            },
+            "isis.voycal": {
+                "from_": "{{no_extension_inputfile}}.cub",
+                "to": "{{no_extension_inputfile}}.cal.cub"
+            },
+            "isis.cam2map": {
+                "from": "{{no_extension_inputfile}}.cal.cub",
+                "to": "{{no_extension_inputfile}}.proj.cub",
+                "map": "value",
+                "matchmap": "no",
+                "pixres": "value",
+                "defaultrange": "value"
             }
         }
     },
     "reduced": {
         "recipe": {
-            "hi2isis": {
+            "voy2isis": {
                 "from_": "value",
                 "to": "value"
             },
@@ -96,7 +108,7 @@
     },
     "projected": {
         "recipe": {
-            "hi2isis": {
+            "voy2isis": {
                 "from_": "value",
                 "to": "value"
             },

@@ -1,0 +1,39 @@
+{
+    "inst": "clementine_uvvis_edr",
+    "src": "/pds_san/PDS_Archive/Clementine/",
+    "upc": {
+        "recipe": {
+        }
+    },
+    "pow": {
+        "recipe": {
+            "isis.clem2isis": {
+                "from_": "{{inputfile}}",
+                "to": "{{no_extension_inputfile}}.cub"
+            },
+            "isis.spiceinit": {
+                "from_": "{{no_extension_inputfile}}.cub",
+                "cknadir": "yes",
+                "cksmithed": "yes"
+            },
+            "isis.clemuvviscal": {
+                "from_": "{{no_extension_inputfile}}.cub",
+                "to": "{{no_extension_inputfile}}.cal.cub",
+		"conv": "yes",
+		"tcor": "yes"
+            },
+            "isis.cam2map": {
+                "from": "{{no_extension_inputfile}}.cal.cub",
+                "to": "{{no_extension_inputfile}}.proj.cub",
+                "map": "value",
+                "matchmap": "no",
+                "pixres": "value",
+                "defaultrange": "value"
+            }
+        }
+    },
+    "reduced": {
+        "recipe": {
+        }
+    }
+}

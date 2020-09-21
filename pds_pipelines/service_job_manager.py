@@ -56,6 +56,7 @@ class jobXML(object):
         file_name = file_name.replace('http://pdsimage.wr.usgs.gov/Missions/', archive_base)
 
         candidates = []
+        filtered_candidates = []
 
         for key in self.pds_info:
             if file_name.startswith(self.pds_info[key]['path']):
@@ -63,21 +64,23 @@ class jobXML(object):
 
         # try to filter list based on upc_reqs.  If upc_reqs isn't specified, just skip the filtering step
         # ps can't use 'filter' because not all elements have upc_reqs, so they may raise exceptions.
-        if len(candidates) > 1:
+        if len(candidates) > 1: 
             for item in candidates:
                 try:
-                    if not all(x in file_name for x in self.pds_info[item]['upc_reqs']):
-                        candidates.remove(item)
+                    if all(x in file_name for x in self.pds_info[item]['upc_reqs']):
+                        filtered_candidates.append(item)
                 except KeyError:
-                    # Intentionally left blank.  Unspecified upc_reqs is valid -- there's just nothing to do for those elements
-                    pass
+                    # Unspecified upc_reqs is valid -- there's just nothing to do for those elements
+                    filtered_candidates.append(item)
+        else:
+            filtered_candidates.append(candidates[0])
 
         # If multiple candidates still exist, then it is not possible to uniquely identify the clean name
-        if len(candidates) > 1:
+        if len(filtered_candidates) > 1:
             raise(RuntimeError('Multiple candidates found for {} with no resolvable clean name'.format(file_name)))
 
         try:
-            return candidates[0]
+            return filtered_candidates[0]
         except IndexError:
             raise(KeyError('No key found in PDSInfo dict for path {}'.format(file_name)))
 
@@ -987,7 +990,15 @@ def main(user_args):
 
     logger.info('Building Recipe')
     if xmlOBJ.getProcess() == 'POW':
-        pds_label = pvl.load(Input_file.split('+')[0])
+        try:
+            pds_label = pvl.load(Input_file.split('+')[0])
+        except:
+            # If pvl fails to load a label, chances are that is because the input file is in a pre-PDS format,
+            #  in which case generate_pow_process() doesn't need the label anyway.
+            # Catch all exceptions because pvl can throw many different types of errors when attempting to read such files
+            logger.warning('PVL was unable to parse PDS label for %s', Input_file.split('+')[0])
+            pds_label = None
+            
         recipeOBJ = generate_pow_recipe(xmlOBJ, pds_label, MAPfile)
 
     elif xmlOBJ.getProcess() == 'MAP2':
@@ -1076,9 +1087,6 @@ def main(user_args):
     JAsize = RQ_file.QueueSize()
     jobOBJ.setJobArray(JAsize)
     logger.info('Job Array Size : %s', str(JAsize))
-
-    # @TODO replace with source activate <env>
-    #jobOBJ.addPath('/usgs/apps/anaconda/bin')
 
     # Whether or not we use the default namespace, this guarantees that the POW/MAP queues will match the namespace
     #  used in the job manager.
