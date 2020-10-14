@@ -157,7 +157,7 @@ class MakeMap(object):
         """
         self.mapDICT['End_Group'] = 'Mapping'
 
-        mappvl = pvl.dumps(self.mapDICT)
+        mappvl = pvl.dumps(self.mapDICT, encoder=pvl.encoder.ISISEncoder())
         self.mappvl = mappvl
 
         return mappvl
@@ -179,7 +179,4 @@ class MakeMap(object):
         filename
         """
         self.mapDICT['End_Group'] = 'Mapping'
-        tempPVL = pvl.dumps(self.mapDICT)
-
-        with open(filename, 'wb') as f:
-            f.write(tempPVL.encode())
+        pvl.dump(self.mapDICT, filename, encoder=pvl.encoder.ISISEncoder())
