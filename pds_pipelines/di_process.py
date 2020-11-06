@@ -69,7 +69,7 @@ def main(user_args):
             Qelement = session.query(Files).filter(
                 Files.filename == inputfile).one()
         except Exception as e:
-            logger.warn('Filename query failed for inputfile %s: %s', inputfile, str(e))
+            logger.warning('Filename query failed for inputfile %s: %s', inputfile, str(e))
             continue
 
         archive_path = PDSinfoDICT[archive]['path']
@@ -84,7 +84,7 @@ def main(user_args):
 
             Qelement.di_pass = checksum == Qelement.checksum
             if !Qelement.di_pass:
-                logger.warn('File %s checksum %s does not match the database entry checksum %s', 
+                logger.warning('File %s checksum %s does not match the database entry checksum %s', 
                             cpfile, checksum, Qelement.checksum)
 
             Qelement.di_date = datetime.datetime.now(
@@ -97,13 +97,13 @@ def main(user_args):
                 index = 0
         else:
             RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during DI processing')
-            logger.warn('File %s Not Found', cpfile)
+            logger.warning('File %s Not Found', cpfile)
     try:
         session.commit()
         logger.info("End Commit DI process to Database: Success")
         index = 1
     except Exception as e:
-        logger.warn("Unable to commit changes to database\n\n%s", e)
+        logger.warning("Unable to commit changes to database\n\n%s", e)
         session.rollback()
 
     # Close connection to database

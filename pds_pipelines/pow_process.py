@@ -99,7 +99,8 @@ def main(user_args):
             if final_process == 'gdal_translate':
                 finalfile = args['dest']
             else:
-                finalfile = args['to']
+                finalfile_split = args['to'].split('+')
+                finalfile = finalfile_split[0]
 
             if RHash.getStatus() != 'ERROR':
                 RHash.Status('SUCCESS')

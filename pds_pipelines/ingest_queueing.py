@@ -88,7 +88,7 @@ def main(user_args):
                     if ingest:
                         RQ_ingest.QueueAdd((fname, archive))
                 except Exception as e:
-                    logger.warn('File %s NOT added to Ingest Queue: %s', fname, str(e))
+                    logger.warning('File %s NOT added to Ingest Queue: %s', fname, str(e))
             else:
                 continue
 

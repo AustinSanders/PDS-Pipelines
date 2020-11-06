@@ -5,14 +5,14 @@ import pvl
 import json
 import logging
 import argparse
-from pds_pipelines.config import recipe_base, link_dest
+from pds_pipelines.config import pds_info, link_dest
 from pds_pipelines.redis_queue import RedisQueue
 from ast import literal_eval
 from pds_pipelines.config import pds_log
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="DI Process")
+    parser = argparse.ArgumentParser(description="Create symbolic links named like PDS DATA_SET_ID for a given item in the Redis queue named LinkQueue. Symlinks are created in location defined by link_dest in PDS-Pipelines config.py.")
 
     parser.add_argument('--log', '-l', dest="log_level",
                         choices=['DEBUG', 'INFO',
@@ -44,14 +44,12 @@ def main(user_args):
         inputfile = item[0]
         archive = item[1]
 
-        json_file_path = recipe_base + archive + '.json'
+        PDSinfoDICT = json.load(open(pds_info, 'r'))
         try:
-            with open(json_file_path, 'r') as f:
-                json_dict = json.load(f)
-        except ValueError as e:
-            logging.warn(e)
+            link_src_path = PDSinfoDICT[archive]['path'][:-1]
+        except ValueError:
+            logger.warning(e)
             continue
-        link_src_path = json_dict['src']
 
         voldesc = load_pvl(inputfile)
         dataset_id = voldesc['VOLUME']['DATA_SET_ID']

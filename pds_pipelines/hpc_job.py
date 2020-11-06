@@ -161,8 +161,6 @@ class HPCjob(object):
             if self.memory:
                 f.write("\n" + self.memory)
 
-            f.write("\n#SBATCH --spread-job")
-
             if self.module:
                 f.write("\n\n" + self.module)
                 f.write("\necho `printenv PATH`")
