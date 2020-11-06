@@ -107,7 +107,7 @@ def main(user_args):
             RQ.QueueAdd((element.filename, archive))
             addcount = addcount + 1
         except:
-            logger.warn('File %s Not Added to DI_ReadyQueue',
+            logger.warning('File %s Not Added to DI_ReadyQueue',
                          element.filename)
 
     logger.info('Files Added to Queue %s', addcount)

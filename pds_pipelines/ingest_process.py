@@ -73,7 +73,7 @@ def main(user_args):
 
         if not os.path.isfile(inputfile):
             RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during ingest processing')
-            logger.warn("%s is not a file\n", inputfile)
+            logger.warning("%s is not a file\n", inputfile)
             continue
 
         RQ_work.QueueAdd(inputfile)
@@ -137,7 +137,7 @@ def main(user_args):
 
         elif not runflag and not override:
             RQ_work.QueueRemove(inputfile)
-            logger.warn("Not running ingest: file %s already present"
+            logger.warning("Not running ingest: file %s already present"
                         " in database and no override flag supplied", inputfile)
 
         if index >= 250:
@@ -147,7 +147,7 @@ def main(user_args):
                 index = 1
             except Exception as e:
                 session.rollback()
-                logger.warn("Unable to commit to database: %s", str(e))
+                logger.warning("Unable to commit to database: %s", str(e))
     else:
         logger.info("No Files Found in Ingest Queue")
         try:

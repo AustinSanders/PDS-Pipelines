@@ -926,7 +926,7 @@ def main(user_args):
             RQ_file.QueueAdd(Input_file)
             logger.info('File %s Added to Redis Queue', Input_file)
         except Exception as e:
-            logger.warn('File %s NOT Added to Redis Queue', Input_file)
+            logger.warning('File %s NOT Added to Redis Queue', Input_file)
             print('Redis Queue Error', e)
     RedisH.FileCount(RQ_file.QueueSize())
     logger.info('Count of Files Queue: %s', str(RQ_file.QueueSize()))
@@ -1073,7 +1073,7 @@ def main(user_args):
         RQ_recipe.QueueAdd(json.dumps(recipeOBJ))
         logger.info('Recipe Added to Redis')
     except Exception as e:
-        logger.warn('Recipe NOT Added to Redis: %s', recipeOBJ)
+        logger.warning('Recipe NOT Added to Redis: %s', recipeOBJ)
 
     # HPC job stuff
     logger.info('HPC Cluster job Submission Starting')
