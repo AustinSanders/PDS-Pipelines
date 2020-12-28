@@ -88,14 +88,19 @@ def main(user_args):
 
         if status == 'success':
             final_file_list = []
+            img_format = RHash.Format()
 
-            if RHash.Format() == 'ISIS3':
+            # If final output format is ISIS3 or PDS, will use an ISIS program to create
+            if img_format == 'ISIS3' or img_format == 'PDS':
                 last_output = list(processes.items())[-1][-1]['to']
                 last_output = last_output.split('+')[0]
-                finalfile = os.path.join(work_dir, RHash.getMAPname() + '.cub')
-            else:
-                img_format = RHash.Format()
+                if img_format == 'ISIS3':
+                    finalfile = os.path.join(work_dir, RHash.getMAPname() + '.cub')
+                else:
+                    finalfile = os.path.join(work_dir, RHash.getMAPname() + '.img')
 
+            # Else will use GDAL, so set extension and define possible ancillary files
+            else:
                 if img_format == 'GeoTiff-BigTiff' or img_format == 'GTiff':
                     fileext = 'tif'
                 elif img_format == 'GeoJPEG-2000':

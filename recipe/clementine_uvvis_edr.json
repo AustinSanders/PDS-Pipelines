@@ -3,6 +3,41 @@
     "src": "/pds_san/PDS_Archive/Clementine/",
     "upc": {
         "recipe": {
+            "isis.clem2isis": {
+                "from_": "{{inputfile}}",
+                "to": "{{no_extension_inputfile}}.cub"
+            },
+            "isis.spiceinit": {
+                "from_": "{{no_extension_inputfile}}.cub",
+                "cknadir": "yes",
+                "cksmithed": "yes"
+            },
+            "isis.footprintinit": {
+                "from_": "{{no_extension_inputfile}}.cub",
+                "increaseprecision": "yes",
+                "inctype": "vertices",
+                "numvertices": "40",
+                "maxemission": "89.5",
+                "maxincidence": "120.0"
+            },
+            "isis.caminfo": {
+                "from_": "{{no_extension_inputfile}}.cub",
+                "to": "{{cam_info_file}}",
+                "geometry": "yes",
+                "isislabel": "yes",
+                "originallabel": "yes",
+                "statistics": "yes",
+                "camstats": "yes",
+                "linc": "100",
+                "sinc": "100",
+                "polygon": "yes",
+                "inctype": "vertices",
+                "increaseprecision": "yes",
+                "numvertices": "40",
+                "maxemission": "89.5",
+                "maxincidence": "120.0",
+                "spice": "no"
+            }
         }
     },
     "pow": {
@@ -34,6 +69,28 @@
     },
     "reduced": {
         "recipe": {
+            "isis.clem2isis": {
+                "from_": "{{inputfile}}",
+                "to": "{{no_extension_inputfile}}.cub"
+            },
+            "gdal_translate": {
+		"outputType": "Byte",
+		"format" : "JPEG",
+		"scaleParams": [[]],
+		"width" : "384",
+		"height" : "0",
+		"src" : "{{no_extension_inputfile}}.cub",
+		"dest": "{{derived_product}}.thumbnail.jpg"
+      	    },
+            "gdal_translate": {
+                "outputType": "Byte",
+                "format" : "JPEG",
+                "scaleParams": [[]],
+                "width" : "384",
+                "height" : "0",
+                "src" : "{{no_extension_inputfile}}.cub",
+                "dest": "{{derived_product}}.browse.jpg"
+            }
         }
     }
 }

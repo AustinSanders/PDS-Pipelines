@@ -33,7 +33,7 @@ class UPCkeywords(object):
     def __init__(self, input_pvl):
         if isinstance(input_pvl, str):
             try:
-                self.label = lower_keys(pvl.load(input_pvl, strict=False))
+                self.label = lower_keys(pvl.load(input_pvl))
             except:
                 # Some labels are poorly formatted or include characters that
                 #  cannot be parsed with the PVL library.  This finds those
@@ -48,7 +48,7 @@ class UPCkeywords(object):
                 with open(input_pvl, 'w') as f:
                     f.write(filedata)
 
-                self.label = lower_keys(pvl.load(input_pvl, strict=False))
+                self.label = lower_keys(pvl.load(input_pvl))
 
         elif isinstance(input_pvl, pvl.PVLModule):
             self.label = lower_keys(input_pvl)
