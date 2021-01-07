@@ -12,8 +12,8 @@ from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.upc_models import DataFiles, SearchTerms, JsonKeywords
-from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db, lock_obj, upc_error_queue, recipe_base, archive_base, derived_base, derived_url
-from pds_pipelines.utils import generate_processes, process, parse_pairs, add_process_db, get_isis_id
+from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db, lock_obj, upc_error_queue, recipe_base, archive_base, derived_base, derived_url, web_base
+from pds_pipelines.utils import generate_processes, process, parse_pairs, add_process_db
 
 def makedir(inputfile):
     temppath = os.path.dirname(inputfile)
@@ -87,13 +87,13 @@ def main():
             processes = generate_processes(inputfile,
                                            recipe_string,
                                            logger,
-                                           no_extension_inputfile=no_extension_inputfile, 
+                                           no_extension_inputfile=no_extension_inputfile,
                                            derived_product=derived_product)
             failing_command, _ = process(processes, workarea, logger)
             if not failing_command:
                 upc_session = upc_session_maker()
-                isis_id = get_isis_id(no_extension_inputfile)
-                datafile = upc_session.query(DataFiles).filter(DataFiles.isisid.like(f"%{isis_id}%")).first()
+                src = inputfile.replace(workarea, web_base)
+                datafile = upc_session.query(DataFiles).filter(DataFiles.source==src).first()
                 upc_id = datafile.upcid
                 add_url(derived_product, upc_id, upc_session_maker)
                 upc_session.close()
