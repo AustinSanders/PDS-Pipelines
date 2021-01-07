@@ -26,7 +26,7 @@ except Exception as e:
                  f'Failed with the following {e}.')
 
 
-def gdal_translate(dest, src, *args, **kwargs):
+def gdal_translate(dest, src, noData=0, *args, **kwargs):
     try:
         # If outputType is specified, convert it to gdal datatype
         kwargs['outputType'] = gdal.GetDataTypeByName(kwargs['outputType'])
@@ -34,7 +34,7 @@ def gdal_translate(dest, src, *args, **kwargs):
         # If outputType not specified, no conversion is necessary and GDAL will
         #  use default arguments.
         pass
-    opts = gdal.TranslateOptions(*args, **kwargs)
+    opts = gdal.TranslateOptions(noData=noData, *args, **kwargs)
     return gdal.Translate(dest, src, options=opts)
 
 
@@ -102,7 +102,7 @@ def get_single_band_cube(cube,out_cube,band_list,keyname):
         bands_in_cube = bands_in_cube.decode()
     bands_in_cube = bands_in_cube.replace('\n', '').replace(' ', '').split(',')
     bands_in_cube = [int(x) for x in bands_in_cube]
-    
+
     for band in band_list:
         if band in bands_in_cube:
             isis.cubeatt(from_=cube + '+' + str(band), to=out_cube)
