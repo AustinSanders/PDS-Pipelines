@@ -26,7 +26,7 @@ except Exception as e:
                  f'Failed with the following {e}.')
 
 
-def gdal_translate(dest, src, *args, **kwargs):
+def gdal_translate(dest, src, noData=0, *args, **kwargs):
     try:
         # If outputType is specified, convert it to gdal datatype
         kwargs['outputType'] = gdal.GetDataTypeByName(kwargs['outputType'])
@@ -34,13 +34,7 @@ def gdal_translate(dest, src, *args, **kwargs):
         # If outputType not specified, no conversion is necessary and GDAL will
         #  use default arguments.
         pass
-    try:
-        # check for existing noData specification
-        kwargs['noData']
-    except KeyError:
-        # If noData value does not exist, use noData=0
-        kwargs['noData'] = 0
-    opts = gdal.TranslateOptions(*args, **kwargs)
+    opts = gdal.TranslateOptions(noData=noData, *args, **kwargs)
     return gdal.Translate(dest, src, options=opts)
 
 
