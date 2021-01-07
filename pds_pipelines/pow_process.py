@@ -107,7 +107,7 @@ def main(user_args):
 
             # Add finalfile to a list (it may be the only item if there are no ancillary files)
             final_file_list = [finalfile]
-            
+
             # Possible ancillary files
             finalfile_aux = finalfile + '.aux.xml'
             finalfile_msk = finalfile + '.msk'
@@ -127,6 +127,12 @@ def main(user_args):
 
         elif status == 'error':
             RHash.Status('ERROR')
+            logger.error(f'Process {failing_command} :: Error')
+            logger.error(error)
+            error_string = f'Error Executing {failing_command}' \
+                           f'Standard Error: {error}'
+            RHerror.addError(basename, error_string)
+            RQ_error.QueueAdd(f'Process {failing_command} failed for {jobFile}')
 
         try:
             RQ_loggy.QueueAdd(process_log)

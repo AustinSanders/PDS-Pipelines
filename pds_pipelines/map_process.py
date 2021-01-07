@@ -8,7 +8,7 @@ import logging
 import shutil
 import argparse
 
-from pds_pipelines.config import lock_obj, pds_log, default_namespace, workarea
+from pds_pipelines.config import lock_obj, pds_log, upc_error_queue, default_namespace, workarea
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.redis_hash import RedisHash
@@ -46,6 +46,7 @@ def main(user_args):
     RQ_loggy = RedisQueue(key + '_loggy', namespace)
     RQ_final = RedisQueue('FinalQueue', namespace)
     RQ_recipe = RedisQueue(key + '_recipe', namespace)
+    RQ_error = RedisQueue(upc_error_queue, namespace)
     RHash = RedisHash(key + '_info')
     RHerror = RedisHash(key + '_error')
     RQ_lock = RedisLock(lock_obj)
@@ -128,7 +129,7 @@ def main(user_args):
                     finalfile_aux = os.path.join(work_dir, RHash.getMAPname() + '.' + fileext + '.aux.xml')
                     shutil.move(last_output_aux, finalfile_aux)
                     final_file_list.append(finalfile_aux)
-                                    
+
             shutil.move(last_output, finalfile)
             final_file_list.append(finalfile)
 
@@ -151,8 +152,15 @@ def main(user_args):
                 logger.error(f'JSON NOT Added to Loggy Queue with error: {e}')
 
             RQ_work.QueueRemove(jobFile)
+
         elif status == 'error':
             RHash.Status('ERROR')
+            logger.error(f'Process {failing_command} :: Error')
+            logger.error(error)
+            error_string = f'Error Executing {failing_command}' \
+                           f'Standard Error: {error}'
+            RHerror.addError(basename, error_string)
+            RQ_error.QueueAdd(f'Process {failing_command} failed for {jobFile}')
             if os.path.isfile(infile):
                 os.remove(infile)
 
