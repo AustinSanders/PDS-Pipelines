@@ -32,6 +32,12 @@ def db_connect(cred):
                                                                     c[cred]['db']))
     except KeyError:
         print("Credentials not found for {}".format(cred))
+
+    try:
+        engine.connect()
+    except sqlalchemy.exc.OperationalError:
+        print(f"WARNING:  Unable to create a database connection for credential specification '{cred}'")
+        return None, None
     metadata = MetaData(bind=engine)
     session_maker = sessionmaker(bind=engine)
     return session_maker, engine
