@@ -1,7 +1,8 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect
 from pds_pipelines.config import credentials as c
 from sqlalchemy import MetaData, Table
 from sqlalchemy.orm import mapper, sessionmaker
+from sqlalchemy.exc import OperationalError
 
 def db_connect(cred):
     """
@@ -25,17 +26,21 @@ def db_connect(cred):
     session_maker = None
     engine = None
     try:
-        engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(c[cred]['user'],
-                                                                    c[cred]['pass'],
-                                                                    c[cred]['host'],
-                                                                    c[cred]['port'],
-                                                                    c[cred]['db']))
+        database_url = 'postgresql://{}:{}@{}:{}'.format(c[cred]['user'],
+                                                            c[cred]['pass'],
+                                                            c[cred]['host'],
+                                                            c[cred]['port'])
     except KeyError:
         print("Credentials not found for {}".format(cred))
 
     try:
-        engine.connect()
-    except sqlalchemy.exc.OperationalError:
+        engine = create_engine(database_url)
+        insp = inspect(engine)
+        db_list = insp.get_schema_names()
+        engine.url.database = c[cred]['db']
+        if c[cred]['db'] in db_list:
+            engine.connect()
+    except OperationalError:
         print(f"WARNING:  Unable to create a database connection for credential specification '{cred}'")
         return None, None
     metadata = MetaData(bind=engine)
