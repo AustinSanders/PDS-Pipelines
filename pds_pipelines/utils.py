@@ -75,6 +75,11 @@ def process(processes, workarea_pwd, logger):
             error = e.stderr.decode('utf-8')
             break
 
+        except RuntimeError as e:
+            failing_command = command
+            error = e
+            logger.debug("%s", error)
+
     return failing_command, error
 
 

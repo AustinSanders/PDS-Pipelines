@@ -58,20 +58,21 @@ def main():
     error_queue = RedisQueue('UPC_ErrorQueue')
 
     try:
-        Session, _ = db_connect(pds_db)
-        session = Session()
+        pds_session_maker, _ = db_connect(pds_db)
+        pds_session = pds_session_maker()
         logger.info('Database Connection Success')
     except:
         logger.error('Database Connection Error')
 
     if args.volume:
         volstr = '%' + args.volume + '%'
-        qOBJ = session.query(Files).filter(Files.archiveid == archiveID,
+        qOBJ = pds_session.query(Files).filter(Files.archiveid == archiveID,
                                                 Files.filename.like(volstr),
                                                 Files.upc_required == 't')
     else:
-        qOBJ = session.query(Files).filter(Files.archiveid == archiveID,
+        qOBJ = pds_session.query(Files).filter(Files.archiveid == archiveID,
                                              Files.upc_required == 't')
+    pds_session.close()
 
 
     if args.search:
@@ -94,7 +95,6 @@ def main():
 
         for element in qOBJ:
             fname = path + element.filename
-            fid = element.fileid
 
             try:
                 dest_path = dirname(fname)
@@ -104,7 +104,7 @@ def main():
                     if not exists(f'{dest_path}{f}'):
                         copy2(f, dest_path)
 
-                RQ.QueueAdd((join(dest_path,basename(element.filename)), fid, args.archive))
+                RQ.QueueAdd((join(dest_path,basename(element.filename)), args.archive))
                 addcount = addcount + 1
             except Exception as e:
                 error_queue.QueueAdd(f'Unable to copy / queue {fname}: {e}')

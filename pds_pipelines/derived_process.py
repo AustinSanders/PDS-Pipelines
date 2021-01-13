@@ -13,7 +13,7 @@ from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.upc_models import DataFiles, SearchTerms, JsonKeywords
 from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db, lock_obj, upc_error_queue, recipe_base, archive_base, derived_base, derived_url, web_base
-from pds_pipelines.utils import generate_processes, process, parse_pairs, add_process_db
+from pds_pipelines.utils import generate_processes, process, parse_pairs
 
 def makedir(inputfile):
     temppath = os.path.dirname(inputfile)
@@ -70,8 +70,7 @@ def main():
         item = literal_eval(RQ_derived.QueueGet())
 
         inputfile = item[0]
-        fid = item[1]
-        archive = item[2]
+        archive = item[1]
         if os.path.isfile(inputfile):
             recipe_file = recipe_base + "/" + archive + '.json'
             with open(recipe_file) as fp:
@@ -99,7 +98,6 @@ def main():
                 upc_session.close()
                 #os.remove(infile)
                 logger.info(f'Derived Process Success: %s', inputfile)
-                add_process_db(pds_session_maker, fid, 't')
             else:
                 logger.error('Error: %s', failing_command)
 
