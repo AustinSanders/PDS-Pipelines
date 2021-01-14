@@ -70,24 +70,19 @@ def getPDSid(infile):
 
 
 
-def get_target_id(label, session_maker):
+def get_target_name(label):
     """
-    Fetches the target_id from the database. If a target_id is not found try
-    to extract it from a given PDS label and add the target to the database
+    Try to extract the target_name from a given PDS label.
 
     Parameters
     ----------
-    pds_label : Object
+    label : Object
         Any type of pds object that can be indexed
-
-    session_maker : sessionmaker
-        sqlalchemy sessionmaker object for connection to and querying the
-        database
 
     Returns
     -------
-    target_id : int
-        The defined target_id from the database. If this is 0 a target name
+    target_name : str
+        The defined target_name from the label. If this is None a target name
         could not be pulled from the label
     """
     try:
@@ -95,40 +90,22 @@ def get_target_id(label, session_maker):
     except KeyError as e:
         return None
 
-    session = session_maker()
-    target_qobj = session.query(Targets).filter(
-        Targets.targetname == target_name.upper()).first()
+    return target_name
 
-    # If no matching table is found, create the entry in the database and
-    #  access the new instance.
-    if target_qobj is None:
-        target_qobj = Targets.create(session, targetname=target_name,
-                                              displayname=target_name.title(),
-                                              system=target_name)
-    target_id = target_qobj.targetid
-    session.close()
-    return target_id
-
-def get_instrument_id(label, session_maker):
+def get_instrument_name(label):
     """
-    Fetches the instrument_id from the database. If a instrument_id is not
-    found, try to extract it from a given PDS label and add the instrument to
-    the database
+    Try to extract the instrument_name from a given PDS label.
 
     Parameters
     ----------
     label : Object
         Any type of pds object that can be indexed
 
-    session_maker : sessionmaker
-        sqlalchemy sessionmaker object for connection to and querying the
-        database
-
     Returns
     -------
-    instrument_id : int
-        The defined instrument_id from the database. If this is 0 a instrument
-        name could not be pulled from the label
+    instrument_name : str
+        The defined instrument_name from the label. If this is None an instrument name
+        could not be pulled from the label
     """
     # Although PDS3 the INSTRUMENT_NAME keyword, it is missing from some older datasets.
     #  PDS3 defines several (often interchangeable) keywords to
@@ -141,13 +118,28 @@ def get_instrument_id(label, session_maker):
         except KeyError as e:
             instrument_name = None
 
-    if not instrument_name:
-        return None
+    return instrument_name
 
+def get_spacecraft_name(label):
+    """
+    Try to extract the spacecraft_name from a given PDS label.
+
+    Parameters
+    ----------
+    label : Object
+        Any type of pds object that can be indexed
+
+    Returns
+    -------
+    spacecraft_name : str
+        The defined spacecraft_name from the label. If this is None an spacecraft name
+        could not be pulled from the label
+    """
     # PDS3 does not require a keyword to hold spacecraft name,
     #  and PDS3 defines several (often interchangeable) keywords to
     #  hold spacecraft name, so try each of them in preferred order and grab the first match.
     # If no match is found, leave as None
+
     for sc in ['SPACECRAFT_NAME','INSTRUMENT_HOST_NAME','MISSION_NAME','SPACECRAFT_ID','INSTRUMENT_HOST_ID']:
         try:
             spacecraft_name = label[sc]
@@ -155,23 +147,7 @@ def get_instrument_id(label, session_maker):
         except KeyError:
             spacecraft_name = None
 
-    if not spacecraft_name:
-        return None
-
-    session = session_maker()
-    # Get the instrument from the instruments table.
-    instrument_qobj = session.query(Instruments).filter(
-        Instruments.instrument == instrument_name,
-        Instruments.spacecraft == spacecraft_name).first()
-
-    # If no matching instrument is found, create the entry in the database
-    #  and access the new instance.
-    if instrument_qobj is None:
-        instrument_qobj = Instruments.create(session, instrument=instrument_name,
-                                                      spacecraft=spacecraft_name)
-    instrument_id = instrument_qobj.instrumentid
-    session.close()
-    return instrument_id
+    return spacecraft_name
 
 def read_json_footprint(footprint_file):
     with open(footprint_file, 'r') as fp:
@@ -181,10 +157,10 @@ def read_json_footprint(footprint_file):
     footprint = ogr.CreateGeometryFromJson(geo_str)
     return footprint.ExportToWkt()
 
-def create_datafiles_record(label, edr_source, input_cube, session_maker):
+def create_datafiles_atts(label, edr_source, input_cube):
     """
-    Creates a new DataFiles record through values from a given label and adds
-    the new record to the database
+    Creates a DataFiles record attribute dictionary through values from a given
+    label
 
     Parameters
     ----------
@@ -197,14 +173,10 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
     input_cube : str
         Path to the cube generated from the data source
 
-    session_maker : sessionmaker
-        sqlalchemy sessionmaker object for connection to and querying the
-        database
-
     Returns
     -------
-    upc_id : int
-        The defined upc_id from the database
+    datafile_attributes : dict
+        A dict of attributes for a Datafiles record (UPC database table record)
     """
     try:
         # If there exists an array of values, then the first value is the
@@ -228,34 +200,13 @@ def create_datafiles_record(label, edr_source, input_cube, session_maker):
     product_id = getPDSid(input_cube)
 
     datafile_attributes['productid'] = product_id
-    datafile_attributes['instrumentid'] = get_instrument_id(label, session_maker)
-    datafile_attributes['targetid'] = get_target_id(label, session_maker)
 
-    session = session_maker()
-    datafile_qobj = session.query(DataFiles).filter(
-        DataFiles.source == img_file).first()
+    return datafile_attributes
 
-    if datafile_qobj is None:
-        DataFiles.create(session, **datafile_attributes)
-    else:
-        datafile_attributes.pop('upcid')
-        session.query(DataFiles).\
-            filter(DataFiles.source == img_file).\
-            update(datafile_attributes)
-        session.commit()
-    session.close()
-
-    session = session_maker()
-    upc_id = session.query(DataFiles).filter(
-        DataFiles.source == img_file).first().upcid
-    session.close()
-
-    return upc_id
-
-def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, footprint_file, search_term_mapping={}, session_maker=None):
+def create_search_terms_atts(cam_info_pvl, upc_id, input_cube, footprint_file = '', search_term_mapping={}):
     """
-    Creates a new SearchTerms record through values from a given caminfo file
-    and adds the new record to the database
+    Creates a SearchTerms record attribute dictionary through values from a given
+    caminfo file
 
     Parameters
     ----------
@@ -268,16 +219,23 @@ def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, footprin
     input_cube : str
         Path to the cube generated from the data source
 
-    session_maker : sessionmaker
-        sqlalchemy sessionmaker object for connection to and querying the
-        database
+    footprint_file : str
+        Path to the file containing the image footprint polygon
 
+    search_term_mapping : dict
+        Dict of keys mapping search term record attributes to values on the expected label
+
+    Returns
+    -------
+    search_term_attributes : dict
+        A dict of attributes for a SearchTerms record (UPC database table record)
     """
     search_term_attributes = dict.fromkeys(SearchTerms.__table__.columns.keys(), None)
     search_term_attributes['err_flag'] = True
 
     if not search_term_mapping:
         search_term_mapping = dict(zip(search_term_attributes.keys(), search_term_attributes.keys()))
+        search_term_mapping['isisfootprint'] = 'GisFootprint'
 
     try:
         keywordsOBJ = UPCkeywords(cam_info_pvl)
@@ -291,8 +249,6 @@ def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, footprin
                 search_term_attributes[key] = keywordsOBJ.getKeyword(search_term_mapping[key])
             except KeyError:
                 search_term_attributes[key] = None
-
-        search_term_attributes['isisfootprint'] = keywordsOBJ.getKeyword('GisFootprint')
 
         if os.path.exists(footprint_file):
             search_term_attributes['isisfootprint'] = read_json_footprint(footprint_file)
@@ -308,24 +264,9 @@ def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, footprin
     search_term_attributes['processdate'] = datetime.datetime.now(pytz.utc).strftime(
         "%Y-%m-%d %H:%M:%S")
 
-    search_term_attributes['targetid'] = get_target_id(label, session_maker)
-    search_term_attributes['instrumentid'] = get_instrument_id(label, session_maker)
-
-    session = session_maker()
-    search_terms_qobj = session.query(SearchTerms).filter(
-        SearchTerms.upcid == upc_id).first()
-
     search_term_attributes = get_keyword_values(search_term_attributes)
 
-    if search_terms_qobj is None:
-        SearchTerms.create(session, **search_term_attributes)
-    else:
-        search_term_attributes.pop('upcid')
-        session.query(SearchTerms).\
-            filter(SearchTerms.upcid == upc_id).\
-            update(search_term_attributes)
-        session.commit()
-    session.close()
+    return search_term_attributes
 
 def get_keyword_values(keywords):
     for k,v in keywords.items():
@@ -337,7 +278,7 @@ def get_keyword_values(keywords):
             pass
     return keywords
 
-def create_json_keywords_record(cam_info_pvl, upc_id, input_file, failing_command, session_maker, logger):
+def create_json_keywords_atts(cam_info_pvl, upc_id, input_file, failing_command, logger):
     """
     Creates a new SearchTerms record through values from a given caminfo file
     and adds the new record to the database
@@ -356,10 +297,13 @@ def create_json_keywords_record(cam_info_pvl, upc_id, input_file, failing_comman
     failing_command : str
         String presentation of the failing processing command
 
-    session_maker : sessionmaker
-        sqlalchemy sessionmaker object for connection to and querying the
-        database
+    logger : Object
+        Python logger object from the logging library
 
+    Returns
+    -------
+    json_keywords_attributes : dict
+        A dict of attributes for a JsonKeywords record (UPC database table record)
     """
     try:
         keywordsOBJ = UPCkeywords(cam_info_pvl)
@@ -387,19 +331,7 @@ def create_json_keywords_record(cam_info_pvl, upc_id, input_file, failing_comman
 
     json_keywords_attributes['jsonkeywords'] = json_keywords
 
-    session = session_maker()
-    json_keywords_qobj = session.query(JsonKeywords).filter(
-        JsonKeywords.upcid == upc_id).first()
-
-    if json_keywords_qobj is None:
-        JsonKeywords.create(session, **json_keywords_attributes)
-    else:
-        json_keywords_attributes.pop('upcid')
-        session.query(JsonKeywords).\
-            filter(JsonKeywords.upcid == upc_id).\
-            update(json_keywords_attributes)
-        session.commit()
-    session.close()
+    return json_keywords_attributes
 
 def parse_args():
     parser = argparse.ArgumentParser(description='UPC Processing')
@@ -493,25 +425,67 @@ def main(user_args):
                                        footprint_file=footprint_file)
         failing_command, _ = process(processes, workarea, logger)
 
-        pds_label = pvl.load(inputfile)
+        if upc_session_maker and pds_session_maker:
+            pds_label = pvl.load(inputfile)
 
-        ######## Generate DataFiles Record ########
-        upc_id = create_datafiles_record(pds_label, edr_source, no_extension_inputfile + '.cub', upc_session_maker)
+            target_name = get_target_name(pds_label)
 
-        ######## Generate SearchTerms Record ########
-        create_search_terms_record(pds_label, cam_info_file, upc_id, no_extension_inputfile + '.cub', footprint_file, search_term_mapping, upc_session_maker)
+            session = upc_session_maker()
+            target_qobj = Targets.create(session, targetname=target_name,
+                                                  displayname=target_name.title(),
+                                                  system=target_name)
+            target_id = target_qobj.targetid
+            session.close()
 
-        ######## Generate JsonKeywords Record ########
-        create_json_keywords_record(cam_info_file, upc_id, inputfile, failing_command, upc_session_maker, logger)
+            instrument_name = get_instrument_name(pds_label)
+            spacecraft_name = get_spacecraft_name(pds_label)
 
-        try:
-            pds_session = pds_session_maker()
-            pds_session.flush()
-        except:
-            logger.debug("Unable to flush database connection")
+            session = upc_session_maker()
+            instrument_qobj = Instruments.create(session, instrument=instrument_name,
+                                                          spacecraft=spacecraft_name)
+            instrument_id = instrument_qobj.instrumentid
+            session.close()
 
-        add_process_db(pds_session, fid, True)
-        pds_session.close()
+            ######## Generate DataFiles Record ########
+            datafile_attributes = create_datafiles_atts(pds_label, edr_source, no_extension_inputfile + '.cub')
+
+            datafile_attributes['instrumentid'] = instrument_id
+            datafile_attributes['targetid'] = target_id
+
+            session = upc_session_maker()
+            datafile_qobj = DataFiles.create(session, **datafile_attributes)
+            upc_id = datafile_qobj.upcid
+            session.close()
+
+            ######## Generate SearchTerms Record ########
+            search_term_attributes = create_search_terms_atts(cam_info_file, upc_id, no_extension_inputfile + '.cub', footprint_file, search_term_mapping)
+
+            search_term_attributes['targetid'] = target_id
+            search_term_attributes['instrumentid'] = instrument_id
+
+            session = upc_session_maker()
+            SearchTerms.create(session, **search_term_attributes)
+            session.close()
+
+            ######## Generate JsonKeywords Record ########
+            json_keywords_attributes = create_json_keywords_atts(cam_info_file, upc_id, inputfile, failing_command, logger)
+
+            session = upc_session_maker()
+            JsonKeywords.create(session, **json_keywords_attributes)
+            session.close()
+
+            try:
+                pds_session = pds_session_maker()
+                pds_session.flush()
+            except:
+                logger.debug("Unable to flush database connection")
+
+            add_process_db(pds_session, fid, True)
+            pds_session.close()
+
+            # Disconnect from the engines
+            pds_engine.dispose()
+            upc_engine.dispose()
 
         if not persist:
             # Remove all files file from the workarea except for the copied
@@ -521,10 +495,6 @@ def main(user_args):
             os.remove(os.path.join(workarea, 'print.prt'))
             for file in workarea_files:
                 os.remove(file)
-
-        # Disconnect from the engines
-        pds_engine.dispose()
-        upc_engine.dispose()
 
     logger.info("UPC processing exited")
 

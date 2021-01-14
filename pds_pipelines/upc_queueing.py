@@ -70,13 +70,13 @@ def main(user_args):
     logger.info("UPC queue: %s", RQ.id_name)
 
     try:
-        upc_session_maker, _ = db_connect(pds_db)
+        pds_session_maker, _ = db_connect(pds_db)
         logger.info('Database Connection Success')
     except Exception as e:
         logger.error('Database Connection Error\n\n%s', e)
         return 1
 
-    session = upc_session_maker()
+    session = pds_session_maker()
     if volume:
         volstr = '%' + volume + '%'
         qOBJ = session.query(Files).filter(Files.archiveid == archiveID,

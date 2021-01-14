@@ -26,23 +26,32 @@ def db_connect(cred):
     session_maker = None
     engine = None
     try:
-        database_url = 'postgresql://{}:{}@{}:{}'.format(c[cred]['user'],
-                                                            c[cred]['pass'],
-                                                            c[cred]['host'],
-                                                            c[cred]['port'])
+        database_url = 'postgresql://{}:{}@{}:{}/{}'
+        public_database_url = database_url.format(c[cred]['user'],
+                                                  c[cred]['pass'],
+                                                  c[cred]['host'],
+                                                  c[cred]['port'],
+                                                  'postgres')
+
+        engine = create_engine(public_database_url)
     except KeyError:
         print("Credentials not found for {}".format(cred))
 
+    # Attempt to connect to a default database in the specific database instance
+    # If this is not possible, then return None for session and engine. Otherwise
+    # create a new URL with the actual database to connect to and move forward
     try:
-        engine = create_engine(database_url)
-        insp = inspect(engine)
-        db_list = insp.get_schema_names()
-        engine.url.database = c[cred]['db']
-        if c[cred]['db'] in db_list:
-            engine.connect()
-    except OperationalError:
+        engine.connect()
+    except sqlalchemy.exc.OperationalError:
         print(f"WARNING:  Unable to create a database connection for credential specification '{cred}'")
         return None, None
+
+    engine = create_engine(database_url.format(c[cred]['user'],
+                                               c[cred]['pass'],
+                                               c[cred]['host'],
+                                               c[cred]['port'],
+                                               c[cred]['db']))
+
     metadata = MetaData(bind=engine)
     session_maker = sessionmaker(bind=engine)
     return session_maker, engine

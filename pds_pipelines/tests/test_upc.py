@@ -1,9 +1,10 @@
-from datetime import datetime
+import datetime
 import json
+import pytz
 from pvl import PVLModule
+import logging
 
 import pytest
-import sqlalchemy
 from shapely.geometry import Polygon
 from geoalchemy2.elements import WKBElement
 from geoalchemy2.shape import from_shape, to_shape
@@ -30,55 +31,16 @@ def spiceinit(from_):
     raise ProcessError(1, ['spiceinit'], b'Could not spiceinit', b'Could not spiceinit')
 pysis.isis.spiceinit = spiceinit
 
-import pds_pipelines
+import pds_pipelines.models.upc_models as models
 from pds_pipelines.process import Process
-from pds_pipelines.db import db_connect
-from pds_pipelines import upc_process
 from pds_pipelines import utils
-from pds_pipelines.upc_process import *
+from pds_pipelines.upc_process import get_target_name, get_instrument_name, \
+                                      get_spacecraft_name, create_datafiles_atts, \
+                                      create_search_terms_atts, create_json_keywords_atts, \
+                                      getPDSid
 
-from pds_pipelines.upc_process import create_datafiles_record, create_search_terms_record, create_json_keywords_record, get_target_id
 from pds_pipelines.utils import process, generate_processes, get_isis_id
-from pds_pipelines.models import upc_models as models
 from pds_pipelines.config import recipe_base
-
-
-@pytest.fixture
-def tables():
-    _, engine = db_connect('upc_test')
-    return engine.table_names()
-
-@pytest.fixture
-def session(tables, request):
-    Session, _ = db_connect('upc_test')
-    session = Session()
-
-    def cleanup():
-        session.rollback()  # Necessary because some tests intentionally fail
-        for t in reversed(tables):
-            # Skip the srid table
-            if t != 'spatial_ref_sys':
-                session.execute(f'TRUNCATE TABLE {t} CASCADE')
-            # Reset the autoincrementing
-            if t in ['datafiles', 'instruments', 'targets']:
-                if t == 'datafiles':
-                    column = f'{t}_upcid_seq'
-                if t == 'instruments':
-                    column = f'{t}_instrumentid_seq'
-                if t == 'targets':
-                    column = f'{t}_targetid_seq'
-
-                session.execute(f'ALTER SEQUENCE {column} RESTART WITH 1')
-        session.commit()
-
-    request.addfinalizer(cleanup)
-
-    return session
-
-@pytest.fixture
-def session_maker(tables, request):
-    Session, _ = db_connect('upc_test')
-    return Session
 
 @pytest.fixture
 def pds_label():
@@ -88,8 +50,8 @@ def pds_label():
                       'TARGET_NAME': 'TEST TARGET'})
 
 cam_info_dict = {'upcid': 1,
-                 'processdate': datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M"),
-                 'starttime': '2019-12-18 21:36',
+                 'processdate': datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H"),
+                 'starttime': '2019-12-18 21',
                  'solarlongitude': 66.210772203754,
                  'meangroundresolution': 4.409120557106079,
                  'minimumemission': 4.541800232653493,
@@ -105,7 +67,7 @@ cam_info_dict = {'upcid': 1,
                  'instrumentid': 1,
                  'pdsproductid': 'PRODUCTID',
                  'err_flag': False,
-                 'isisfootprint': Polygon([(153.80256122853893, -32.68515128444211),
+                 'GisFootprint': Polygon([(153.80256122853893, -32.68515128444211),
                                            (153.80256122853893, -33.18515128444211),
                                            (153.30256122853893, -33.18515128444211),
                                            (153.30256122853893, -32.68515128444211),
@@ -122,188 +84,147 @@ def test_get_isis_id():
     assert serial == 'ISISSERIAL'
     assert isinstance(serial, str)
 
-def test_datafiles_exists(tables):
-    assert models.DataFiles.__tablename__ in tables
-
-def test_instruments_exists(tables):
-    assert models.Instruments.__tablename__ in tables
-
-def test_targets_exists(tables):
-    assert models.Targets.__tablename__ in tables
-
-def test_search_terms_exists(tables):
-    assert models.SearchTerms.__tablename__ in tables
-
-def test_json_keywords_exists(tables):
-    assert models.JsonKeywords.__tablename__ in tables
-
-def test_target_insert(session, session_maker, pds_label):
-    target_id = get_target_id(pds_label, session_maker)
-    resp = session.query(models.Targets).filter(models.Targets.targetid==target_id).one()
-    target_name = resp.targetname
+def test_target_name(pds_label):
+    target_name = get_target_name(pds_label)
     assert pds_label['TARGET_NAME'] == target_name
 
-def test_bad_target_insert(session, session_maker):
-    target_id = get_target_id(PVLModule(), session_maker)
-    assert target_id == None
-    with pytest.raises(sqlalchemy.orm.exc.NoResultFound):
-        session.query(models.Targets).filter(models.Targets.targetid==target_id).one()
+def test_bad_target_name():
+    target_name = get_target_name(PVLModule())
+    assert target_name == None
 
-def test_instrument_insert(session, session_maker, pds_label):
-    instrument_id = get_instrument_id(pds_label, session_maker)
-    resp = session.query(models.Instruments).filter(models.Instruments.instrumentid == instrument_id).one()
-    instrument_name = resp.instrument
+def test_instrument_name(pds_label):
+    instrument_name = get_instrument_name(pds_label)
     assert pds_label['INSTRUMENT_NAME'] == instrument_name
 
-def test_bad_instrumentname_instrument_insert(session, session_maker):
-    instrument_id = get_instrument_id(PVLModule(), session_maker)
-    assert instrument_id == None
-    with pytest.raises(sqlalchemy.orm.exc.NoResultFound):
-        session.query(models.Instruments).filter(models.Instruments.instrumentid == instrument_id).one()
+def test_spacecraft_name(pds_label):
+    spacecraft_name = get_spacecraft_name(pds_label)
+    assert pds_label['SPACECRAFT_NAME'] == spacecraft_name
 
-def test_bad_spacecraftname_instrument_insert(session, session_maker):
-    instrument_id = get_instrument_id(PVLModule({'INSTRUMENT_NAME': 'TEST INSTRUMENT'}), session_maker)
-    assert instrument_id == None
-    with pytest.raises(sqlalchemy.orm.exc.NoResultFound):
-        session.query(models.Instruments).filter(models.Instruments.instrumentid == instrument_id).one()
+def test_bad_instrument_name():
+    instrument_name = get_instrument_name(PVLModule())
+    assert instrument_name == None
+
+def test_bad_spacecraft_name():
+    spacecraft_name = get_spacecraft_name(PVLModule())
+    assert spacecraft_name == None
 
 @patch('pds_pipelines.upc_process.get_isis_id', return_value = 'ISISSERIAL')
 @patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
-def test_datafiles_insert(mocked_pds_id, mocked_isis_id, session, session_maker, pds_label):
+def test_datafile_generation(mocked_pds_id, mocked_isis_id, pds_label):
     input_cube = '/Path/to/my/cube.cub'
-    upc_id = create_datafiles_record(pds_label, '/Path/to/label/location/label.lbl', input_cube, session_maker)
+    datafile_attributes = create_datafiles_atts(pds_label, '/Path/to/label/location/label.lbl', input_cube)
     mocked_isis_id.assert_called_with(input_cube)
     mocked_pds_id.assert_called_with(input_cube)
 
-    resp = session.query(models.DataFiles).filter(models.DataFiles.isisid=='ISISSERIAL').first()
-    assert upc_id == resp.upcid
+    expected_attributes = {'upcid': None, 'isisid': 'ISISSERIAL', 'productid': 'PRODUCTID',
+                           'source': '/Path/to/label/location/label.img',
+                           'detached_label': '/Path/to/label/location/label.lbl',
+                           'instrumentid': None, 'targetid': None, 'level': None}
+    shared_items = {k: expected_attributes[k] for k in expected_attributes if k in datafile_attributes and expected_attributes[k] == datafile_attributes[k]}
+    assert len(shared_items) == 8
 
 @patch('pds_pipelines.upc_process.get_isis_id', return_value = 'ISISSERIAL')
 @patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
-def test_datafiles_no_label(mocked_pds_id, mocked_isis_id, session, session_maker, pds_label):
+def test_datafiles_no_label(mocked_pds_id, mocked_isis_id, pds_label):
     pds_label['^IMAGE'] = 1
-    upc_id = create_datafiles_record(pds_label, '/Path/to/label/location/label.lbl', '/Path/to/my/cube.cub', session_maker)
-    resp = session.query(models.DataFiles).filter(models.DataFiles.upcid==upc_id).first()
-    assert resp.detached_label == None
-    assert resp.source == '/Path/to/label/location/label.lbl'
+    datafile_attributes = create_datafiles_atts(pds_label, '/Path/to/label/location/label.lbl', '/Path/to/my/cube.cub')
+
+    assert datafile_attributes['detached_label'] == None
+    assert datafile_attributes['source'] == '/Path/to/label/location/label.lbl'
 
 @patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
-def test_datafiles_no_isisid(mocked_pds_id, session, session_maker, pds_label):
+def test_datafiles_no_isisid(mocked_pds_id, pds_label):
     # Since we mock getsn above, make it throw an exception here so we can test
     # when there is no ISIS ID.
     with patch('pysis.isis.getsn', side_effect=ProcessError(1, ['getsn'], '', '')):
-        upc_id = create_datafiles_record(pds_label, '/Path/to/label/location/label.lbl', '/Path/to/my/cube.cub', session_maker)
-    resp = session.query(models.DataFiles).filter(models.DataFiles.upcid==upc_id).first()
-    assert resp.isisid == None
+        datafile_attributes = create_datafiles_atts(pds_label, '/Path/to/label/location/label.lbl', '/Path/to/my/cube.cub')
+    assert datafile_attributes['isisid'] == None
 
 @patch('pds_pipelines.upc_process.get_isis_id', return_value = 'ISISSERIAL')
-def test_datafiles_no_pdsid(mocked_isis_id, session, session_maker, pds_label):
+def test_datafiles_no_pdsid(mocked_isis_id, pds_label):
     # Since we mock getkey above, make it throw an exception here so we can test
     # when there is no PDS ID.
     with patch('pysis.isis.getkey', side_effect=ProcessError(1, 'getkey', '', '')):
-        upc_id = create_datafiles_record(pds_label, '/Path/to/label/location/label.lbl', '/Path/to/my/cube.cub', session_maker)
-    resp = session.query(models.DataFiles).filter(models.DataFiles.upcid==upc_id).first()
-    assert resp.productid == None
+        datafile_attributes = create_datafiles_atts(pds_label, '/Path/to/label/location/label.lbl', '/Path/to/my/cube.cub')
+    assert datafile_attributes['productid'] == None
 
 def extract_keyword(key):
-    if key == 'GisFootprint':
-        return Polygon([(153.80256122853893, -32.68515128444211), (153.80256122853893, -33.18515128444211), (153.30256122853893, -33.18515128444211), (153.30256122853893, -32.68515128444211), (153.80256122853893, -32.68515128444211)]).wkt
     return cam_info_dict[key]
+
 @patch('pds_pipelines.upc_keywords.UPCkeywords.__init__', return_value = None)
 @patch('pds_pipelines.upc_keywords.UPCkeywords.getKeyword', side_effect = extract_keyword)
 @patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
-def test_search_terms_insert(mocked_product_id, mocked_keyword, mocked_init, session, session_maker, pds_label):
+def test_search_terms_generation(mocked_product_id, mocked_keyword, mocked_init, pds_label):
     upc_id = cam_info_dict['upcid']
 
-    models.DataFiles.create(session, upcid = upc_id)
+    search_term_attributes = create_search_terms_atts('/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', '')
+    # Convert the dates from strings back to date times. This could probably
+    # be handled in the model
+    search_term_attributes['processdate'] = datetime.datetime.strptime(search_term_attributes['processdate'], "%Y-%m-%d %H:%M:%S")
+    search_term_attributes['starttime'] = datetime.datetime.strptime(search_term_attributes['starttime'], "%Y-%m-%d %H")
 
-    create_search_terms_record(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', '', session_maker = session_maker)
-    resp = session.query(SearchTerms).filter(SearchTerms.upcid == upc_id).first()
+    search_term_mapping = dict(zip(search_term_attributes.keys(), search_term_attributes.keys()))
+    search_term_mapping['isisfootprint'] = 'GisFootprint'
 
-    for key in cam_info_dict.keys():
-        resp_attribute = resp.__getattribute__(key)
-        if isinstance(resp_attribute, datetime.date):
-            resp_attribute = resp_attribute.strftime("%Y-%m-%d %H:%M")
-        if isinstance(resp_attribute, WKBElement):
-            resp_attribute = str(to_shape(resp_attribute))
-        if isinstance(resp_attribute, float):
-            np.testing.assert_almost_equal(resp_attribute, cam_info_dict[key], 12)
+    for key in search_term_mapping.keys():
+        attribute = search_term_attributes[key]
+        if isinstance(attribute, datetime.date):
+            attribute = attribute.strftime("%Y-%m-%d %H")
+        if isinstance(attribute, WKBElement):
+            attribute = str(to_shape(attribute))
+        if isinstance(attribute, float):
+            np.testing.assert_almost_equal(attribute, cam_info_dict[key], 12)
             continue
-        assert cam_info_dict[key] == resp_attribute
+        assert cam_info_dict[search_term_mapping[key]] == attribute
 
 @patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
-def test_search_terms_keyword_exception(mocked_product_id, session, session_maker, pds_label):
-    upc_id = cam_info_dict['upcid']
-    models.DataFiles.create(session, upcid = upc_id)
-
-    create_search_terms_record(pds_label, "", upc_id, '/Path/to/my/cube.cub', '', session_maker = session_maker)
-    resp = session.query(SearchTerms).filter(SearchTerms.upcid == upc_id).first()
-    assert resp.starttime == None
-    assert resp.solarlongitude == None
-    assert resp.meangroundresolution == None
-    assert resp.minimumemission == None
-    assert resp.maximumemission == None
-    assert resp.emissionangle == None
-    assert resp.minimumincidence == None
-    assert resp.maximumincidence == None
-    assert resp.incidenceangle == None
-    assert resp.minimumphase == None
-    assert resp.maximumphase == None
-    assert resp.phaseangle == None
-    assert resp.isisfootprint == None
-    assert resp.err_flag == True
-
-@patch('pds_pipelines.upc_keywords.UPCkeywords.__init__', return_value = None)
-@patch('pds_pipelines.upc_keywords.UPCkeywords.getKeyword', side_effect = extract_keyword)
-@patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
-def test_search_terms_no_datafile(mocked_product_id, mocked_keyword, mocked_init, session, session_maker, pds_label):
+def test_search_terms_keyword_exception(mocked_product_id, pds_label):
     upc_id = cam_info_dict['upcid']
 
-    with pytest.raises(sqlalchemy.exc.IntegrityError):
-        create_search_terms_record(pds_label, '/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', '', session_maker = session_maker)
+    search_term_attributes = create_search_terms_atts("", upc_id, '/Path/to/my/cube.cub', '')
+    assert search_term_attributes['starttime'] == None
+    assert search_term_attributes['solarlongitude'] == None
+    assert search_term_attributes['meangroundresolution'] == None
+    assert search_term_attributes['minimumemission'] == None
+    assert search_term_attributes['maximumemission'] == None
+    assert search_term_attributes['emissionangle'] == None
+    assert search_term_attributes['minimumincidence'] == None
+    assert search_term_attributes['maximumincidence'] == None
+    assert search_term_attributes['incidenceangle'] == None
+    assert search_term_attributes['minimumphase'] == None
+    assert search_term_attributes['maximumphase'] == None
+    assert search_term_attributes['phaseangle'] == None
+    assert search_term_attributes['isisfootprint'] == None
+    assert search_term_attributes['err_flag'] == True
 
 @patch('pds_pipelines.upc_keywords.UPCkeywords.__init__', return_value = None)
-def test_json_keywords_insert(mocked_init, session, session_maker, pds_label):
+def test_json_keywords_generation(mocked_init, pds_label):
     logger = logging.getLogger('UPC_Process')
     upc_id = cam_info_dict['upcid']
-
-    models.DataFiles.create(session, upcid = upc_id)
 
     with patch('pds_pipelines.upc_keywords.UPCkeywords.label', new_callable=PropertyMock) as mocked_label:
         mocked_label.return_value = pds_label
-        create_json_keywords_record(pds_label, upc_id, '/Path/to/my/cube.cub', 'No Failures', session_maker, logger)
+        json_keywords_attributes = create_json_keywords_atts(pds_label, upc_id, '/Path/to/my/cube.cub', 'No Failures', logger)
 
-    resp = session.query(JsonKeywords).filter(JsonKeywords.upcid == upc_id).first()
-    resp_json = resp.jsonkeywords
-    assert resp_json['^IMAGE'][0] == pds_label['^IMAGE'][0]
-    assert resp_json['TARGET_NAME'] == pds_label['TARGET_NAME']
-    assert resp_json['INSTRUMENT_NAME'] == pds_label['INSTRUMENT_NAME']
-    assert resp_json['SPACECRAFT_NAME'] == pds_label['SPACECRAFT_NAME']
+    result_json = json_keywords_attributes['jsonkeywords']
+    assert result_json['^IMAGE'][0] == pds_label['^IMAGE'][0]
+    assert result_json['TARGET_NAME'] == pds_label['TARGET_NAME']
+    assert result_json['INSTRUMENT_NAME'] == pds_label['INSTRUMENT_NAME']
+    assert result_json['SPACECRAFT_NAME'] == pds_label['SPACECRAFT_NAME']
 
-def test_json_keywords_exception(session, session_maker):
+def test_json_keywords_exception():
     logger = logging.getLogger('UPC_Process')
     upc_id = cam_info_dict['upcid']
-    models.DataFiles.create(session, upcid = upc_id)
 
     input_cube = '/Path/to/my/cube.cub'
     error_message = 'Got to exception.'
-    create_json_keywords_record("", upc_id, input_cube, error_message, session_maker, logger)
-    resp = session.query(JsonKeywords).filter(JsonKeywords.upcid == upc_id).first()
-    resp_json = resp.jsonkeywords
-    assert resp_json['errortype'] == error_message
-    assert resp_json['file'] == input_cube
-    assert resp_json['errormessage'] == f'Error running {error_message} on file {input_cube}'
-    assert resp_json['error'] == True
+    json_keywords_attributes = create_json_keywords_atts("", upc_id, input_cube, error_message, logger)
 
-@patch('pds_pipelines.upc_keywords.UPCkeywords.__init__', return_value = None)
-def test_json_keywords_no_datafile(mocked_init, session, session_maker, pds_label):
-    logger = logging.getLogger('UPC_Process')
-    upc_id = cam_info_dict['upcid']
-
-    with pytest.raises(sqlalchemy.exc.IntegrityError),\
-    patch('pds_pipelines.upc_keywords.UPCkeywords.label', new_callable=PropertyMock) as mocked_label:
-        mocked_label.return_value = pds_label
-        create_json_keywords_record(pds_label, upc_id, '/Path/to/my/cube.cub', 'No Failures', session_maker, logger)
+    result_json = json_keywords_attributes['jsonkeywords']
+    assert result_json['errortype'] == error_message
+    assert result_json['file'] == input_cube
+    assert result_json['errormessage'] == f'Error running {error_message} on file {input_cube}'
+    assert result_json['error'] == True
 
 def test_generate_processes():
     logger = logging.getLogger('UPC_Process')

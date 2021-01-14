@@ -65,6 +65,22 @@ class DataFiles(BaseMixin, Base):
     json_keyword = relationship('JsonKeywords', backref="DataFiles", uselist=True, cascade="save-update, merge, delete, delete-orphan")
     level = Column(CHAR(1))
 
+    def create(session, **kw):
+        datafile_qobj = session.query(DataFiles).filter(
+            DataFiles.source == kw['source']).first()
+
+        if datafile_qobj is None:
+            datafile_qobj = DataFiles(**kw)
+            session.add(datafile_qobj)
+        else:
+            upc_id = kw.pop('upcid')
+            session.query(DataFiles).\
+                filter(DataFiles.upcid == upc_id).\
+                update(kw)
+        session.commit()
+
+        return datafile_qobj
+
 
 class Instruments(BaseMixin, Base):
     __tablename__ = 'instruments'
@@ -77,6 +93,20 @@ class Instruments(BaseMixin, Base):
     search_terms = relationship('SearchTerms', backref="instruments", uselist=False)
     datafiles = relationship('DataFiles', backref="instruments", uselist=False)
     #product_type = Column(String(8))
+
+    def create(session, **kw):
+        # Get the instrument from the instruments table.
+        instrument_qobj = session.query(Instruments).filter(
+            Instruments.instrument == kw['instrument'],
+            Instruments.spacecraft == kw['spacecraft']).first()
+
+        # If no matching instrument is found, create the entry in the database
+        #  and access the new instance.
+        if instrument_qobj is None:
+            instrument_qobj = Instruments(**kw)
+            session.add(instrument_qobj)
+            session.commit()
+        return instrument_qobj
 
 
 class Targets(BaseMixin, Base):
@@ -92,7 +122,18 @@ class Targets(BaseMixin, Base):
     description = Column(String(1024))
     search_term = relationship('SearchTerms', backref="targets", uselist=False)
     datafiles = relationship('DataFiles', backref="targets", uselist=False)
-    #iau_mean_radius = Column(Float)
+
+    def create(session, **kw):
+        target_qobj = session.query(Targets).filter(
+            Targets.targetname == kw['targetname'].upper()).first()
+
+        # If no matching table is found, create the entry in the database and
+        #  access the new instance.
+        if target_qobj is None:
+            target_qobj = Targets(**kw)
+            session.add(target_qobj)
+            session.commit()
+        return target_qobj
 
 
 class NewStats(BaseMixin, Base):
@@ -133,13 +174,45 @@ class SearchTerms(BaseMixin, Base):
     instrumentid = Column(Integer, ForeignKey('instruments.instrumentid'))
     pdsproductid = Column(String(256))
     err_flag = Column(Boolean)
-    isisfootprint = Column(Geometry())
+    isisfootprint = Column(Geometry('MULTIPOLYGON'))
+
+    def create(session, **kw):
+        search_terms_qobj = session.query(SearchTerms).filter(
+            SearchTerms.upcid == kw['upcid']).first()
+
+        if search_terms_qobj is None:
+            search_terms_qobj = SearchTerms(**kw)
+            session.add(search_terms_qobj)
+        else:
+            upc_id = kw.pop('upcid')
+            session.query(SearchTerms).\
+                filter(SearchTerms.upcid == upc_id).\
+                update(kw)
+        session.commit()
+
+        return search_terms_qobj
 
 
 class JsonKeywords(BaseMixin, Base):
     __tablename__ = "json_keywords"
     upcid = Column(Integer, ForeignKey('datafiles.upcid'), primary_key=True)
     jsonkeywords = Column(MutableDict.as_mutable(JSONB))
+
+    def create(session, **kw):
+        json_keywords_qobj = session.query(JsonKeywords).filter(
+            JsonKeywords.upcid == kw['upcid']).first()
+
+        if json_keywords_qobj is None:
+            json_keywords_qobj = JsonKeywords(**kw)
+            session.add(json_keywords_qobj)
+        else:
+            upc_id = kw.pop('upcid')
+            session.query(JsonKeywords).\
+                filter(JsonKeywords.upcid == upc_id).\
+                update(kw)
+        session.commit()
+
+        return json_keywords_qobj
 
 class_map = {
     'datafiles': DataFiles,
