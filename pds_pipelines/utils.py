@@ -5,6 +5,7 @@ import pds_pipelines
 import datetime
 import pytz
 import pds_pipelines
+import sqlalchemy
 from pds_pipelines.available_modules import *
 from pds_pipelines.models import pds_models
 from pysis.exceptions import ProcessError
@@ -157,7 +158,7 @@ def generate_log_json(processes, basename, failing_command = '', error = ''):
         process_log['status'] = 'SUCCESS'
         process_log['parameters'] = str(processes[process])
         process = process.split('.')[-1]
-        
+
         if process in dir(isis):
             process_log['helplink'] = isis_help_link.format(process)
 
@@ -172,3 +173,40 @@ def generate_log_json(processes, basename, failing_command = '', error = ''):
         else:
             log_json[basename][process] = process_log
     return json.dumps(log_json)
+
+
+def parametrized(dec):
+    """ Meta decorator for parameterizing decorators. """
+    def layer(*args, **kwargs):
+        def repl(f):
+            return dec(f, *args, **kwargs)
+        return repl
+    return layer
+
+@parametrized
+def reprocess(f, n=5):
+    """ Decorator for sql functions to force retries on failure.
+
+        Parameters
+        ----------
+        f : function
+            The function to decorate
+
+        n : int
+            Number of times to attempt process
+
+        Returns
+        -------
+        f : function
+            The decorated function.
+    """
+    def wrapper(*args, **kwargs):
+        for i in range(n-1):
+            try:
+                return f(*args, **kwargs)
+            except sqlalchemy.exc.OperationalError:
+                # If we get a connection error, sleep for 60 seconds and try again
+                os.sleep(60)
+
+        # No error handling here in order to allow custom error handling on scripting side
+        return f(*args, **kwargs)

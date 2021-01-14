@@ -13,7 +13,7 @@ from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.db import db_connect
 from pds_pipelines.models.upc_models import DataFiles, SearchTerms, JsonKeywords
 from pds_pipelines.config import pds_log, pds_info, workarea, pds_db, upc_db, lock_obj, upc_error_queue, recipe_base, archive_base, derived_base, derived_url, web_base
-from pds_pipelines.utils import generate_processes, process, parse_pairs
+from pds_pipelines.utils import generate_processes, process, parse_pairs, reprocess
 
 def makedir(inputfile):
     temppath = os.path.dirname(inputfile)
@@ -29,6 +29,7 @@ def makedir(inputfile):
     return finalpath
 
 
+@reprocess(5)
 def add_url(input_file, upc_id, session_maker):
     session = session_maker()
     outputfile = input_file.replace(derived_base, derived_url)
@@ -94,10 +95,15 @@ def main():
                 src = inputfile.replace(workarea, web_base)
                 datafile = upc_session.query(DataFiles).filter(DataFiles.source==src).first()
                 upc_id = datafile.upcid
-                add_url(derived_product, upc_id, upc_session_maker)
-                upc_session.close()
-                #os.remove(infile)
-                logger.info(f'Derived Process Success: %s', inputfile)
+                try:
+                    add_url(derived_product, upc_id, upc_session_maker)
+                    upc_session.close()
+                    #os.remove(infile)
+                    logger.info(f'Derived Process Success: %s', inputfile)
+                except sqlalchemy.exc.OperationalError as e:
+                    logger.error('Error: %s\nRequeueing (%s, %s)', e, inputfile, archive)
+                    RQ_derived.QueueAdd((inputfile, archive))
+
             else:
                 logger.error('Error: %s', failing_command)
 

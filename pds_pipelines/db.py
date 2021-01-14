@@ -2,11 +2,11 @@ from sqlalchemy import create_engine, inspect
 from pds_pipelines.config import credentials as c
 from sqlalchemy import MetaData, Table
 from sqlalchemy.orm import mapper, sessionmaker
-from sqlalchemy.exc import OperationalError
+import sqlalchemy
 
 def db_connect(cred):
     """
-    Given some crediential string that is present as a key in the config
+    Given some credential string that is present as a key in the config
     credentials dictionary, generate the engine and associated session_maker
     objects for a database.
 
