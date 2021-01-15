@@ -33,7 +33,7 @@ def db_connect(cred):
                                                   c[cred]['port'],
                                                   'postgres')
 
-        engine = create_engine(public_database_url)
+        engine = create_engine(public_database_url, pool_pre_ping=True)
     except KeyError:
         print("Credentials not found for {}".format(cred))
 
@@ -50,7 +50,7 @@ def db_connect(cred):
                                                c[cred]['pass'],
                                                c[cred]['host'],
                                                c[cred]['port'],
-                                               c[cred]['db']))
+                                               c[cred]['db']), pool_pre_ping=True)
 
     metadata = MetaData(bind=engine)
     session_maker = sessionmaker(bind=engine)
