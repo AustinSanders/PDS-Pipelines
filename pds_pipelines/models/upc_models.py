@@ -66,7 +66,7 @@ class DataFiles(BaseMixin, Base):
     json_keyword = relationship('JsonKeywords', backref="DataFiles", uselist=True, cascade="save-update, merge, delete, delete-orphan")
     level = Column(CHAR(1))
 
-    @reprocess(5)
+    @reprocess
     def create(session, **kw):
         datafile_qobj = session.query(DataFiles).filter(
             DataFiles.source == kw['source']).first()
@@ -96,7 +96,7 @@ class Instruments(BaseMixin, Base):
     datafiles = relationship('DataFiles', backref="instruments", uselist=False)
     #product_type = Column(String(8))
 
-    @reprocess(5)
+    @reprocess
     def create(session, **kw):
         # Get the instrument from the instruments table.
         instrument_qobj = session.query(Instruments).filter(
@@ -126,7 +126,7 @@ class Targets(BaseMixin, Base):
     search_term = relationship('SearchTerms', backref="targets", uselist=False)
     datafiles = relationship('DataFiles', backref="targets", uselist=False)
 
-    @reprocess(5)
+    @reprocess
     def create(session, **kw):
         target_qobj = session.query(Targets).filter(
             Targets.targetname == kw['targetname'].upper()).first()
@@ -180,7 +180,7 @@ class SearchTerms(BaseMixin, Base):
     err_flag = Column(Boolean)
     isisfootprint = Column(Geometry('MULTIPOLYGON'))
 
-    @reprocess(5)
+    @reprocess
     def create(session, **kw):
         search_terms_qobj = session.query(SearchTerms).filter(
             SearchTerms.upcid == kw['upcid']).first()
@@ -203,7 +203,7 @@ class JsonKeywords(BaseMixin, Base):
     upcid = Column(Integer, ForeignKey('datafiles.upcid'), primary_key=True)
     jsonkeywords = Column(MutableDict.as_mutable(JSONB))
 
-    @reprocess(5)
+    @reprocess
     def create(session, **kw):
         json_keywords_qobj = session.query(JsonKeywords).filter(
             JsonKeywords.upcid == kw['upcid']).first()

@@ -29,7 +29,7 @@ def makedir(inputfile):
     return finalpath
 
 
-@reprocess(5)
+@reprocess
 def add_url(input_file, upc_id, session_maker):
     session = session_maker()
     outputfile = input_file.replace(derived_base, derived_url)

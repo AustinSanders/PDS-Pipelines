@@ -176,16 +176,7 @@ def generate_log_json(processes, basename, failing_command = '', error = ''):
     return json.dumps(log_json)
 
 
-def parametrized(dec):
-    """ Meta decorator for parameterizing decorators. """
-    def layer(*args, **kwargs):
-        def repl(f):
-            return dec(f, *args, **kwargs)
-        return repl
-    return layer
-
-@parametrized
-def reprocess(f, n):
+def reprocess(f):
     """ Decorator for sql functions to force retries on failure.
 
         Parameters
@@ -202,7 +193,7 @@ def reprocess(f, n):
             The decorated function.
     """
     def wrapper(*args, **kwargs):
-        for i in range(n-1):
+        for i in range(4):
             try:
                 res = f(*args, **kwargs)
                 return res
