@@ -475,7 +475,7 @@ def main(user_args):
                 JsonKeywords.create(session, **json_keywords_attributes)
                 session.close()
             except sqlalchemy.exc.SQLAlchemyError as e:
-                logger.error("Database operation failed: %s \nRequeueing (%s, %s, %s)",inputfile, fid, archive)
+                logger.error("Database operation failed: %s \nRequeueing (%s, %s, %s)", e, inputfile, fid, archive)
                 RQ_main.QueueAdd((inputfile, fid, archive))
                 return
 
