@@ -206,7 +206,7 @@ def reprocess(f, n):
             try:
                 res = f(*args, **kwargs)
                 return res
-            except sqlalchemy.exc.SQLAlchemyError:
+            except sqlalchemy.exc.OperationalError:
                 # If we get a connection error, sleep for 60 seconds and try again
                 time.sleep(60)
 
