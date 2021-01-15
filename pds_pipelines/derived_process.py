@@ -100,7 +100,7 @@ def main():
                     upc_session.close()
                     #os.remove(infile)
                     logger.info(f'Derived Process Success: %s', inputfile)
-                except sqlalchemy.exc.OperationalError as e:
+                except sqlalchemy.exc.SQLAlchemyError as e:
                     logger.error('Error: %s\nRequeueing (%s, %s)', e, inputfile, archive)
                     RQ_derived.QueueAdd((inputfile, archive))
 

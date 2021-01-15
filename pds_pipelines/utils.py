@@ -184,7 +184,7 @@ def parametrized(dec):
     return layer
 
 @parametrized
-def reprocess(f, n=5):
+def reprocess(f, n):
     """ Decorator for sql functions to force retries on failure.
 
         Parameters
@@ -203,10 +203,13 @@ def reprocess(f, n=5):
     def wrapper(*args, **kwargs):
         for i in range(n-1):
             try:
-                return f(*args, **kwargs)
-            except sqlalchemy.exc.OperationalError:
+                res = f(*args, **kwargs)
+                return res
+            except sqlalchemy.exc.SQLAlchemyError:
                 # If we get a connection error, sleep for 60 seconds and try again
                 os.sleep(60)
 
         # No error handling here in order to allow custom error handling on scripting side
-        return f(*args, **kwargs)
+        res = f(*args, **kwargs)
+        return res
+    return wrapper

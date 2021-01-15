@@ -474,7 +474,7 @@ def main(user_args):
                 session = upc_session_maker()
                 JsonKeywords.create(session, **json_keywords_attributes)
                 session.close()
-            except sqlalchemy.exc.OperationalError as e:
+            except sqlalchemy.exc.SQLAlchemyError as e:
                 logger.error("Database operation failed: %s \nRequeueing (%s, %s, %s)",inputfile, fid, archive)
                 RQ_main.QueueAdd((inputfile, fid, archive))
                 return
