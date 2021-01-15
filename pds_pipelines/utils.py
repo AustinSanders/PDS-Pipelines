@@ -1,4 +1,5 @@
 import os
+import time
 import jinja2
 import json
 import pds_pipelines
@@ -207,7 +208,7 @@ def reprocess(f, n):
                 return res
             except sqlalchemy.exc.SQLAlchemyError:
                 # If we get a connection error, sleep for 60 seconds and try again
-                os.sleep(60)
+                time.sleep(60)
 
         # No error handling here in order to allow custom error handling on scripting side
         res = f(*args, **kwargs)
