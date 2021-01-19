@@ -148,16 +148,15 @@ def test_datafiles_no_pdsid(mocked_isis_id, pds_label):
         datafile_attributes = create_datafiles_atts(pds_label, '/Path/to/label/location/label.lbl', '/Path/to/my/cube.cub')
     assert datafile_attributes['productid'] == None
 
-def extract_keyword(key):
+def extract_keyword(pvl, key):
     return cam_info_dict[key]
 
-@patch('pds_pipelines.upc_keywords.UPCkeywords.__init__', return_value = None)
-@patch('pds_pipelines.upc_keywords.UPCkeywords.getKeyword', side_effect = extract_keyword)
+@patch('pds_pipelines.upc_process.find_keyword', side_effect = extract_keyword)
 @patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
-def test_search_terms_generation(mocked_product_id, mocked_keyword, mocked_init, pds_label):
+def test_search_terms_generation(mocked_product_id, mocked_keyword):
     upc_id = cam_info_dict['upcid']
-
-    search_term_attributes = create_search_terms_atts('/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', '')
+    with patch('pds_pipelines.upc_process.load_pvl', return_value = pds_label):
+        search_term_attributes = create_search_terms_atts('/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', '')
     # Convert the dates from strings back to date times. This could probably
     # be handled in the model
     search_term_attributes['processdate'] = datetime.datetime.strptime(search_term_attributes['processdate'], "%Y-%m-%d %H:%M:%S")
@@ -197,13 +196,11 @@ def test_search_terms_keyword_exception(mocked_product_id, pds_label):
     assert search_term_attributes['isisfootprint'] == None
     assert search_term_attributes['err_flag'] == True
 
-@patch('pds_pipelines.upc_keywords.UPCkeywords.__init__', return_value = None)
-def test_json_keywords_generation(mocked_init, pds_label):
+def test_json_keywords_generation(pds_label):
     logger = logging.getLogger('UPC_Process')
     upc_id = cam_info_dict['upcid']
 
-    with patch('pds_pipelines.upc_keywords.UPCkeywords.label', new_callable=PropertyMock) as mocked_label:
-        mocked_label.return_value = pds_label
+    with patch('pds_pipelines.upc_process.load_pvl', return_value = pds_label):
         json_keywords_attributes = create_json_keywords_atts(pds_label, upc_id, '/Path/to/my/cube.cub', 'No Failures', logger)
 
     result_json = json_keywords_attributes['jsonkeywords']
@@ -218,7 +215,8 @@ def test_json_keywords_exception():
 
     input_cube = '/Path/to/my/cube.cub'
     error_message = 'Got to exception.'
-    json_keywords_attributes = create_json_keywords_atts("", upc_id, input_cube, error_message, logger)
+    json_keywords_attributes = create_json_keywords_atts(None, upc_id, input_cube, error_message, logger)
+    print(json_keywords_attributes)
 
     result_json = json_keywords_attributes['jsonkeywords']
     assert result_json['errortype'] == error_message

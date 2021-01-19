@@ -25,7 +25,7 @@ from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.recipe import Recipe
 from pds_pipelines.process import Process
-from pds_pipelines.upc_keywords import UPCkeywords
+from pds_pipelines.pvl_utils import load_pvl, find_keyword
 from pds_pipelines.db import db_connect
 from pds_pipelines.models import pds_models
 from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, DataFiles, JsonKeywords, BaseMixin
@@ -238,15 +238,15 @@ def create_search_terms_atts(cam_info_pvl, upc_id, input_cube, footprint_file = 
         search_term_mapping['isisfootprint'] = 'GisFootprint'
 
     try:
-        keywordsOBJ = UPCkeywords(cam_info_pvl)
-    except:
-        keywordsOBJ = None
+        pvl_label = load_pvl(cam_info_pvl)
+    except Exception as e:
+        pvl_label = None
 
-    if keywordsOBJ:
+    if pvl_label:
         # For each key in the dictionary, get the related keyword from the keywords object
         for key in search_term_attributes.keys():
             try:
-                search_term_attributes[key] = keywordsOBJ.getKeyword(search_term_mapping[key])
+                search_term_attributes[key] = find_keyword(pvl_label, search_term_mapping[key])
             except KeyError:
                 search_term_attributes[key] = None
 
@@ -306,20 +306,21 @@ def create_json_keywords_atts(cam_info_pvl, upc_id, input_file, failing_command,
         A dict of attributes for a JsonKeywords record (UPC database table record)
     """
     try:
-        keywordsOBJ = UPCkeywords(cam_info_pvl)
+        pvl_label = load_pvl(cam_info_pvl)
     except Exception as e:
         logger.debug(f"Failed to create upc keywords with: {e}")
-        keywordsOBJ = None
+        pvl_label = None
 
     json_keywords_attributes = dict.fromkeys(JsonKeywords.__table__.columns.keys(), None)
 
     json_keywords_attributes['upcid'] = upc_id
 
-    try:
-        json_keywords = json.dumps(keywordsOBJ.label, indent=4, sort_keys=True, default=str)
+    # If the process was unable to finish the pvl label will not be populated
+    # but json can read None as "valid" json so just "error out"
+    if pvl_label:
+        json_keywords = json.dumps(pvl_label, indent=4, sort_keys=True, default=str)
         json_keywords = json.loads(json_keywords)
-    except Exception as e:
-        logger.debug(f"Failed to load json keywords with: {e}")
+    else:
         err_dict = {}
         err_dict['processdate'] = datetime.datetime.now(pytz.utc).strftime(
             "%Y-%m-%d %H:%M:%S")
