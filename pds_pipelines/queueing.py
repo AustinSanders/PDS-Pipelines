@@ -31,6 +31,9 @@ def parse_args():
                                 'WARNING', 'ERROR', 'CRITICAL'],
                         help="Set the log level.", default='INFO')
 
+    parser.add_argument('--namespace', '-n', dest="namespace",
+                        help="The namespace used for this queue.")
+
     args = parser.parse_args()
     return args
 
@@ -79,7 +82,7 @@ def has_space(elements, src_path, dest_path, ratio):
 
 
 class QueueProcess():
-    def __init__(self, process_name, archive, volume=None, search=None, log_level='INFO'):
+    def __init__(self, process_name, archive, volume=None, search=None, log_level='INFO', namespace=None):
         self.process_name = process_name
         self.archive = archive
         self.logger = self.get_logger(log_level)
@@ -91,8 +94,8 @@ class QueueProcess():
             exit()
         self.volume = volume
         self.search = search
-        self.process_queue = RedisQueue(f"{process_name}_ReadyQueue")
-        self.error_queue = RedisQueue(f"{process_name}_ErrorQueue")
+        self.process_queue = RedisQueue(f"{process_name}_ReadyQueue", namespace)
+        self.error_queue = RedisQueue(f"{process_name}_ErrorQueue", namespace)
         self.logger.info("%s queue: %s", process_name, self.process_queue.id_name)
 
         try:
