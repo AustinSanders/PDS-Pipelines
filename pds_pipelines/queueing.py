@@ -40,7 +40,6 @@ def parse_args():
     return args
 
 
-
 def copy_files(fname, src_dir, dest_dir):
     """ Globs files with shared filename in src_dir and copies them to dest_dir
 
@@ -70,6 +69,31 @@ def copy_files(fname, src_dir, dest_dir):
 
 
 def has_space(elements, src_path, dest_path, ratio):
+    """ Calculate if dest_path has room to hold the specified elements.
+
+    Determine whether or not dest_path will exceed the specified usage ratio
+    (used:total space) after adding the specified elements.
+
+    Parameters
+    ----------
+    elements : sqlalchemy.orm.query.Query
+        The elements to be added to the destination directory
+
+    src_path : str
+        The path in which the elements are currently stored
+
+    dest_path : str
+        The path to which the elements would be moved.
+
+    ratio : double
+        The allowed ratio of used:total space.
+
+    Returns
+    -------
+    True if adding "elements" to "dest_path" does not increase the ratio past its
+      threshold.  Else false.
+
+    """
     if elements:
         addcount = 0
         size = 0
@@ -111,6 +135,17 @@ class QueueProcess():
 
 
     def get_logger(self, log_level):
+        """ Instantiate and return a logger based on process inforamtion.
+        Parameters
+        ----------
+        log_level : str
+            The string descriptor of the log level (critical, error, warning, info, debug)
+
+        Returns
+        -------
+        logger : logging.Logger
+            The parameterized logger
+        """
         logger = logging.getLogger(f"{self.process_name}_Queueing.{self.archive}")
         level = logging.getLevelName(log_level)
         logger.setLevel(level)
@@ -123,10 +158,12 @@ class QueueProcess():
 
 
     def get_matching_files(self):
+        """ Get the files matching the process characteristics.  Overridden by child classes."""
         raise NotImplementedError()
 
 
-    def enqueue(self, element):
+    def enqueue(self, element, copy):
+        """ Add an element to the queue.  Overridden by child classes."""
         raise NotImplementedError()
 
 
@@ -185,6 +222,13 @@ class QueueProcess():
 
 class DIQueueProcess(QueueProcess):
     def get_matching_files(self):
+        """ Gets the files matching the processing parameters.
+
+        Returns
+        -------
+        results : sqlalchemy.orm.query.Query
+            A collection of files represented as a sqlalchemy query object.
+        """
         session = self.session_maker()
         td = (datetime.datetime.now(pytz.utc) -
               datetime.timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
@@ -192,24 +236,48 @@ class DIQueueProcess(QueueProcess):
         if self.volume:
             volstr = '%' + self.volume + '%'
             results = session.query(Files).filter(
-                Files.archiveid == archiveID, Files.filename.like(volstr)).filter(
+                Files.archiveid == self.archive_id, Files.filename.like(volstr)).filter(
                     or_(cast(Files.di_date, Date) < testing_date,
                         cast(Files.di_date, Date) is None))
         else:
-            results = session.query(Files).filter(Files.archiveid == archiveID).filter(
+            results = session.query(Files).filter(Files.archiveid == self.archive_id).filter(
                 or_(cast(Files.di_date, Date) < testing_date,
                     cast(Files.di_date, Date) is None))
-        sessin.close()
+        session.close()
 
         return results
 
     def enqueue(self, element, copy):
-        self.process_queue.add((element.filename, self.archive))
+        """ Copy and queue a single element
 
+        Parameters
+        ----------
+        element :sqlalchemy.orm.query.Query
+            The element to be enqueued in the process's processing queue
+
+        copy : boolean
+            Copy files to the workspace if true.
+
+        Returns
+        -------
+        None
+        """
+        path = self.archive_info[self.archive]['path']
+        fname = path+element.filename
+        if copy:
+            fname = copy_files(path+fname, archive_base, workarea)
+        self.process_queue.QueueAdd((element.filename, self.archive))
 
 
 class UPCQueueProcess(QueueProcess):
     def get_matching_files(self):
+        """ Gets the files matching the processing parameters.
+
+        Returns
+        -------
+        results : sqlalchemy.orm.query.Query
+            A collection of files represented as a sqlalchemy query object.
+        """
         session = self.session_maker()
         if self.volume:
             volstr = '%' + self.volume + '%'
@@ -226,6 +294,20 @@ class UPCQueueProcess(QueueProcess):
         return results
 
     def enqueue(self, element, copy):
+        """ Copy and queue a single element
+
+        Parameters
+        ----------
+        element :sqlalchemy.orm.query.Query
+            The element to be enqueued in the process's processing queue
+
+        copy : boolean
+            Copy files to the workspace if true.
+
+        Returns
+        -------
+        None
+        """
         path = self.archive_info[self.archive]['path']
         fname = path+element.filename
         if copy:
@@ -234,6 +316,20 @@ class UPCQueueProcess(QueueProcess):
 
 class DerivedQueueProcess(UPCQueueProcess):
     def enqueue(self, element, copy):
+        """ Copy and queue a single element
+
+        Parameters
+        ----------
+        element :sqlalchemy.orm.query.Query
+            The element to be enqueued in the process's processing queue
+
+        copy : boolean
+            Copy files to the workspace if true.
+
+        Returns
+        -------
+        None
+        """
         path = self.archive_info[self.archive]['path']
         fname = path+element.filename
         if copy:

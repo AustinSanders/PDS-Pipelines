@@ -1,10 +1,12 @@
 #!/usr/bin/env python
+import sys
 import argparse
 from pds_pipelines.queueing import parse_args, DIQueueProcess
 
 def main(user_args):
     archive = user_args.archive
     volume = user_args.volume
+    search = user_args.search
     log_level = user_args.log_level
     namespace = user_args.namespace
     process = DIQueueProcess('DI', archive, volume, search, log_level, namespace)

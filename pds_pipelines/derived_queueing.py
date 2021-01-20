@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import sys
 import argparse
 from pds_pipelines.queueing import parse_args, DerivedQueueProcess
 
@@ -11,7 +12,6 @@ def main(user_args):
     process = DerivedQueueProcess('Derived', archive, volume, search, log_level, namespace)
     matching_files = process.get_matching_files()
     process.run(matching_files)
-
 
 if __name__ == "__main__":
     sys.exit(main(parse_args()))
