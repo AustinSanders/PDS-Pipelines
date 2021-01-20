@@ -28,6 +28,8 @@ class RedisQueue(object):
         name : str
         namespace : str
         """
+        if namespace is None:
+            namespace=default_namespace
         self._db=redis.StrictRedis(host=ri['host'], port=ri['port'], db=ri['db'])
         self.id_name = '%s:%s' % (namespace, name)
 
