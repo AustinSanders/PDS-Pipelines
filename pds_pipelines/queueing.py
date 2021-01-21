@@ -5,6 +5,7 @@ import pathlib
 import glob
 import datetime
 import pytz
+import os
 
 from shutil import copy2, disk_usage
 from sqlalchemy import Date, cast
@@ -117,9 +118,10 @@ class QueueProcess():
             self.archive_id = self.get_archive_id()
         except KeyError:
             self.logger.error("Archive %s not found in %s", archive, pds_info)
-            exit()
+            raise
         self.volume = volume
         self.search = search
+        self.namespace = namespace
         self.process_queue = RedisQueue(f"{process_name}_ReadyQueue", namespace)
         self.error_queue = RedisQueue(f"{process_name}_ErrorQueue", namespace)
         self.logger.info("%s queue: %s", process_name, self.process_queue.id_name)
@@ -129,7 +131,7 @@ class QueueProcess():
             self.logger.info('Database Connection Success')
         except Exception as e:
             self.logger.error('Database Connection Error\n\n%s', e)
-            exit()
+            raise
 
         self.session_maker = pds_session_maker
 
@@ -162,7 +164,7 @@ class QueueProcess():
         raise NotImplementedError()
 
 
-    def enqueue(self, element, copy):
+    def enqueue(self, element, **kwargs):
         """ Add an element to the queue.  Overridden by child classes."""
         raise NotImplementedError()
 
@@ -172,7 +174,7 @@ class QueueProcess():
 
         Parameters
         ----------
-        elements : sqlalchemy.orm.query.Query
+        elements : sqlalchemy.orm.query.Query or list
             The elements to be processed
 
         copy : boolean
@@ -190,11 +192,15 @@ class QueueProcess():
         addcount=0
         for element in elements:
             try:
-                self.enqueue(element, copy)
+                self.enqueue(element, copy=copy)
                 addcount = addcount + 1
             except Exception as e:
-                self.error_queue.QueueAdd(f'Unable to copy / queue {element.filename}: {e}')
-                self.logger.error('Unable to copy / queue %s: %s', element.filename, e)
+                try:
+                    fn = element.filename
+                except:
+                    fn = element
+                self.error_queue.QueueAdd(f'Unable to copy / queue {fn}: {e}')
+                self.logger.error('Unable to copy / queue %s: %s', fn, e)
         self.logger.info('Files Added to %s Queue: %s', self.process_name, addcount)
 
 
@@ -247,7 +253,7 @@ class DIQueueProcess(QueueProcess):
 
         return results
 
-    def enqueue(self, element, copy):
+    def enqueue(self, element, **kwargs):
         """ Copy and queue a single element
 
         Parameters
@@ -255,17 +261,12 @@ class DIQueueProcess(QueueProcess):
         element :sqlalchemy.orm.query.Query
             The element to be enqueued in the process's processing queue
 
-        copy : boolean
-            Copy files to the workspace if true.
-
         Returns
         -------
         None
         """
         path = self.archive_info[self.archive]['path']
         fname = path+element.filename
-        if copy:
-            fname = copy_files(path+fname, archive_base, workarea)
         self.process_queue.QueueAdd((element.filename, self.archive))
 
 
@@ -293,7 +294,7 @@ class UPCQueueProcess(QueueProcess):
         session.close()
         return results
 
-    def enqueue(self, element, copy):
+    def enqueue(self, element, **kwargs):
         """ Copy and queue a single element
 
         Parameters
@@ -308,6 +309,7 @@ class UPCQueueProcess(QueueProcess):
         -------
         None
         """
+        copy = kwargs.pop('copy', True)
         path = self.archive_info[self.archive]['path']
         fname = path+element.filename
         if copy:
@@ -315,7 +317,59 @@ class UPCQueueProcess(QueueProcess):
         self.process_queue.QueueAdd((workarea+element.filename, element.fileid, self.archive))
 
 class DerivedQueueProcess(UPCQueueProcess):
-    def enqueue(self, element, copy):
+    def enqueue(self, element, **kwargs):
+        """ Copy and queue a single element
+
+        Parameters
+        ----------
+        element :sqlalchemy.orm.query.Query
+            The element to be enqueued in the process's processing queue
+
+        Keyword Arguments
+        -----------------
+        copy : boolean
+            If true or not specified, copy files to the work area
+
+        Returns
+        -------
+        None
+        """
+        copy = kwargs.pop('copy', True)
+        path = self.archive_info[self.archive]['path']
+        fname = path+element.filename
+        if copy:
+            fname = copy_files(path+fname, archive_base, workarea)
+        self.process_queue.QueueAdd((fname, self.archive))
+
+class IngestQueueProcess(QueueProcess):
+    def __init__(self, *args, link_only=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Default to empty string if falsy value specified
+        self.search = self.search or ''
+        self.link_only = link_only
+        self.link_queue = RedisQueue('LinkQueue', self.namespace)
+
+
+    def get_matching_files(self):
+        """ Gets the files matching the processing parameters.
+
+        Returns
+        -------
+        results : list
+            A list of files
+        """
+        archivepath = join(self.archive_info[self.archive]['path'], self.volume)
+        results = []
+        for dirpath, _, files in os.walk(archivepath):
+            for filename in files:
+                fname = join(dirpath, filename)
+                if self.search in filename:
+                    results.append(join(dirpath, filename))
+
+        return results
+
+
+    def enqueue(self, element, **kwargs):
         """ Copy and queue a single element
 
         Parameters
@@ -330,8 +384,7 @@ class DerivedQueueProcess(UPCQueueProcess):
         -------
         None
         """
-        path = self.archive_info[self.archive]['path']
-        fname = path+element.filename
-        if copy:
-            fname = copy_files(path+fname, archive_base, workarea)
-        self.process_queue.QueueAdd((fname, self.archive))
+        if element.lower() == "voldesc.cat":
+            self.link_queue.QueueAdd(element)
+        if not self.link_only:
+            self.process_queue.QueueAdd((element, self.archive))
