@@ -10,7 +10,7 @@ except Exception as e:
                  f'Failed with the following {e}.')
 
 try:
-    import gdal
+    from osgeo import gdal
     available_modules['gdal'] = gdal
     # Python GDAL doesn't use exceptions by default.
     gdal.UseExceptions()
