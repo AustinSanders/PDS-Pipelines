@@ -65,7 +65,6 @@ def copy_files(fname, src_dir, dest_dir):
     dest_path = dest_path.replace(src_dir, dest_dir)
     pathlib.Path(dest_path).mkdir(parents=True, exist_ok=True)
     for f in glob.glob(splitext(fname)[0] + r'.*'):
-        print(f)
         copy2(f, dest_path)
     return join(dest_path, basename(fname))
 
@@ -149,15 +148,17 @@ class QueueProcess():
         logger : logging.Logger
             The parameterized logger
         """
-        logger = logging.getLogger(f"{self.process_name}_Queueing.{self.archive}")
-        level = logging.getLevelName(log_level)
-        logger.setLevel(level)
-        logFileHandle = logging.FileHandler(pds_log + 'Process.log')
-        formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
-        logFileHandle.setFormatter(formatter)
-        logger.addHandler(logFileHandle)
-        return logger
+        if not hasattr(self, "logger"):
+            logger = logging.getLogger(f"{self.process_name}_Queueing.{self.archive}")
+            level = logging.getLevelName(log_level)
+            logger.setLevel(level)
+            logFileHandle = logging.FileHandler(pds_log + 'Process.log')
+            formatter = logging.Formatter(
+                '%(asctime)s - %(name)s - %(levelname)s, %(message)s')
+            logFileHandle.setFormatter(formatter)
+            logger.addHandler(logFileHandle)
+            self.logger = logger
+        return self.logger
 
 
     def get_matching_files(self):
