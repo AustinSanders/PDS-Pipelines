@@ -214,7 +214,6 @@ class QueueProcess():
 
         Returns
         -------
-
         archive_id : int
             The integer value associated with the archive name.
 
@@ -259,12 +258,12 @@ class DIQueueProcess(QueueProcess):
         return results
 
     def enqueue(self, element):
-        """ Copy and queue a single element
+        """ Enqueue a single element
 
         Parameters
         ----------
-        element :sqlalchemy.orm.query.Query
-            The element to be enqueued in the process's processing queue
+        element : str
+            The filename to be enqueued
 
         Returns
         -------
@@ -300,12 +299,12 @@ class UPCQueueProcess(QueueProcess):
         return results
 
     def enqueue(self, element):
-        """ Copy and queue a single element
+        """ Enqueue a single element
 
         Parameters
         ----------
-        element :sqlalchemy.orm.query.Query
-            The element to be enqueued in the process's processing queue
+        element : str
+            The filename to be enqueued
 
         Returns
         -------
@@ -343,15 +342,12 @@ class IngestQueueProcess(QueueProcess):
 
 
     def enqueue(self, element):
-        """ Copy and queue a single element
+        """ Enqueue a single element
 
         Parameters
         ----------
-        element :sqlalchemy.orm.query.Query
-            The element to be enqueued in the process's processing queue
-
-        copy : boolean
-            Copy files to the workspace if true.
+        element : str
+            The filename to be enqueued
 
         Returns
         -------
