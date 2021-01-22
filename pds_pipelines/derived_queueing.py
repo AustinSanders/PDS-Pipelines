@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import sys
 import argparse
-from pds_pipelines.queueing import parse_args, DerivedQueueProcess
+from pds_pipelines.queueing import parse_args, UPCQueueProcess
 
 def main(user_args):
     archive = user_args.archive
@@ -9,7 +9,7 @@ def main(user_args):
     search = user_args.search
     log_level = user_args.log_level
     namespace = user_args.namespace
-    process = DerivedQueueProcess('Derived', archive, volume, search, log_level, namespace)
+    process = UPCQueueProcess('Derived', archive, volume, search, log_level, namespace)
     matching_files = process.get_matching_files()
     process.run(matching_files)
 

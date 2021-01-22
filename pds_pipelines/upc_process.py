@@ -387,8 +387,7 @@ def main(user_args):
         # get a file from the queue
         item = literal_eval(RQ_main.QueueGet())
         inputfile = item[0]
-        fid = item[1]
-        archive = item[2]
+        archive = item[1]
 
         if not os.path.isfile(inputfile):
             RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during UPC processing')
@@ -476,8 +475,8 @@ def main(user_args):
                 JsonKeywords.create(session, **json_keywords_attributes)
                 session.close()
             except sqlalchemy.exc.SQLAlchemyError as e:
-                logger.error("Database operation failed: %s \nRequeueing (%s, %s, %s)", e, inputfile, fid, archive)
-                RQ_main.QueueAdd((inputfile, fid, archive))
+                logger.error("Database operation failed: %s \nRequeueing (%s, %s, %s)", e, inputfile,  archive)
+                RQ_main.QueueAdd((inputfile, archive))
                 return
 
             try:
@@ -486,7 +485,6 @@ def main(user_args):
             except:
                 logger.debug("Unable to flush database connection")
 
-            add_process_db(pds_session, fid, True)
             pds_session.close()
 
             # Disconnect from the engines
