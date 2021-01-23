@@ -1037,6 +1037,9 @@ def main(user_args):
 
         if xmlOBJ.getOutBit() != 'input':
             gdal_translate_dict['outputType'] = GDAL_OBit(xmlOBJ.getOutBit())
+            if xmlOBJ.getOutBit() == 'real':
+                gdal_translate_dict['unscale'] = True
+
         gdal_translate_dict['format'] = Oformat
 
         if Oformat == 'GTiff' or Oformat == 'JP2KAK' or Oformat == 'JPEG':

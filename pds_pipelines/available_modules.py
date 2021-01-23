@@ -19,7 +19,7 @@ except Exception as e:
                  f'Failed with the following {e}.')
 
 try:
-    import ogr
+    from osgeo import ogr
     available_modules['ogr'] = ogr
 except Exception as e:
     warnings.warn('Unable to add ogr to the available modules. ' +
