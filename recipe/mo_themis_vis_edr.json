@@ -94,26 +94,5 @@
                 "dest": "{{derived_product}}.browse.jpg"
             }
         }
-    },
-    "projected": {
-        "recipe": {
-            "thmproc": {
-                "from_": "value",
-                "to": "value",
-                "remove": "no"
-            },
-            "handmos": {
-                "from_": "value",
-                "mosaic": "value",
-                "priority": "beneath"
-            },
-            "isis2std": {
-                "from_": "value",
-                "to": "value",
-                "format": "jpeg",
-                "quality": "60",
-                "stretch": "linear"
-            }
-        }
     }
 }

@@ -85,24 +85,5 @@
                 "dest": "{{derived_product}}.browse.jpg"
             }
         }
-    },
-    "projected": {
-        "recipe": {
-            "thm2isis": {
-                "from_": "value",
-                "to": "value"
-            },
-            "cubeatt": {
-                "from_": "value",
-                "to": "value"
-            },
-            "isis2std": {
-                "from_": "value",
-                "to": "value",
-                "format": "jpeg",
-                "quality": "60",
-                "stretch": "linear"
-            }
-        }
     }
 }

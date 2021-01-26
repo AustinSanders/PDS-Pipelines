@@ -112,13 +112,5 @@
                 "dest": "{{derived_product}}.browse.jpg"
             }
         }
-    },
-    "projected": {
-        "recipe": {
-            "moccal": {
-                "from_": "value",
-                "to": "value"
-            }
-        }
     }
 }
