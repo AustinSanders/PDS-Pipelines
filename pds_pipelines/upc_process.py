@@ -29,7 +29,7 @@ from pds_pipelines.pvl_utils import load_pvl, find_keyword
 from pds_pipelines.db import db_connect
 from pds_pipelines.models import pds_models
 from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, DataFiles, JsonKeywords, BaseMixin
-from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj, upc_error_queue, web_base, archive_base, recipe_base
+from pds_pipelines.config import pds_log, workarea, keyword_def, pds_db, upc_db, lock_obj, upc_error_queue, web_base, archive_base, recipe_base
 from pds_pipelines.utils import generate_processes, process, add_process_db, get_isis_id
 
 
@@ -394,11 +394,8 @@ def main(user_args):
             logger.debug("%s is not a file\n", inputfile)
             exit()
 
-        # Build URL for edr_source based on archive path from PDSinfo.json
-        PDSinfoDICT = json.load(open(pds_info, 'r'))
-        archive_path = PDSinfoDICT[archive]['path']
-        orig_file = inputfile.replace(workarea, archive_path)
-        edr_source = orig_file.replace(archive_base, web_base)
+        # Build URL for edr_source
+        edr_source = inputfile.replace(workarea, web_base)
 
         # Update the logger context to include inputfile
         context['inputfile'] = inputfile

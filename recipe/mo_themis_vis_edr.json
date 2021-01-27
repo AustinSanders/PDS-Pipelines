@@ -1,6 +1,6 @@
 {
     "inst": "mo_themis_vis_edr",
-    "src": "/pds_san/PDS_Archive/Mars_Odyssey/",
+    "src": "/pds_san/PDS_Archive/Mars_Odyssey/USA_NASA_PDS_ODTSDP_100XX/",
     "upc": {
         "recipe": {
             "isis.thmproc": {

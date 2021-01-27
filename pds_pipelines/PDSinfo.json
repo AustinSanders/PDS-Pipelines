@@ -172,7 +172,7 @@
     "mo_themis_sdp": {
         "archiveid": "130",
         "path": "/pds_san/PDS_Archive/Mars_Odyssey/THEMIS/USA_NASA_PDS_ODTSDP_100XX/",
-	"upc_reqs": ["This archive clean name is for DI only. It does not map to a POW recipe."]
+	"upc_reqs": ["/data/odt", "EDR.QUB"]
     },
     "mo_themis_ir_edr": {
         "archiveid": "130",
