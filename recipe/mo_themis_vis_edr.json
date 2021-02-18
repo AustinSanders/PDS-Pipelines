@@ -20,7 +20,7 @@
             },
             "isis.footprintinit": {
                 "from_": "{{no_extension_inputfile}}.raw.odd.cub",
-                "increaseprecision": "yes",
+                "increaseprecision": "no",
                 "inctype": "vertices",
                 "numvertices": "20"
             },
@@ -29,16 +29,16 @@
                 "to": "{{cam_info_file}}",
                 "geometry": "yes",
                 "isislabel": "yes",
-                "originallabel": "no",
+                "originallabel": "yes",
                 "statistics": "yes",
                 "camstats": "yes",
                 "linc": "100",
                 "sinc": "100",
                 "polygon": "yes",
                 "inctype": "vertices",
-                "numvertices": "40",
-                "maxemission": "180.0",
-                "maxincidence": "180.0",
+                "numvertices": "20",
+                "maxemission": "89.5",
+                "maxincidence": "89.5",
                 "spice": "no"
             }
         }
@@ -64,7 +64,7 @@
                 "to": "{{no_extension_inputfile}}.cub",
                 "remove": "no"
             },
-            "handmos": {
+            "isis.handmos": {
                 "from_": "{{no_extension_inputfile}}.cub",
                 "mosaic": "value",
                 "priority": "beneath"

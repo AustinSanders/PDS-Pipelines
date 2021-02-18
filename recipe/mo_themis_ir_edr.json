@@ -14,7 +14,7 @@
             },
             "isis.footprintinit": {
                 "from_": "{{no_extension_inputfile}}.cub",
-                "increaseprecision": "yes",
+                "increaseprecision": "no",
                 "inctype": "vertices",
                 "numvertices": "20"
             },

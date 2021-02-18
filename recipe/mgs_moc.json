@@ -1,5 +1,5 @@
 {
-    "inst": "mgs_moc_na",
+    "inst": "mgs_moc",
     "src": "/pds_san/PDS_Archive/Mars_Global_Surveyor/MOC/",
     "upc": {
         "recipe": {
@@ -14,11 +14,9 @@
             },
             "isis.footprintinit": {
                 "from_": "{{no_extension_inputfile}}.cub",
-                "increaseprecision": "yes",
+                "increaseprecision": "no",
                 "inctype": "vertices",
-                "numvertices": "40",
-                "maxemission": "89.5",
-                "maxincidence": "120.0"
+                "numvertices": "40"
             },
             "isis.caminfo": {
                 "from_": "{{no_extension_inputfile}}.cub",
@@ -32,10 +30,10 @@
                 "sinc": "100",
                 "polygon": "yes",
                 "inctype": "vertices",
-                "increaseprecision": "yes",
+                "increaseprecision": "no",
                 "numvertices": "40",
                 "maxemission": "89.5",
-                "maxincidence": "120.0",
+                "maxincidence": "89.5",
                 "spice": "no"
             }
 
