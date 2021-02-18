@@ -65,8 +65,8 @@
                 "remove": "no"
             },
             "isis.handmos": {
-                "from_": "{{no_extension_inputfile}}.cub",
-                "mosaic": "value",
+                "from_": "{{no_extension_inputfile}}.raw.even.cub",
+                "mosaic": "{{no_extension_inputfile}}.raw.odd.cub",
                 "priority": "beneath"
             },
             "get_single_band_cube": {
