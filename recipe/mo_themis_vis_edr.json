@@ -3,29 +3,31 @@
     "src": "/pds_san/PDS_Archive/Mars_Odyssey/USA_NASA_PDS_ODTSDP_100XX/",
     "upc": {
         "recipe": {
-            "isis.thmproc": {
+            "isis.thm2isis": {
                 "from_": "{{inputfile}}",
-                "to": "{{no_extension_inputfile}}.cub",
-                "mapping": "no",
-                "remove": "no"
+                "to": "{{no_extension_inputfile}}.cub"
+            },
+            "isis.spiceinit": {
+                "from_": "{{no_extension_inputfile}}.even.cub",
+                "cknadir": "yes",
+                "cksmithed": "yes"
+            },
+            "isis.spiceinit": {
+                "from_": "{{no_extension_inputfile}}.odd.cub",
+                "cknadir": "yes",
+                "cksmithed": "yes"
             },
             "isis.handmos": {
-                "from_": "{{no_extension_inputfile}}.raw.even.cub",
-                "mosaic": "{{no_extension_inputfile}}.raw.odd.cub",
+                "from_": "{{no_extension_inputfile}}.even.cub",
+                "mosaic": "{{no_extension_inputfile}}.odd.cub",
                 "priority": "beneath"
             },
             "isis.cubeatt": {
-                "from_": "{{no_extension_inputfile}}.raw.odd.cub",
+                "from_": "{{no_extension_inputfile}}.odd.cub",
                 "to": "{{no_extension_inputfile}}.cub"
             },
-            "isis.footprintinit": {
-                "from_": "{{no_extension_inputfile}}.raw.odd.cub",
-                "increaseprecision": "no",
-                "inctype": "vertices",
-                "numvertices": "20"
-            },
             "isis.caminfo": {
-                "from_": "{{no_extension_inputfile}}.raw.odd.cub",
+                "from_": "{{no_extension_inputfile}}.odd.cub",
                 "to": "{{cam_info_file}}",
                 "geometry": "yes",
                 "isislabel": "yes",
@@ -36,10 +38,9 @@
                 "sinc": "100",
                 "polygon": "yes",
                 "inctype": "vertices",
-                "numvertices": "20",
                 "maxemission": "89.5",
-                "maxincidence": "89.5",
-                "spice": "no"
+                "maxincidence": "119.5",
+		"numvertices": "40"		
             }
         }
     },
@@ -59,18 +60,17 @@
     },
     "reduced": {
         "recipe": {
-            "isis.thmproc": {
+            "isis.thm2isis": {
                 "from_": "{{inputfile}}",
-                "to": "{{no_extension_inputfile}}.cub",
-                "remove": "no"
+                "to": "{{no_extension_inputfile}}.cub"
             },
             "isis.handmos": {
-                "from_": "{{no_extension_inputfile}}.raw.even.cub",
-                "mosaic": "{{no_extension_inputfile}}.raw.odd.cub",
+                "from_": "{{no_extension_inputfile}}.even.cub",
+                "mosaic": "{{no_extension_inputfile}}.odd.cub",
                 "priority": "beneath"
             },
             "get_single_band_cube": {
-                "cube": "{{no_extension_inputfile}}.cub",
+                "cube": "{{no_extension_inputfile}}.odd.cub",
                 "out_cube": "{{no_extension_inputfile}}.singleband.cub",
                 "band_list": [3,2,5,4,1],
                 "keyname": "FilterNumber"

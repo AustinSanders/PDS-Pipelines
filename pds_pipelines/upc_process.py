@@ -14,7 +14,7 @@ from glob import glob
 
 import pvl
 import json
-from sqlalchemy import and_
+from sqlalchemy import exc, and_
 from pds_pipelines.available_modules import *
 from osgeo import ogr
 
@@ -235,7 +235,7 @@ def create_search_terms_atts(cam_info_pvl, upc_id, input_cube, footprint_file = 
 
     if not search_term_mapping:
         search_term_mapping = dict(zip(search_term_attributes.keys(), search_term_attributes.keys()))
-        search_term_mapping['isisfootprint'] = 'GisFootprint'
+        search_term_mapping['isisfootprint'] = 'gisfootprint'
 
     try:
         pvl_label = load_pvl(cam_info_pvl)
@@ -493,7 +493,7 @@ def main(user_args):
             # source file
             file_prefix = os.path.splitext(inputfile)[0]
             workarea_files = glob(file_prefix + '*')
-            os.remove(os.path.join(workarea, 'print.prt'))
+            # os.remove(os.path.join(workarea, 'print.prt'))
             for file in workarea_files:
                 os.remove(file)
 
