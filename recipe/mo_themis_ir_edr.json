@@ -1,6 +1,6 @@
 {
     "inst": "mo_themis_ir_edr",
-    "src": "/pds_san/PDS_Archive/Mars_Odyssey/",
+    "src": "/pds_san/PDS_Archive/Mars_Odyssey/USA_NASA_PDS_ODTSDP_100XX/",
     "upc": {
         "recipe": {
             "isis.thm2isis": {
@@ -12,12 +12,6 @@
                 "cknadir": "yes",
                 "cksmithed": "yes"
             },
-            "isis.footprintinit": {
-                "from_": "{{no_extension_inputfile}}.cub",
-                "increaseprecision": "yes",
-                "inctype": "vertices",
-                "numvertices": "20"
-            },
             "isis.caminfo": {
                 "from_": "{{no_extension_inputfile}}.cub",
                 "to": "{{cam_info_file}}",
@@ -28,8 +22,11 @@
                 "camstats": "yes",
                 "linc": "100",
                 "sinc": "100",
-                "uselabel": "yes",
-                "spice": "no"
+                "polygon": "yes",
+                "inctype": "vertices",
+                "maxemission": "89.5",
+                "maxincidence": "119.5",
+		"numvertices": "40"		
             }
         }
     },
@@ -83,25 +80,6 @@
                 "height" : "0",
                 "src" : "{{no_extension_inputfile}}.singleband.cub",
                 "dest": "{{derived_product}}.browse.jpg"
-            }
-        }
-    },
-    "projected": {
-        "recipe": {
-            "thm2isis": {
-                "from_": "value",
-                "to": "value"
-            },
-            "cubeatt": {
-                "from_": "value",
-                "to": "value"
-            },
-            "isis2std": {
-                "from_": "value",
-                "to": "value",
-                "format": "jpeg",
-                "quality": "60",
-                "stretch": "linear"
             }
         }
     }

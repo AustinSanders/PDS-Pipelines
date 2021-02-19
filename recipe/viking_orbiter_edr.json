@@ -41,26 +41,26 @@
     },
     "pow": {
         "recipe": {
-            "vik2isis": {
-                "from_": "value",
-                "to": "value"
+            "isis.vik2isis": {
+                "from_": "{{inputfile}}",
+                "to": "{{no_extension_inputfile}}.cub"
             },
-            "spiceinit": {
-                "from_": "value",
+            "isis.spiceinit": {
+                "from_": "{{no_extension_inputfile}}.cub",
                 "cknadir": "yes",
                 "cksmithed": "yes"
             },
-            "vikclean": {
-                "from_": "value",
-                "to": "value"
+            "isis.vikclean": {
+                "from_": "{{no_extension_inputfile}}.cub",
+                "to": "{{no_extension_inputfile}}.clean.cub"
             },
-            "vikcal": {
-                "from_": "value",
-                "to": "value"
+            "isis.vikcal": {
+                "from_": "{{no_extension_inputfile}}.clean.cub",
+                "to": "{{no_extension_inputfile}}.cal.cub"
             },
-            "cam2map": {
-                "from": "value",
-                "to": "value",
+            "isis.cam2map": {
+                "from": "{{no_extension_inputfile}}.cal.cub",
+                "to": "{{no_extension_inputfile}}.proj.cub",
                 "map": "value",
                 "matchmap": "no",
                 "pixres": "value",
@@ -113,29 +113,5 @@
 	    "maxlines": "300",
 	    "maxsamples": "300"
 	}
-    },
-    "projected": {
-        "recipe": {
-            "vik2isis": {
-                "from_": "value",
-                "to": "value"
-            },
-            "spiceinit": {
-                "from_": "value",
-                "cknadir": "yes",
-                "cksmithed": "yes"
-            },
-            "vikcal": {
-                "from_": "value",
-                "to": "value"
-            },
-            "isis2std": {
-                "from_": "value",
-                "to": "value",
-                "format": "jpeg",
-                "quality": "60",
-                "stretch": "linear"
-            }
-        }
     }
 }

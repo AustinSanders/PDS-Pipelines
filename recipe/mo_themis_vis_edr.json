@@ -1,45 +1,46 @@
 {
     "inst": "mo_themis_vis_edr",
-    "src": "/pds_san/PDS_Archive/Mars_Odyssey/",
+    "src": "/pds_san/PDS_Archive/Mars_Odyssey/USA_NASA_PDS_ODTSDP_100XX/",
     "upc": {
         "recipe": {
-            "isis.thmproc": {
+            "isis.thm2isis": {
                 "from_": "{{inputfile}}",
-                "to": "{{no_extension_inputfile}}.cub",
-                "mapping": "no",
-                "remove": "no"
+                "to": "{{no_extension_inputfile}}.cub"
+            },
+            "isis.spiceinit": {
+                "from_": "{{no_extension_inputfile}}.even.cub",
+                "cknadir": "yes",
+                "cksmithed": "yes"
+            },
+            "isis.spiceinit": {
+                "from_": "{{no_extension_inputfile}}.odd.cub",
+                "cknadir": "yes",
+                "cksmithed": "yes"
             },
             "isis.handmos": {
-                "from_": "{{no_extension_inputfile}}.raw.even.cub",
-                "mosaic": "{{no_extension_inputfile}}.raw.odd.cub",
+                "from_": "{{no_extension_inputfile}}.even.cub",
+                "mosaic": "{{no_extension_inputfile}}.odd.cub",
                 "priority": "beneath"
             },
             "isis.cubeatt": {
-                "from_": "{{no_extension_inputfile}}.raw.odd.cub",
+                "from_": "{{no_extension_inputfile}}.odd.cub",
                 "to": "{{no_extension_inputfile}}.cub"
             },
-            "isis.footprintinit": {
-                "from_": "{{no_extension_inputfile}}.raw.odd.cub",
-                "increaseprecision": "yes",
-                "inctype": "vertices",
-                "numvertices": "20"
-            },
             "isis.caminfo": {
-                "from_": "{{no_extension_inputfile}}.raw.odd.cub",
+                "from_": "{{no_extension_inputfile}}.odd.cub",
                 "to": "{{cam_info_file}}",
                 "geometry": "yes",
                 "isislabel": "yes",
-                "originallabel": "no",
+                "originallabel": "yes",
                 "statistics": "yes",
                 "camstats": "yes",
                 "linc": "100",
                 "sinc": "100",
                 "polygon": "yes",
                 "inctype": "vertices",
-                "numvertices": "40",
-                "maxemission": "180.0",
-                "maxincidence": "180.0",
-                "spice": "no"
+                "maxemission": "89.5",
+                "maxincidence": "119.5",
+		"numvertices": "40"		
             }
         }
     },
@@ -59,18 +60,17 @@
     },
     "reduced": {
         "recipe": {
-            "isis.thmproc": {
+            "isis.thm2isis": {
                 "from_": "{{inputfile}}",
-                "to": "{{no_extension_inputfile}}.cub",
-                "remove": "no"
+                "to": "{{no_extension_inputfile}}.cub"
             },
-            "handmos": {
-                "from_": "{{no_extension_inputfile}}.cub",
-                "mosaic": "value",
+            "isis.handmos": {
+                "from_": "{{no_extension_inputfile}}.even.cub",
+                "mosaic": "{{no_extension_inputfile}}.odd.cub",
                 "priority": "beneath"
             },
             "get_single_band_cube": {
-                "cube": "{{no_extension_inputfile}}.cub",
+                "cube": "{{no_extension_inputfile}}.odd.cub",
                 "out_cube": "{{no_extension_inputfile}}.singleband.cub",
                 "band_list": [3,2,5,4,1],
                 "keyname": "FilterNumber"
@@ -92,27 +92,6 @@
                 "height" : "0",
                 "src" : "{{no_extension_inputfile}}.singleband.cub",
                 "dest": "{{derived_product}}.browse.jpg"
-            }
-        }
-    },
-    "projected": {
-        "recipe": {
-            "thmproc": {
-                "from_": "value",
-                "to": "value",
-                "remove": "no"
-            },
-            "handmos": {
-                "from_": "value",
-                "mosaic": "value",
-                "priority": "beneath"
-            },
-            "isis2std": {
-                "from_": "value",
-                "to": "value",
-                "format": "jpeg",
-                "quality": "60",
-                "stretch": "linear"
             }
         }
     }

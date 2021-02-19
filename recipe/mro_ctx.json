@@ -107,29 +107,5 @@
                 "dest": "{{derived_product}}.browse.jpg"
             }
         }
-    },
-    "projected": {
-        "recipe": {
-            "mroctx2isis": {
-                "from_": "value",
-                "to": "value"
-            },
-            "spiceinit": {
-                "from_": "value",
-                "cknadir": "yes",
-                "cksmithed": "yes"
-            },
-            "ctxcal": {
-                "from_": "value",
-                "to": "value"
-            },
-            "isis2std": {
-                "from_": "value",
-                "to": "value",
-                "format": "jpeg",
-                "quality": "60",
-                "stretch": "linear"
-            }
-        }
     }
 }

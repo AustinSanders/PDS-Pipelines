@@ -67,7 +67,7 @@ cam_info_dict = {'upcid': 1,
                  'instrumentid': 1,
                  'pdsproductid': 'PRODUCTID',
                  'err_flag': False,
-                 'GisFootprint': Polygon([(153.80256122853893, -32.68515128444211),
+                 'gisfootprint': Polygon([(153.80256122853893, -32.68515128444211),
                                            (153.80256122853893, -33.18515128444211),
                                            (153.30256122853893, -33.18515128444211),
                                            (153.30256122853893, -32.68515128444211),
@@ -163,7 +163,7 @@ def test_search_terms_generation(mocked_product_id, mocked_keyword):
     search_term_attributes['starttime'] = datetime.datetime.strptime(search_term_attributes['starttime'], "%Y-%m-%d %H")
 
     search_term_mapping = dict(zip(search_term_attributes.keys(), search_term_attributes.keys()))
-    search_term_mapping['isisfootprint'] = 'GisFootprint'
+    search_term_mapping['isisfootprint'] = 'gisfootprint'
 
     for key in search_term_mapping.keys():
         attribute = search_term_attributes[key]

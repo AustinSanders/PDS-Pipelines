@@ -14,7 +14,7 @@ from glob import glob
 
 import pvl
 import json
-from sqlalchemy import and_
+from sqlalchemy import exc, and_
 from pds_pipelines.available_modules import *
 from osgeo import ogr
 
@@ -29,7 +29,7 @@ from pds_pipelines.pvl_utils import load_pvl, find_keyword
 from pds_pipelines.db import db_connect
 from pds_pipelines.models import pds_models
 from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, DataFiles, JsonKeywords, BaseMixin
-from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj, upc_error_queue, web_base, archive_base, recipe_base
+from pds_pipelines.config import pds_log, workarea, keyword_def, pds_db, upc_db, lock_obj, upc_error_queue, web_base, archive_base, recipe_base
 from pds_pipelines.utils import generate_processes, process, add_process_db, get_isis_id
 
 
@@ -235,7 +235,7 @@ def create_search_terms_atts(cam_info_pvl, upc_id, input_cube, footprint_file = 
 
     if not search_term_mapping:
         search_term_mapping = dict(zip(search_term_attributes.keys(), search_term_attributes.keys()))
-        search_term_mapping['isisfootprint'] = 'GisFootprint'
+        search_term_mapping['isisfootprint'] = 'gisfootprint'
 
     try:
         pvl_label = load_pvl(cam_info_pvl)
@@ -394,11 +394,8 @@ def main(user_args):
             logger.debug("%s is not a file\n", inputfile)
             exit()
 
-        # Build URL for edr_source based on archive path from PDSinfo.json
-        PDSinfoDICT = json.load(open(pds_info, 'r'))
-        archive_path = PDSinfoDICT[archive]['path']
-        orig_file = inputfile.replace(workarea, archive_path)
-        edr_source = orig_file.replace(archive_base, web_base)
+        # Build URL for edr_source
+        edr_source = inputfile.replace(workarea, web_base)
 
         # Update the logger context to include inputfile
         context['inputfile'] = inputfile
@@ -496,7 +493,7 @@ def main(user_args):
             # source file
             file_prefix = os.path.splitext(inputfile)[0]
             workarea_files = glob(file_prefix + '*')
-            os.remove(os.path.join(workarea, 'print.prt'))
+            # os.remove(os.path.join(workarea, 'print.prt'))
             for file in workarea_files:
                 os.remove(file)
 

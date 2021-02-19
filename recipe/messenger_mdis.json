@@ -98,29 +98,5 @@
                 "dest": "{{derived_product}}.browse.jpg"
             }
         }
-    },
-    "projected": {
-        "recipe": {
-            "mdis2isis": {
-                "from_": "value",
-                "to": "value"
-            },
-            "spiceinit": {
-                "from_": "value",
-                "cknadir": "yes",
-                "cksmithed": "yes"
-            },
-            "mdiscal": {
-                "from_": "value",
-                "to": "value"
-            },
-            "isis2std": {
-                "from_": "value",
-                "to": "value",
-                "format": "jpeg",
-                "quality": "60",
-                "stretch": "linear"
-            }
-        }
     }
 }

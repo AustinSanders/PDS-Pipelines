@@ -164,28 +164,29 @@
     "mo_themis_geo_v1": {
         "archiveid": "128",
         "path": "/pds_san/PDS_Archive/Mars_Odyssey/THEMIS/USA_NASA_PDS_ODTGEO_100XX/"
-},
+    },
     "mo_themis_geo": {
         "archiveid": "118",
         "path": "/pds_san/PDS_Archive/Mars_Odyssey/THEMIS/USA_NASA_PDS_ODTGEO_200XX/"
     },
+    "mo_themis_sdp": {
+        "archiveid": "130",
+        "path": "/pds_san/PDS_Archive/Mars_Odyssey/THEMIS/USA_NASA_PDS_ODTSDP_100XX/",
+	"upc_reqs": ["/data/odt", "EDR.QUB"]
+    },
     "mo_themis_ir_edr": {
-        "bandorder": ["9", "8", "7", "6", "5", "4", "3", "2", "1"],
-        "archiveid": "116",
-	"UPCerrorSpacecraft": "MARS_ODYSSEY",
-        "UPCerrorInstrument": "THEMIS_IR",
+        "archiveid": "130",
         "path": "/pds_san/PDS_Archive/Mars_Odyssey/THEMIS/USA_NASA_PDS_ODTSDP_100XX/",
         "bandbinQuery": "FilterNumber",
-	"upc_reqs": ["/data/odtie1", ".QUB"]
+        "bandorder": ["9", "8", "7", "6", "5", "4", "3", "2", "1"],
+	"upc_reqs": ["/data/odtie1_", "EDR.QUB"]
     },
     "mo_themis_vis_edr": {
-	"archiveid" : "117",
+	"archiveid" : "130",
         "path" : "/pds_san/PDS_Archive/Mars_Odyssey/THEMIS/USA_NASA_PDS_ODTSDP_100XX/",
-        "UPCerrorSpacecraft": "MARS_ODYSSEY",
-        "UPCerrorInstrument": "THEMIS_VIS",
         "bandbinQuery" : "FilterNumber",
         "bandorder" : ["3", "2", "5", "4", "1"],
-	"upc_reqs": ["/data/odtve1", ".QUB"]
+	"upc_reqs": ["/data/odtve1_", "EDR.QUB"]
     },
     "viking_lander": {
         "archiveid": "7",
