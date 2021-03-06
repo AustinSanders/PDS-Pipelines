@@ -8,6 +8,8 @@ import errno
 from ast import literal_eval
 from json import JSONDecoder
 
+from sqlalchemy import exc
+
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.db import db_connect
@@ -48,14 +50,24 @@ def add_url(input_file, upc_id, session_maker):
 
 
 def main():
-    # Set up logging
+    try:
+        slurm_job_id = os.environ['SLURM_ARRAY_JOB_ID']
+        slurm_array_id = os.environ['SLURM_ARRAY_TASK_ID']
+    except:
+        slurm_job_id = ''
+        slurm_array_id = ''
+
+    inputfile = ''
+    context = {'job_id': slurm_job_id, 'array_id':slurm_array_id, 'inputfile': inputfile}
     logger = logging.getLogger('Derived_Process')
     logger.setLevel(logging.INFO)
-    logFileHandle = logging.FileHandler(pds_log + 'Process.log')
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s, %(message)s')
-    logFileHandle.setFormatter(formatter)
-    logger.addHandler(logFileHandle)
-
+    log_file_handle = logging.FileHandler(pds_log + 'Process.log')
+    formatter = logging.Formatter(
+        '%(asctime)s - %(job_id)s - %(array_id)s - %(inputfile)s - %(name)s - %(levelname)s, %(message)s')
+    log_file_handle.setFormatter(formatter)
+    logger.addHandler(log_file_handle)
+    logger = logging.LoggerAdapter(logger, context)
+    
     RQ_derived = RedisQueue('Derived_ReadyQueue')
     RQ_error = RedisQueue(upc_error_queue)
     RQ_lock = RedisLock(lock_obj)
@@ -63,8 +75,7 @@ def main():
 
     PDSinfoDICT = json.load(open(pds_info, 'r'))
 
-    pds_session_maker, pds_session = db_connect(pds_db)
-    upc_session_maker, upc_session = db_connect(upc_db)
+    upc_session_maker, upc_engine = db_connect(upc_db)
 
     # Only checks lock for browse.  Not sure of a better way to handle this.
     if int(RQ_derived.QueueSize()) and RQ_lock.available(RQ_derived.id_name):
@@ -91,16 +102,16 @@ def main():
                                            derived_product=derived_product)
             failing_command, _ = process(processes, workarea, logger)
             if not failing_command:
-                upc_session = upc_session_maker()
+                session = upc_session_maker()
                 src = inputfile.replace(workarea, web_base)
-                datafile = upc_session.query(DataFiles).filter(DataFiles.source==src).first()
+                datafile = session.query(DataFiles).filter(DataFiles.source==src).first()
                 upc_id = datafile.upcid
                 try:
                     add_url(derived_product, upc_id, upc_session_maker)
-                    upc_session.close()
+                    session.close()
                     #os.remove(infile)
                     logger.info(f'Derived Process Success: %s', inputfile)
-                except sqlalchemy.exc.SQLAlchemyError as e:
+                except exc.SQLAlchemyError as e:
                     logger.error('Error: %s\nRequeueing (%s, %s)', e, inputfile, archive)
                     RQ_derived.QueueAdd((inputfile, archive))
 

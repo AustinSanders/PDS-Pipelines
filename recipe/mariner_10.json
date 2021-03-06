@@ -3,6 +3,31 @@
     "src": "/pds_san/PDS_Archive/Mariner_10/",
     "upc": {
         "recipe": {
+            "isis.mar102isis": {
+                "from_": "{{inputfile}}",
+                "to": "{{no_extension_inputfile}}.cub"
+            },
+            "isis.spiceinit": {
+                "from_": "{{no_extension_inputfile}}.cub",
+                "cknadir": "yes",
+                "cksmithed": "yes"
+            },
+            "isis.caminfo": {
+                "from_": "{{no_extension_inputfile}}.cub",
+                "to": "{{cam_info_file}}",
+                "geometry": "yes",
+                "isislabel": "yes",
+                "originallabel": "yes",
+                "statistics": "yes",
+                "camstats": "yes",
+                "linc": "100",
+                "sinc": "100",
+                "polygon": "yes",
+                "inctype": "vertices",
+                "maxemission": "89.5",
+                "maxincidence": "119.5",
+		"numvertices": "40"		
+            }
         }
     },
     "pow": {
@@ -32,6 +57,28 @@
     },
     "reduced": {
         "recipe": {
+            "isis.mar102isis": {
+                "from_": "{{inputfile}}",
+                "to": "{{no_extension_inputfile}}.cub"
+            },
+            "gdal_translate": {
+		"outputType": "Byte",
+		"format" : "JPEG",
+		"scaleParams": [[]],
+		"width" : "0",
+		"height" : "300",
+		"src" : "{{no_extension_inputfile}}.cub",
+		"dest": "{{derived_product}}.thumbnail.jpg"
+      	    },
+            "gdal_translate": {
+                "outputType": "Byte",
+                "format" : "JPEG",
+                "scaleParams": [[]],
+                "width" : "0",
+                "height" : "900",
+                "src" : "{{no_extension_inputfile}}.cub",
+                "dest": "{{derived_product}}.browse.jpg"
+            }
         }
     }
 }
