@@ -12,14 +12,6 @@
                 "cknadir": "yes",
                 "cksmithed": "yes"
             },
-            "isis.footprintinit": {
-                "from_": "{{no_extension_inputfile}}.cub",
-                "increaseprecision": "yes",
-                "inctype": "vertices",
-                "numvertices": "40",
-                "maxemission": "89.5",
-                "maxincidence": "120.0"
-            },
             "isis.caminfo": {
                 "from_": "{{no_extension_inputfile}}.cub",
                 "to": "{{cam_info_file}}",
@@ -32,10 +24,9 @@
                 "sinc": "100",
                 "polygon": "yes",
                 "inctype": "vertices",
-                "numvertices": "40",
                 "maxemission": "89.5",
-                "maxincidence": "120.0",
-                "spice": "no"
+                "maxincidence": "119.5",
+		"numvertices": "40"		
             }
         }
     },

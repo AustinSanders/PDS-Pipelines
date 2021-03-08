@@ -105,7 +105,7 @@ def get_single_band_cube(cube,out_cube,band_list,keyname):
 
     for band in band_list:
         if band in bands_in_cube:
-            isis.cubeatt(from_=cube + '+' + str(band), to=out_cube)
+            isis.cubeatt(from_=cube + '+' + str(bands_in_cube.index(band) + 1), to=out_cube)
             break
         else:
             continue
