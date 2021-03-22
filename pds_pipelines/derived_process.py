@@ -8,7 +8,8 @@ import errno
 from ast import literal_eval
 from json import JSONDecoder
 
-from sqlalchemy import exc, or_
+from sqlalchemy import or_
+from sqlalchemy.exc import SQLAlchemyError
 
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.redis_lock import RedisLock
@@ -67,7 +68,7 @@ def main():
     log_file_handle.setFormatter(formatter)
     logger.addHandler(log_file_handle)
     logger = logging.LoggerAdapter(logger, context)
-    
+
     RQ_derived = RedisQueue('Derived_ReadyQueue')
     RQ_error = RedisQueue(upc_error_queue)
     RQ_lock = RedisLock(lock_obj)
@@ -111,7 +112,7 @@ def main():
                     session.close()
                     #os.remove(infile)
                     logger.info(f'Derived Process Success: %s', inputfile)
-                except exc.SQLAlchemyError as e:
+                except SQLAlchemyError as e:
                     logger.error('Error: %s\nRequeueing (%s, %s)', e, inputfile, archive)
                     RQ_derived.QueueAdd((inputfile, archive))
 
