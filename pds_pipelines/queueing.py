@@ -357,6 +357,6 @@ class IngestQueueProcess(QueueProcess):
         None
         """
         if basename(element.lower()) == "voldesc.cat":
-            self.link_queue.QueueAdd(element)
+            self.link_queue.QueueAdd((element, self.archive))
         if not self.link_only:
             self.ready_queue.QueueAdd((element, self.archive))
