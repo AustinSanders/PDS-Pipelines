@@ -58,7 +58,7 @@ class PVLDecoderNoScientificNotation(pvl.decoder.PVLDecoder):
         based on *value*.  Raises a ValueError otherwise.
         """
         # Check for scientific notation
-        pattern = re.compile("^([0-9]+)e([0-9]+)$")
+        pattern = re.compile("^([0-9]+)[Ee]([0-9]+)$")
         if pattern.match(str(value)):
             return str(value)
 
