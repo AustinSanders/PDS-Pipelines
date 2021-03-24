@@ -24,10 +24,10 @@ def lower_keys(x):
     else:
         return x
 
-def load_pvl(input_pvl):
+def load_pvl(input_pvl, decoder=None):
     if isinstance(input_pvl, str):
         try:
-            label = pvl.load(input_pvl)
+            label = pvl.load(input_pvl, decoder=decoder)
         except:
             # Some labels are poorly formatted or include characters that
             # cannot be parsed with the PVL library.  This finds those
@@ -50,3 +50,19 @@ def load_pvl(input_pvl):
         label = lower_keys(input_pvl)
 
     return label
+
+class PVLDecoderNoScientificNotation(pvl.decoder.OmniDecoder):
+    @staticmethod
+    def decode_decimal(value: str):
+        """Returns a Python ``int`` or ``float`` as appropriate
+        based on *value*.  Raises a ValueError otherwise.
+        """
+        # Check for scientific notation
+        pattern = re.compile("^([0-9]+)[Ee]([0-9]+)$")
+        if pattern.match(str(value)):
+            return str(value)
+
+        try:
+            return int(value, base=10)
+        except ValueError:
+            return float(value)
