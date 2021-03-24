@@ -51,7 +51,7 @@ def load_pvl(input_pvl, decoder=None):
 
     return label
 
-class PVLDecoderNoScientificNotation(pvl.decoder.PVLDecoder):
+class PVLDecoderNoScientificNotation(pvl.decoder.OmniDecoder):
     @staticmethod
     def decode_decimal(value: str):
         """Returns a Python ``int`` or ``float`` as appropriate
