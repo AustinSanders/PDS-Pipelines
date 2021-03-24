@@ -64,21 +64,22 @@ class Archives(BaseMixin, Base):
     file = relationship('Files', backref='archives', uselist=False)
 
 
-try:
-    Session, engine = db_connect(pds_db)
-except:
-    Session = None
-    engine = None
+def create_pds_database():
+    try:
+        Session, engine = db_connect(pds_db)
+    except:
+        Session = None
+        engine = None
 
-if isinstance(Session, sqlalchemy.orm.sessionmaker):
+    if isinstance(Session, sqlalchemy.orm.sessionmaker):
 
-    # Create the database
-    if not database_exists(engine.url):
-        create_database(engine.url, template='template_postgis')  # This is a hardcode to the local template
+        # Create the database
+        if not database_exists(engine.url):
+            create_database(engine.url, template='template_postgis')  # This is a hardcode to the local template
 
-    Base.metadata.bind = engine
-    # If the table does not exist, this will create it. This is used in case a
-    # user has manually dropped a table so that the project is not wrecked.
-    Base.metadata.create_all(tables=[ProcessRuns.__table__,
-                                     Files.__table__,
-                                     Archives.__table__])
+        Base.metadata.bind = engine
+        # If the table does not exist, this will create it. This is used in case a
+        # user has manually dropped a table so that the project is not wrecked.
+        Base.metadata.create_all(tables=[ProcessRuns.__table__,
+                                         Files.__table__,
+                                         Archives.__table__])
