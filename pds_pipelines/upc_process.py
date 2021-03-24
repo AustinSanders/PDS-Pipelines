@@ -22,7 +22,7 @@ from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.recipe import Recipe
 from pds_pipelines.process import Process
-from pds_pipelines.pvl_utils import load_pvl, find_keyword
+from pds_pipelines.pvl_utils import load_pvl, find_keyword, PVLDecoderNoScientificNotation
 from pds_pipelines.db import db_connect
 from pds_pipelines.models import session_scope
 from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, DataFiles, JsonKeywords, BaseMixin
@@ -303,7 +303,7 @@ def create_json_keywords_atts(cam_info_pvl, upc_id, input_file, failing_command,
         A dict of attributes for a JsonKeywords record (UPC database table record)
     """
     try:
-        pvl_label = load_pvl(cam_info_pvl)
+        pvl_label = load_pvl(cam_info_pvl, decoder=PVLDecoderNoScientificNotation())
     except Exception as e:
         logger.debug(f"Failed to create upc keywords with: {e}")
         pvl_label = None
