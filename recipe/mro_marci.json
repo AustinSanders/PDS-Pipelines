@@ -3,123 +3,91 @@
     "src": "/pds_san/PDS_Archive/Mars_Reconnaissance_Orbiter/MARCI/",
     "upc": {
         "recipe": {
-            "marci2isis": {
-                "from_": "value",
-                "to": "value"
+            "isis.marci2isis": {
+                "from_": "{{inputfile}}",
+                "to": "{{no_extension_inputfile}}.cub",
+                "flip": "no"
             },
-            "spiceinit": {
-                "from_": "value",
+            "isis.spiceinit": {
+                "from_": "{{no_extension_inputfile}}.even.cub",
+                "cknadir": "yes",
                 "cksmithed": "yes"
             },
-            "marcical": {
-                "from_": "value",
-                "to": "value",
-                "iof": "no"
+            "isis.spiceinit": {
+                "from_": "{{no_extension_inputfile}}.odd.cub",
+                "cknadir": "yes",
+                "cksmithed": "yes"
             },
-            "handmos": {
-                "from_": "value",
-                "mosaic": "value"
+            "isis.handmos": {
+                "from_": "{{no_extension_inputfile}}.even.cub",
+                "mosaic": "{{no_extension_inputfile}}.odd.cub",
+                "priority": "beneath"
             },
-            "cubeatt": {
-                "from_": "value",
-                "to": "value"
+            "isis.cubeatt": {
+                "from_": "{{no_extension_inputfile}}.odd.cub",
+                "to": "{{no_extension_inputfile}}.cub"
             },
-            "footprintinit": {
-                "from_": "value",
-                "increaseprecision": "yes",
-                "linc": "700",
-                "sinc": "500"
-            },
-            "caminfo": {
-                "from_": "value",
-                "to": "value",
+	    "isis.footprintinit": {
+		"from_": "{{no_extension_inputfile}}.odd.cub",
+		"increaseprecision": "no",
+		"testxy": "no",
+                "inctype": "vertices",
+                "maxemission": "89.5",
+                "maxincidence": "119.5",
+		"numvertices": "40"		
+	    },
+            "isis.caminfo": {
+                "from_": "{{no_extension_inputfile}}.odd.cub",
+                "to": "{{cam_info_file}}",
                 "geometry": "yes",
                 "isislabel": "yes",
-                "originallabel": "no",
+                "originallabel": "yes",
                 "statistics": "yes",
                 "camstats": "yes",
-                "linc": "100",
-                "sinc": "100",
-                "uselabel": "yes"
-            }
-        }
-    },
-    "pow": {
-        "recipe": {
-            "marci2isis": {
-                "from_": "value",
-                "to": "value"
-            },
-            "spiceinit": {
-                "from_": "value",
-                "cksmithed": "yes"
+                "linc": "128",
+                "sinc": "128",
+		"uselabel": "yes"
             }
         }
     },
     "reduced": {
         "recipe": {
-            "marci2isis": {
-                "from_": "value",
-                "to": "value"
+            "isis.marci2isis": {
+                "from_": "{{inputfile}}",
+                "to": "{{no_extension_inputfile}}.cub",
+                "flip": "no"
             },
-            "spiceinit": {
-                "from_": "value",
-                "cksmithed": "yes"
+            "isis.handmos": {
+                "from_": "{{no_extension_inputfile}}.even.cub",
+                "mosaic": "{{no_extension_inputfile}}.odd.cub",
+                "priority": "beneath"
             },
-            "reduce": {
-                "from_": "value",
-                "to": "value",
-                "algorithm": "average",
-                "mode": "scale",
-                "sscale": "value",
-                "lscale": "value",
-                "validper": "1",
-                "vper_replace": "nearest"
+            "get_single_band_cube": {
+                "cube": "{{no_extension_inputfile}}.odd.cub",
+                "out_cube": "{{no_extension_inputfile}}.singleband.cub",
+                "band_list": [5,4,3,2,1],
+                "keyname": "OriginalBand"
             },
-            "isis2std": {
-                "red": "value",
-                "green": "value",
-                "blue": "value",
-                "to": "value",
-                "mode": "rgb",
-                "format": "tiff",
-                "minpercent": "0.0",
-                "maxpercent": "100.0"
-            }
-        },
-	"browse": {
-	    "minlines": "200",
-	    "minsamples": "200",
-	    "maxlines": "900",
-	    "maxsamples": "900"
-	},
-	"thumbnail": {
-	    "minlines": "50",
-	    "minsamples": "50",
-	    "maxlines": "300",
-	    "maxsamples": "300"
-	}
-    },
-    "projected": {
-        "recipe": {
-            "marci2isis": {
-                "from_": "value",
-                "to": "value"
-            },
-            "spiceinit": {
-                "from_": "value",
-                "cksmithed": "yes"
-            },
-            "isis2std": {
-                "red": "value",
-                "green": "value",
-                "blue": "value",
-                "to": "value",
-                "mode": "rgb",
-                "format": "tiff",
-                "minpercent": "0.0",
-                "maxpercent": "100.0"
+            "gdal_translate": {
+	    	"outputType": "Byte",
+	    	"format" : "JPEG",
+	    	"scaleParams": [[]],
+	    	"width" : "50",
+	    	"height" : "0",
+	    	"src" : "{{no_extension_inputfile}}.singleband.cub",
+	    	"dest": "{{derived_product}}.thumbnail.jpg"
+      	    },
+            "gdal_translate": {
+                "outputType": "Byte",
+                "format" : "JPEG",
+                "scaleParams": [[]],
+                "width" : "200",
+                "height" : "0",
+                "src" : "{{no_extension_inputfile}}.singleband.cub",
+                "dest": "{{derived_product}}.browse.jpg"
             }
         }
     }
 }
+
+
