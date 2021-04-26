@@ -4,7 +4,7 @@
     "upc": {
         "recipe": {
             "isis.mar102isis": {
-                "from_": "{{inputfile}}",
+                "from_": "{{no_extension_inputfile}}",
                 "to": "{{no_extension_inputfile}}.cub"
             },
             "isis.spiceinit": {
