@@ -47,11 +47,13 @@
     },
     "dawn_ceres": {
         "archiveid": "123",
-        "path": "/pds_san/PDS_Archive/Dawn/Ceres/"
+        "path": "/pds_san/PDS_Archive/Dawn/Ceres/",
+	"upc_reqs": ["DATA",".IMG"]
     },
     "dawn_vesta": {
         "archiveid": "119",
-        "path": "/pds_san/PDS_Archive/Dawn/Vesta/"
+        "path": "/pds_san/PDS_Archive/Dawn/Vesta/",
+	"upc_reqs": ["DATA",".IMG"]
     },
     "galileo_nims": {
         "archiveid": "24",
@@ -92,6 +94,14 @@
     "map_a_planet": {
         "archiveid": "41",
         "path": "/pds_san/PDS_Derived/Map_A_Planet/"
+    },
+    "mariner_69": {
+        "archiveid": "131",
+        "path": "/pds_san/PDS_Archive/Mariner_69/"
+    },
+    "mariner_9": {
+        "archiveid": "132",
+        "path": "/pds_san/PDS_Archive/Mariner_09/"
     },
     "mariner_10": {
         "archiveid": "46",
