@@ -65,6 +65,10 @@
         "bandbinQuery": "FilterName",
         "upc_reqs": [".lbl"]
     },
+    "junocam": {
+        "archiveid": "133",
+        "path": "/pds_san/PDS_Archive/Juno/JunoCam/"
+    },
     "kaguya_lism": {
         "archiveid": "92",
         "path": "/pds_san/PDS_Safed/Data/Kaguya/LISM/"
