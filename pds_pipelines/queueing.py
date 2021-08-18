@@ -271,8 +271,8 @@ class DIQueueProcess(QueueProcess):
         None
         """
         path = self.get_archive_att('path')
-        fname = path+element.filename
-        self.ready_queue.QueueAdd((element.filename, self.archive))
+        fname = path+element
+        self.ready_queue.QueueAdd((element, self.archive))
 
 
 class UPCQueueProcess(QueueProcess):
