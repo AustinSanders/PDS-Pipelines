@@ -65,19 +65,20 @@ def main(user_args):
         inputfile = item[0]
         archive = item[1]
         logger.debug("%s - %s", inputfile, archive)
+
+        subfile = inputfile.replace(PDSinfoDICT[archive]['path'], '')
         try:
             Qelement = session.query(Files).filter(
-                Files.filename == inputfile).one()
+                Files.filename == subfile).one()
         except Exception as e:
             logger.warning('Filename query failed for inputfile %s: %s', inputfile, str(e))
             continue
 
         archive_path = PDSinfoDICT[archive]['path']
 
-        cpfile = archive_path + Qelement.filename
-        if os.path.isfile(cpfile):
+        if os.path.isfile(inputfile):
             f_hash = hashlib.md5()
-            with open(cpfile, "rb") as f:
+            with open(inputfile, "rb") as f:
                 for chunk in iter(lambda: f.read(4096), b""):
                     f_hash.update(chunk)
             checksum = f_hash.hexdigest()
@@ -85,19 +86,19 @@ def main(user_args):
             Qelement.di_pass = checksum == Qelement.checksum
             if not Qelement.di_pass:
                 logger.warning('File %s checksum %s does not match the database entry checksum %s',
-                            cpfile, checksum, Qelement.checksum)
+                            inputfile, checksum, Qelement.checksum)
 
             Qelement.di_date = datetime.datetime.now(
                 pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
             session.flush()
             index = index + 1
-            if index > 50:
+            if index > 250:
                 session.commit()
                 logger.info('Session Commit for 50 Records: Success')
                 index = 0
         else:
             RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during DI processing')
-            logger.warning('File %s Not Found', cpfile)
+            logger.warning('File %s Not Found', inputfile)
     try:
         session.commit()
         logger.info("End Commit DI process to Database: Success")
