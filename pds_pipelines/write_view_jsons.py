@@ -21,13 +21,14 @@ queries = {
     #     JOIN datafiles d on (d.instrumentid = i.instrumentid)
     #     JOIN json_keywords j on (d.upcid = j.upcid)
     #     """,
-    'target_summary': """
-        SELECT d.targetid, count(d.*) as target_count
-        FROM datafiles d
-        GROUP by d.targetid
-        union
-        select s.targetid, count(s.*) from search_terms s where s.targetid is null group by s.targetid
-        order by targetid
+   'target_summary': """
+       SELECT s2.displayname, s2.system, s1.target_count
+       FROM
+       (SELECT d.targetid, count(d.*) as target_count from datafiles d
+       GROUP BY d.targetid) s1
+       JOIN
+       (SELECT t.targetid, t.displayname, t.system from targets t) s2
+       on s1.targetid = s2.targetid
     """
 }
 
