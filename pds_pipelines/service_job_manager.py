@@ -623,8 +623,10 @@ def generate_pow_recipe(xmlOBJ, pds_label, MAPfile):
 
         if xmlOBJ.getRangeType() is None:
             recipeOBJ['isis.cam2map']['defaultrange'] = 'MINIMIZE'
-        elif xmlOBJ.getRangeType() == 'smart' or xmlOBJ.getRangeType() == 'fill':
-            recipeOBJ['isis.cam2map']['defaultrange'] = 'CAMERA'
+        elif xmlOBJ.getRangeType() == 'smart':
+            recipeOBJ['isis.cam2map']['defaultrange'] = 'MAP'
+        elif xmlOBJ.getRangeType() == 'fill':
+            recipeOBJ['isis.cam2map']['defaultrange'] = 'MAP'
             recipeOBJ['isis.cam2map']['trim'] = 'YES'
 
     if 'isis.ctxevenodd' in recipe_processes:
@@ -963,16 +965,15 @@ def main(user_args):
         mapOBJ.LonDirection(xmlOBJ.getLonDirection())
     if xmlOBJ.getLonDomain() is not None:
         mapOBJ.LonDomain(int(xmlOBJ.getLonDomain()))
+    if xmlOBJ.getMinLat() is not None:
+        mapOBJ.MinLat(float(xmlOBJ.getMinLat()))
+    if xmlOBJ.getMaxLat() is not None:
+        mapOBJ.MaxLat(float(xmlOBJ.getMaxLat()))
+    if xmlOBJ.getMinLon() is not None:
+        mapOBJ.MinLon(float(xmlOBJ.getMinLon()))
+    if xmlOBJ.getMaxLon() is not None:
+        mapOBJ.MaxLon(float(xmlOBJ.getMaxLon()))
 
-    if xmlOBJ.getProcess() == 'MAP2':
-        if xmlOBJ.getMinLat() is not None:
-            mapOBJ.MinLat(float(xmlOBJ.getMinLat()))
-        if xmlOBJ.getMaxLat() is not None:
-            mapOBJ.MaxLat(float(xmlOBJ.getMaxLat()))
-        if xmlOBJ.getMinLon() is not None:
-            mapOBJ.MinLon(float(xmlOBJ.getMinLon()))
-        if xmlOBJ.getMaxLon() is not None:
-            mapOBJ.MaxLon(float(xmlOBJ.getMaxLon()))
 
     mapOBJ.Map2pvl()
 

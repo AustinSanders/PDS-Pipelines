@@ -94,7 +94,7 @@ def main(user_args):
             index = index + 1
             if index > 250:
                 session.commit()
-                logger.info('Session Commit for 50 Records: Success')
+                logger.info('Session Commit for 250 Records: Success')
                 index = 0
         else:
             RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during DI processing')
