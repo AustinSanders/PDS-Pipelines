@@ -12,14 +12,6 @@
                 "cknadir": "yes",
                 "cksmithed": "yes"
             },
-            "isis.footprintinit": {
-                "from_": "{{no_extension_inputfile}}.cub",
-                "increaseprecision": "yes",
-                "inctype": "vertices",
-                "numvertices": "40",
-                "maxemission": "89.5",
-                "maxincidence": "120.0"
-            },
             "isis.caminfo": {
                 "from_": "{{no_extension_inputfile}}.cub",
                 "to": "{{cam_info_file}}",
@@ -28,15 +20,13 @@
                 "originallabel": "yes",
                 "statistics": "yes",
                 "camstats": "yes",
-                "linc": "50",
-                "sinc": "50",
+                "linc": "128",
+                "sinc": "128",
                 "polygon": "yes",
                 "inctype": "vertices",
-                "increaseprecision": "yes",
-                "numvertices": "40",
                 "maxemission": "89.5",
-                "maxincidence": "120.0",
-                "spice": "no"
+                "maxincidence": "119.5",
+		"numvertices": "40"
             }
         }
     },
@@ -71,17 +61,12 @@
                 "from_": "{{inputfile}}",
                 "to": "{{no_extension_inputfile}}.cub"
             },
-            "isis.spiceinit": {
-                "from_": "{{no_extension_inputfile}}.cub",
-                "cknadir": "yes",
-                "cksmithed": "yes"
-            },
             "gdal_translate": {
 		"outputType": "Byte",
 		"format" : "JPEG",
 		"scaleParams": [[]],
-		"width" : "0",
-		"height" : "300",
+		"width" : "256",
+		"height" : "256",
 		"src" : "{{no_extension_inputfile}}.cub",
 		"dest": "{{derived_product}}.thumbnail.jpg"
       	    },
@@ -89,8 +74,8 @@
                 "outputType": "Byte",
                 "format" : "JPEG",
                 "scaleParams": [[]],
-                "width" : "0",
-                "height" : "900",
+                "width" : "1024",
+                "height" : "1024",
                 "src" : "{{no_extension_inputfile}}.cub",
                 "dest": "{{derived_product}}.browse.jpg"
             }
