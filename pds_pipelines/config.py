@@ -66,8 +66,6 @@ pds_log = os.path.join(root, 'logs/')
 slurm_log = os.path.join(root, 'output/')
 # The directory containing python source files
 cmd_dir = os.path.join(root, 'pds_pipelines/')
-# The JSON file containing keyword definitions
-keyword_def = os.path.join(root, 'recipe/Keyword_Definition.json')
 
 
 # The location to which temporary / working files will be written or copied
@@ -95,4 +93,4 @@ disk_usage_ratio = 0.4
 
 
 # Path to which JSON summary views are written
-summaries_path = '/home/kdlee/builds/PDS-Pipelines/json'
+summaries_path = '/pds_san/PDS_Derived/UPC/images/summaries/'

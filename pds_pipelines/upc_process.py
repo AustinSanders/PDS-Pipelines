@@ -26,7 +26,7 @@ from pds_pipelines.pvl_utils import load_pvl, find_keyword, PVLDecoderNoScientif
 from pds_pipelines.db import db_connect
 from pds_pipelines.models import session_scope
 from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, DataFiles, JsonKeywords, BaseMixin
-from pds_pipelines.config import pds_log, workarea, keyword_def, upc_db, lock_obj, upc_error_queue, web_base, archive_base, recipe_base
+from pds_pipelines.config import pds_log, workarea, upc_db, lock_obj, upc_error_queue, web_base, archive_base, recipe_base
 from pds_pipelines.utils import generate_processes, process, add_process_db, get_isis_id
 
 
@@ -179,7 +179,12 @@ def create_datafiles_atts(label, edr_source, input_cube):
         # If there exists an array of values, then the first value is the
         #  path to the IMG.
         original_image_ext = os.path.splitext(label['^IMAGE'][0])[-1]
-        img_file = os.path.splitext(edr_source)[0] + original_image_ext.lower()
+        # Sometimes the actual image file has a lowercase extension but the label lists it as uppercase
+        # If a file with the lowercase extension does *not* exist, assume file matches case in label
+        if os.path.exists(os.path.splitext(edr_source)[0] + original_image_ext.lower()):
+            img_file = os.path.splitext(edr_source)[0] + original_image_ext.lower()
+        else:
+            img_file = os.path.splitext(edr_source)[0] + original_image_ext
         d_label = edr_source
     except (TypeError, KeyError):
         img_file = edr_source
