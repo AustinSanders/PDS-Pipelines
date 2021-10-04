@@ -85,6 +85,7 @@ def main(user_args):
 
             Qelement.di_pass = checksum == Qelement.checksum
             if not Qelement.di_pass:
+                RQ_error.QueueAdd(f'File {inputfile} checksum {checksum} does not match the database entry checksum {Qelement.checksum}')
                 logger.warning('File %s checksum %s does not match the database entry checksum %s',
                             inputfile, checksum, Qelement.checksum)
 
