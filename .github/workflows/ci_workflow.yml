@@ -1,0 +1,75 @@
+name: Pull-Request-CI
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+
+jobs:
+  Build-and-Test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+       os: [ubuntu-latest]
+       python-version: ["3.7"]
+    services:
+      postgres:
+        image: mdillon/postgis:9.6-alpine
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+      redis:
+          image: 'redis:latest'
+          # command: redis-server --requirepass redispass
+          ports:
+              - '6379:6379'
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Cache conda
+        uses: actions/cache@v2
+        env:
+          # Increase this value to reset cache if etc/example-environment.yml has not changed
+          CACHE_NUMBER: 0
+        with:
+          path: ~/conda_pkgs_dir
+          key:
+            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
+            hashFiles('environment.yml') }}
+      - name: Setup ENV
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          miniconda-version: "latest"
+          mamba-version: "*"
+          use-mamba: true
+          channels: conda-forge
+          channel-priority: strict
+          activate-environment: pds_pipelines
+          environment-file: environment.yml
+          use-only-tar-bz2: true
+          python-version: ${{ matrix.python-version }}
+      - name: Check build environment
+        run: |
+          conda list
+      - name: Install Python Package
+        run: |
+          python setup.py install
+      - name: Test Python Package
+        run: |
+           pytest --cov-report=xml --cov pds_pipelines -vv
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          verbose: true
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.7'

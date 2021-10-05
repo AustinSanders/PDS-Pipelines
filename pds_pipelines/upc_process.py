@@ -20,7 +20,6 @@ from pysis.exceptions import ProcessError
 
 from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.redis_queue import RedisQueue
-from pds_pipelines.recipe import Recipe
 from pds_pipelines.process import Process
 from pds_pipelines.pvl_utils import load_pvl, find_keyword, PVLDecoderNoScientificNotation
 from pds_pipelines.db import db_connect
@@ -180,11 +179,13 @@ def create_datafiles_atts(label, edr_source, input_cube):
         #  path to the IMG.
         original_image_ext = os.path.splitext(label['^IMAGE'][0])[-1]
         # Sometimes the actual image file has a lowercase extension but the label lists it as uppercase
-        # If a file with the lowercase extension does *not* exist, assume file matches case in label
-        if os.path.exists(os.path.splitext(edr_source)[0] + original_image_ext.lower()):
-            img_file = os.path.splitext(edr_source)[0] + original_image_ext.lower()
-        else:
-            img_file = os.path.splitext(edr_source)[0] + original_image_ext
+        # If a file with the uppercase extension does *not* exist, assume image file is lower case
+        source_file_no_ext = os.path.splitext(edr_source)[0]
+        img_file = source_file_no_ext + original_image_ext
+
+        if not os.path.exists(img_file):
+            img_file = source_file_no_ext + original_image_ext.lower()
+
         d_label = edr_source
     except (TypeError, KeyError):
         img_file = edr_source

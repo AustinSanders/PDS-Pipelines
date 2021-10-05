@@ -1,0 +1,20 @@
+[run]
+source = pds_pipelines
+[report]
+omit =
+    pds_pipelines/dashboard.py
+    pds_pipelines/__init__.py
+    pds_pipelines/batch*
+    pds_pipelines/config.py
+    pds_pipelines/db_sync.py
+    pds_pipelines/init_db.py
+    pds_pipelines/jobconfig.py
+    pds_pipelines/recipe.py
+    bin/*
+    tests/*
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == __main__:
