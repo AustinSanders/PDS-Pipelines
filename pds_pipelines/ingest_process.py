@@ -66,17 +66,14 @@ def main(user_args):
     index = 1
 
     while int(RQ_main.QueueSize()) > 0 and RQ_lock.available(RQ_main.id_name):
-
-        item = literal_eval(RQ_main.QueueGet())
-        inputfile = item[0]
-        archive = item[1]
+        item = RQ_main.Qfile2Qwork(RQ_main.getQueueName(), RQ_work.getQueueName())
+        inputfile = literal_eval(item)[0]
+        archive = literal_eval(item)[1]
 
         if not os.path.isfile(inputfile):
             RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during ingest processing')
             logger.warning("%s is not a file\n", inputfile)
             continue
-
-        RQ_work.QueueAdd(inputfile)
 
         subfile = inputfile.replace(PDSinfoDICT[archive]['path'], '')
         # Calculate checksum in chunks of 4096
@@ -128,7 +125,7 @@ def main(user_args):
                 session.merge(ingest_entry)
                 session.flush()
 
-                RQ_work.QueueRemove(inputfile)
+                RQ_work.QueueRemove(item)
 
                 index = index + 1
 
@@ -136,7 +133,7 @@ def main(user_args):
                 logger.error("Error During File Insert %s : %s", str(subfile), str(e))
 
         elif not runflag and not override:
-            RQ_work.QueueRemove(inputfile)
+            RQ_work.QueueRemove(item)
             logger.warning("Not running ingest: file %s already present"
                         " in database and no override flag supplied", inputfile)
 

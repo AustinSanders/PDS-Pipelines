@@ -56,14 +56,15 @@ def main(user_args):
     RQ_error = RedisQueue(upc_error_queue)
     RQ_lock = RedisLock(lock_obj)
     RQ_lock.add({RQ.id_name: '1'})
+    RQ_work = RedisQueue('DI_WorkQueue')
     index = 0
 
     logger.info("DI Queue: %s", RQ.id_name)
 
     while int(RQ.QueueSize()) > 0 and RQ_lock.available(RQ.id_name):
-        item = literal_eval(RQ.QueueGet())
-        inputfile = item[0]
-        archive = item[1]
+        item = RQ.Qfile2Qwork(RQ.getQueueName(), RQ_work.getQueueName())
+        inputfile = literal_eval(item)[0]
+        archive = literal_eval(item)[1]
         logger.debug("%s - %s", inputfile, archive)
 
         subfile = inputfile.replace(PDSinfoDICT[archive]['path'], '')
@@ -92,7 +93,11 @@ def main(user_args):
             Qelement.di_date = datetime.datetime.now(
                 pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
             session.flush()
+
+            RQ_work.QueueRemove(item)
+
             index = index + 1
+
             if index > 250:
                 session.commit()
                 logger.info('Session Commit for 250 Records: Success')
@@ -111,6 +116,12 @@ def main(user_args):
     # Close connection to database
     session.close()
     engine.dispose()
+
+    if RQ.QueueSize() == 0 and RQ_work.QueueSize() == 0:
+        logger.info("Process Complete All Queues Empty")
+    elif RQ.QueueSize() == 0 and RQ_work.QueueSize() != 0:
+        logger.warning("Process Done Work Queue NOT Empty Contains %s Files", str(
+            RQ_work.QueueSize()))
 
 
 if __name__ == "__main__":
