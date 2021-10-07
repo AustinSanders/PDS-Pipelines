@@ -1,0 +1,24 @@
+### PDS-Pipelines Cronjobs ###
+# Replace "/example/installdir/" with path to where PDS-Pipelines is installed
+# Examples assume that PDS-Pipelines runs under a conda environment named "PDS-Services"
+
+# It may be necessary to set BASH_ENV in order to ensure access to `conda activate`
+# Replace "example_user" with appropriate user name
+SHELL=/bin/bash
+BASH_ENV=/home/example_user/.bashrc
+
+# Check clusterjobs database for new POW or MAP2 jobs and submit them for processing
+*/1 * * * * conda activate PDS-Services; python /example/installdir/PDS-Pipelines/pds_pipelines/service_job_manager.py
+# Check for POW or MAP2 jobs that have completed processing and need to be zipped up/copied to download area
+*/2 * * * * conda activate PDS-Services; python /example/installdir/PDS-Pipelines/pds_pipelines/final_job_manager.py
+
+# Notify users that their POW or MAP2 job has completed
+*/15 * * * * conda activate PDS-Services; python /example/installdir/PDS-Pipelines/pds_pipelines/notify_finished.py
+# Notify users that their POW/MAP2 results will be deleted in x days
+0 6 * * * conda activate PDS-Services; python /example/installdir/PDS-Pipelines/pds_pipelines/notify_upcoming_purge.py
+# Delete POW/MAP2 output that is > 14 days old according to the clusterjobs database
+0 7 * * * conda activate PDS-Services; python /example/installdir/PDS-Pipelines/pds_pipelines/rm_expired_products.py
+
+# Write summary views of UPC database as JSON
+# Replace "/example/upc/summaries/" with path to where summary JSON should be written
+0 2 * * * conda activate PDS-Services; python /example/installdir/PDS-Pipelines/pds_pipelines/write_view_jsons.py --path /example/upc/summaries/
