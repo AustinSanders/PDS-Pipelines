@@ -458,53 +458,72 @@ def main(user_args):
     # If the queue isn't registered, add it and set it to "running"
     RQ_lock.add({RQ_main.id_name: '1'})
 
-    no_extension_inputfile = os.path.splitext(inputfile)[0]
-    upc_session = upc_session_maker()
-    isis_id = get_isis_id(no_extension_inputfile)
-    datafile = upc_session.query(DataFiles).filter(DataFiles.isisid.like(f"%{isis_id}%")).first()
-    upc_id = datafile.upcid
-
-    # UPC process update
-    if update_type.lower() = 'upc':
-        cam_info_file = no_extension_inputfile + '_caminfo.pvl'
-        footprint_file = no_extension_inputfile + '_footprint.json'
-        pds_label = pvl.load(inputfile)
-        # Build URL for edr_source based on archive path from PDSinfo.json
-        PDSinfoDICT = json.load(open(pds_info, 'r'))
-        archive_path = PDSinfoDICT[archive]['path']
-        orig_file = inputfile.replace(workarea, archive_path)
-        edr_source = orig_file.replace(archive_base, web_base)
-        upc_id = create_datafiles_record(pds_label, edr_source, no_extension_inputfile + '.cub', upc_session_maker)
-        create_search_terms_record(pds_label, cam_info_file, upc_id, no_extension_inputfile + '.cub', footprint_file, search_term_mapping, upc_session_maker)
-        create_json_keywords_record(cam_info_file, upc_id, inputfile, failing_command, upc_session_maker, logger)
-    # Derived process update
-    elif update_type.lower() = 'derived':
-        temppath = os.path.dirname(inputfile)
-        final_path = temppath.replace(workarea, derived_base)
-        derived_product = os.path.join(final_path, os.path.splitext(os.path.basename(inputfile))[0])
-        add_url(derived_product, upc_id, upc_session_maker)
-        upc_session.close()
-        logger.info(f'Derived Process Success: %s', inputfile)
-        add_process_db(pds_session_maker, fid, 't')
-
     try:
-        pds_session = pds_session_maker()
-        pds_session.flush()
-    except:
-        logger.debug("Unable to flush database connection")
+        session = upc_session_maker()
+        session.close()
+    except TypeError as e:
+        logger.error("Unable to create a database session/connection to the upc database: %s", e)
+        raise e
 
-    add_process_db(pds_session, fid, True)
-    pds_session.close()
+    # if there are items in the redis queue
+    if int(RQ_main.QueueSize()) > 0 and RQ_lock.available(RQ_main.id_name):
+        # get a file from the queue
+        item = literal_eval(RQ_main.QueueGet())
+        inputfile = item[0]
+        archive = item[1]
+
+        no_extension_inputfile = os.path.splitext(inputfile)[0]
+        upc_session = upc_session_maker()
+        isis_id = get_isis_id(no_extension_inputfile)
+        datafile = upc_session.query(DataFiles).filter(DataFiles.isisid.like(f"%{isis_id}%")).first()
+        upc_id = datafile.upcid
+
+        if not os.path.isfile(inputfile):
+            RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during UPC processing')
+            logger.debug("%s is not a file\n", inputfile)
+            exit()
+
+        # UPC process update
+        if update_type.lower() = 'upc':
+            cam_info_file = no_extension_inputfile + '_caminfo.pvl'
+            footprint_file = no_extension_inputfile + '_footprint.json'
+            pds_label = pvl.load(inputfile)
+            # Build URL for edr_source based on archive path from PDSinfo.json
+            PDSinfoDICT = json.load(open(pds_info, 'r'))
+            archive_path = PDSinfoDICT[archive]['path']
+            orig_file = inputfile.replace(workarea, archive_path)
+            edr_source = orig_file.replace(archive_base, web_base)
+            #upc_id = create_datafiles_record(pds_label, edr_source, no_extension_inputfile + '.cub', upc_session_maker)
+            #create_search_terms_record(pds_label, cam_info_file, upc_id, no_extension_inputfile + '.cub', footprint_file, search_term_mapping, upc_session_maker)
+            #create_json_keywords_record(cam_info_file, upc_id, inputfile, failing_command, upc_session_maker, logger)
+        # Derived process update
+        elif update_type.lower() = 'derived':
+            temppath = os.path.dirname(inputfile)
+            final_path = temppath.replace(workarea, derived_base)
+            derived_product = os.path.join(final_path, os.path.splitext(os.path.basename(inputfile))[0])
+            #add_url(derived_product, upc_id, upc_session_maker)
+            upc_session.close()
+            logger.info(f'Derived Process Success: %s', inputfile)
+            #add_process_db(pds_session_maker, fid, 't')
+
+        try:
+            pds_session = pds_session_maker()
+            pds_session.flush()
+        except:
+            logger.debug("Unable to flush database connection")
+
+        add_process_db(pds_session, fid, True)
+        pds_session.close()
 
 
-    if not persist:
-        # Remove all files file from the workarea except for the copied
-        # source file
-        file_prefix = os.path.splitext(inputfile)[0]
-        workarea_files = glob(file_prefix + '*')
-        os.remove(os.path.join(workarea, 'print.prt'))
-        for file in workarea_files:
-            os.remove(file)
+        if not persist:
+            # Remove all files file from the workarea except for the copied
+            # source file
+            file_prefix = os.path.splitext(inputfile)[0]
+            workarea_files = glob(file_prefix + '*')
+            os.remove(os.path.join(workarea, 'print.prt'))
+            for file in workarea_files:
+                os.remove(file)
 
 
 if __name__ == '__main__':
