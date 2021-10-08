@@ -1,68 +1,57 @@
 #!/usr/bin/env python
-import re
 import os
 import sys
 import datetime
 import logging
-import pds_pipelines
 from ast import literal_eval
-import pytz
 import argparse
-import jinja2
 from glob import glob
-
 import json
-from sqlalchemy import and_
+
 from osgeo import ogr
+import pytz
+import pvl
+from sqlalchemy import or_
+from sqlalchemy.exc import SQLAlchemyError
+
+from pysis import isis
+from pysis.exceptions import ProcessError
 
 from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.redis_queue import RedisQueue
-from pds_pipelines.upc_keywords import UPCkeywords
+from pds_pipelines.pvl_utils import load_pvl, find_keyword, PVLDecoderNoScientificNotation
 from pds_pipelines.db import db_connect
-from pds_pipelines.models import pds_models
-from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, DataFiles, JsonKeywords, BaseMixin
-from pds_pipelines.config import pds_log, pds_info, workarea, keyword_def, pds_db, upc_db, lock_obj, upc_error_queue, web_base, archive_base, recipe_base
-from pds_pipelines.utils import generate_processes, process, add_process_db, get_isis_id
+from pds_pipelines.models import session_scope
+from pds_pipelines.models.upc_models import SearchTerms, Targets, Instruments, DataFiles, JsonKeywords
+from pds_pipelines.config import (pds_log, workarea, upc_db, lock_obj, upc_error_queue,
+                                  web_base, recipe_base, derived_base, derived_url)
+from pds_pipelines.utils import get_isis_id, reprocess
+
+@reprocess
+def add_url(input_file, upc_id, session_maker):
+    outputfile = input_file.replace(derived_base, derived_url)
+    thumb = outputfile + '.thumbnail.jpg'
+    browse = outputfile + '.browse.jpg'
+    with session_scope(session_maker) as session:
+        q_record = session.query(JsonKeywords).filter(JsonKeywords.upcid == upc_id)
+        params = {}
+        old_json = q_record.first().jsonkeywords
+        old_json['browse'] = browse
+        old_json['thumbnail'] = thumb
+        params['jsonkeywords'] = old_json
+
+        q_record.update(params, False)
 
 
-def get_target_id(label, session_maker):
-    """
-    Fetches the target_id from the database. If a target_id is not found try
-    to extract it from a given PDS label and add the target to the database
+def read_json_footprint(footprint_file):
+    with open(footprint_file, 'r') as fp:
+        geo_json = json.load(fp)
+        geo_str = json.dumps(geo_json['features'][0]['geometry'])
 
-    Parameters
-    ----------
-    pds_label : Object
-        Any type of pds object that can be indexed
+    footprint = ogr.CreateGeometryFromJson(geo_str)
+    return footprint.ExportToWkt()
 
-    session_maker : sessionmaker
-        sqlalchemy sessionmaker object for connection to and querying the
-        database
 
-    Returns
-    -------
-    target_id : int
-        The defined target_id from the database. If this is 0 a target name
-        could not be pulled from the label
-    """
-    try:
-        target_name = label['TARGET_NAME']
-    except KeyError as e:
-        return None
-
-    session = session_maker()
-    target_qobj = session.query(Targets).filter(
-        Targets.targetname == target_name.upper()).first()
-
-    # If no matching table is found, create the entry in the database and
-    #  access the new instance.
-    if target_qobj is None:
-        target_qobj = Targets.create(session, targetname=target_name,
-                                              displayname=target_name.title(),
-                                              system=target_name)
-    target_id = target_qobj.targetid
-    session.close()
-    return target_id
 
 
 def getPDSid(infile):
@@ -101,112 +90,63 @@ def getPDSid(infile):
     return prod_id
 
 
-def add_url(input_file, upc_id, session_maker):
-    session = session_maker()
-    outputfile = input_file.replace(derived_base, derived_url)
-    thumb = outputfile + '.thumbnail.jpg'
-    browse = outputfile + '.browse.jpg'
-    q_record = session.query(JsonKeywords).filter(JsonKeywords.upcid==upc_id)
-    params = {}
-    old_json = q_record.first().jsonkeywords
-    old_json['browse'] = thumb
-    old_json['thumbnail'] = browse
-    params['jsonkeywords'] = old_json
-
-    q_record.update(params, False)
-    session.commit()
-    session.close()
-
-
-def get_instrument_id(label, session_maker):
+def create_datafiles_atts(label, edr_source, input_cube):
     """
-    Fetches the instrument_id from the database. If a instrument_id is not
-    found, try to extract it from a given PDS label and add the instrument to
-    the database
+    Creates a DataFiles record attribute dictionary through values from a given
+    label
 
     Parameters
     ----------
     label : Object
         Any type of pds object that can be indexed
 
-    session_maker : sessionmaker
-        sqlalchemy sessionmaker object for connection to and querying the
-        database
+    edr_source : str
+        Path to the original label source
+
+    input_cube : str
+        Path to the cube generated from the data source
 
     Returns
     -------
-    instrument_id : int
-        The defined instrument_id from the database. If this is 0 a instrument
-        name could not be pulled from the label
+    datafile_attributes : dict
+        A dict of attributes for a Datafiles record (UPC database table record)
     """
-    # Although PDS3 the INSTRUMENT_NAME keyword, it is missing from some older datasets.
-    #  PDS3 defines several (often interchangeable) keywords to
-    #  hold instrument name, so try each of them in preferred order and grab the first match.
-    # If no match is found, leave as None
-    for inst in ['INSTRUMENT_NAME', 'INSTRUMENT_ID']:
-        try:
-            instrument_name = label[inst]
-            break
-        except KeyError as e:
-            instrument_name = None
+    try:
+        # If there exists an array of values, then the first value is the
+        #  path to the IMG.
+        original_image_ext = os.path.splitext(label['^IMAGE'][0])[-1]
+        # Sometimes the actual image file has a lowercase extension but the label lists it as uppercase
+        # If a file with the uppercase extension does *not* exist, assume image file is lower case
+        source_file_no_ext = os.path.splitext(edr_source)[0]
+        img_file = source_file_no_ext + original_image_ext
 
-    if not instrument_name:
-        return None
+        if not os.path.exists(img_file):
+            img_file = source_file_no_ext + original_image_ext.lower()
 
-    # PDS3 does not require a keyword to hold spacecraft name,
-    #  and PDS3 defines several (often interchangeable) keywords to
-    #  hold spacecraft name, so try each of them in preferred order and grab the first match.
-    # If no match is found, leave as None
-    for sc in ['SPACECRAFT_NAME','INSTRUMENT_HOST_NAME','MISSION_NAME','SPACECRAFT_ID','INSTRUMENT_HOST_ID']:
-        try:
-            spacecraft_name = label[sc]
-            break
-        except KeyError:
-            spacecraft_name = None
+        d_label = edr_source
+    except (TypeError, KeyError):
+        img_file = edr_source
+        d_label = None
 
-    if not spacecraft_name:
-        return None
+    datafile_attributes = dict.fromkeys(DataFiles.__table__.columns.keys(), None)
 
-    session = session_maker()
-    # Get the instrument from the instruments table.
-    instrument_qobj = session.query(Instruments).filter(
-        Instruments.instrument == instrument_name,
-        Instruments.spacecraft == spacecraft_name).first()
+    datafile_attributes['source'] = img_file
+    datafile_attributes['detached_label'] = d_label
 
-    # If no matching instrument is found, create the entry in the database
-    #  and access the new instance.
-    if instrument_qobj is None:
-        instrument_qobj = Instruments.create(session, instrument=instrument_name,
-                                                      spacecraft=spacecraft_name)
-    instrument_id = instrument_qobj.instrumentid
-    session.close()
-    return instrument_id
+    # Attempt to get the ISIS serial from the cube
+    datafile_attributes['isisid'] = get_isis_id(input_cube)
 
+    # Attempt to get the product id from the original label
+    product_id = getPDSid(input_cube)
 
-def get_keyword_values(keywords):
-    for k,v in keywords.items():
-        try:
-            keywords[k] = v.value
-        except AttributeError:
-            # Intentionally left blank.  If v doesn't have a .value, then it
-            #  doesn't need to be converted.
-            pass
-    return keywords
+    datafile_attributes['productid'] = product_id
 
+    return datafile_attributes
 
-def read_json_footprint(footprint_file):
-    with open(footprint_file, 'r') as fp:
-        geo_json = json.load(fp)
-        geo_str = json.dumps(geo_json['features'][0]['geometry'])
-
-    footprint = ogr.CreateGeometryFromJson(geo_str)
-    return footprint.ExportToWkt()
-
-
-def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, footprint_file, search_term_mapping={}, session_maker=None):
+def create_search_terms_atts(cam_info_pvl, upc_id, input_cube, footprint_file='', search_term_mapping={}):
     """
-    Creates a new SearchTerms record through values from a given caminfo file
-    and adds the new record to the database
+    Creates a SearchTerms record attribute dictionary through values from a given
+    caminfo file
 
     Parameters
     ----------
@@ -219,31 +159,36 @@ def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, footprin
     input_cube : str
         Path to the cube generated from the data source
 
-    session_maker : sessionmaker
-        sqlalchemy sessionmaker object for connection to and querying the
-        database
+    footprint_file : str
+        Path to the file containing the image footprint polygon
 
+    search_term_mapping : dict
+        Dict of keys mapping search term record attributes to values on the expected label
+
+    Returns
+    -------
+    search_term_attributes : dict
+        A dict of attributes for a SearchTerms record (UPC database table record)
     """
     search_term_attributes = dict.fromkeys(SearchTerms.__table__.columns.keys(), None)
     search_term_attributes['err_flag'] = True
 
     if not search_term_mapping:
         search_term_mapping = dict(zip(search_term_attributes.keys(), search_term_attributes.keys()))
+        search_term_mapping['isisfootprint'] = 'gisfootprint'
 
     try:
-        keywordsOBJ = UPCkeywords(cam_info_pvl)
-    except:
-        keywordsOBJ = None
+        pvl_label = load_pvl(cam_info_pvl)
+    except Exception:
+        pvl_label = None
 
-    if keywordsOBJ:
+    if pvl_label:
         # For each key in the dictionary, get the related keyword from the keywords object
         for key in search_term_attributes.keys():
             try:
-                search_term_attributes[key] = keywordsOBJ.getKeyword(search_term_mapping[key])
+                search_term_attributes[key] = find_keyword(pvl_label, search_term_mapping[key])
             except KeyError:
                 search_term_attributes[key] = None
-
-        search_term_attributes['isisfootprint'] = keywordsOBJ.getKeyword('GisFootprint')
 
         if os.path.exists(footprint_file):
             search_term_attributes['isisfootprint'] = read_json_footprint(footprint_file)
@@ -259,26 +204,21 @@ def create_search_terms_record(label, cam_info_pvl, upc_id, input_cube, footprin
     search_term_attributes['processdate'] = datetime.datetime.now(pytz.utc).strftime(
         "%Y-%m-%d %H:%M:%S")
 
-    search_term_attributes['targetid'] = get_target_id(label, session_maker)
-    search_term_attributes['instrumentid'] = get_instrument_id(label, session_maker)
-
-    session = session_maker()
-    search_terms_qobj = session.query(SearchTerms).filter(
-        SearchTerms.upcid == upc_id).first()
-
     search_term_attributes = get_keyword_values(search_term_attributes)
 
-    if search_terms_qobj is None:
-        SearchTerms.create(session, **search_term_attributes)
-    else:
-        search_term_attributes.pop('upcid')
-        session.query(SearchTerms).\
-            filter(SearchTerms.upcid == upc_id).\
-            update(search_term_attributes)
-        session.commit()
-    session.close()
+    return search_term_attributes
 
-def create_json_keywords_record(cam_info_pvl, upc_id, input_file, failing_command, session_maker, logger):
+def get_keyword_values(keywords):
+    for k, v in keywords.items():
+        try:
+            keywords[k] = v.value
+        except AttributeError:
+            # Intentionally left blank.  If v doesn't have a .value, then it
+            #  doesn't need to be converted.
+            pass
+    return keywords
+
+def create_json_keywords_atts(cam_info_pvl, upc_id, input_file, failing_command, logger):
     """
     Creates a new SearchTerms record through values from a given caminfo file
     and adds the new record to the database
@@ -297,26 +237,30 @@ def create_json_keywords_record(cam_info_pvl, upc_id, input_file, failing_comman
     failing_command : str
         String presentation of the failing processing command
 
-    session_maker : sessionmaker
-        sqlalchemy sessionmaker object for connection to and querying the
-        database
+    logger : Object
+        Python logger object from the logging library
 
+    Returns
+    -------
+    json_keywords_attributes : dict
+        A dict of attributes for a JsonKeywords record (UPC database table record)
     """
     try:
-        keywordsOBJ = UPCkeywords(cam_info_pvl)
+        pvl_label = load_pvl(cam_info_pvl, decoder=PVLDecoderNoScientificNotation())
     except Exception as e:
         logger.debug(f"Failed to create upc keywords with: {e}")
-        keywordsOBJ = None
+        pvl_label = None
 
     json_keywords_attributes = dict.fromkeys(JsonKeywords.__table__.columns.keys(), None)
 
     json_keywords_attributes['upcid'] = upc_id
 
-    try:
-        json_keywords = json.dumps(keywordsOBJ.label, indent=4, sort_keys=True, default=str)
+    # If the process was unable to finish the pvl label will not be populated
+    # but json can read None as "valid" json so just "error out"
+    if pvl_label:
+        json_keywords = json.dumps(pvl_label, indent=4, sort_keys=True, default=str)
         json_keywords = json.loads(json_keywords)
-    except Exception as e:
-        logger.debug(f"Failed to load json keywords with: {e}")
+    else:
         err_dict = {}
         err_dict['processdate'] = datetime.datetime.now(pytz.utc).strftime(
             "%Y-%m-%d %H:%M:%S")
@@ -328,91 +272,89 @@ def create_json_keywords_record(cam_info_pvl, upc_id, input_file, failing_comman
 
     json_keywords_attributes['jsonkeywords'] = json_keywords
 
-    session = session_maker()
-    json_keywords_qobj = session.query(JsonKeywords).filter(
-        JsonKeywords.upcid == upc_id).first()
-
-    if json_keywords_qobj is None:
-        JsonKeywords.create(session, **json_keywords_attributes)
-    else:
-        json_keywords_attributes.pop('upcid')
-        session.query(JsonKeywords).\
-            filter(JsonKeywords.upcid == upc_id).\
-            update(json_keywords_attributes)
-        session.commit()
-    session.close()
+    return json_keywords_attributes
 
 
-def create_datafiles_record(label, edr_source, input_cube, session_maker):
+def get_target_name(label):
     """
-    Creates a new DataFiles record through values from a given label and adds
-    the new record to the database
+    Try to extract the target_name from a given PDS label.
 
     Parameters
     ----------
     label : Object
         Any type of pds object that can be indexed
 
-    edr_source : str
-        Path to the original label source
+    Returns
+    -------
+    target_name : str
+        The defined target_name from the label. If this is None a target name
+        could not be pulled from the label
+    """
+    try:
+        target_name = label['TARGET_NAME']
+    except KeyError:
+        return None
 
-    input_cube : str
-        Path to the cube generated from the data source
+    return target_name
 
-    session_maker : sessionmaker
-        sqlalchemy sessionmaker object for connection to and querying the
-        database
+
+def get_instrument_name(label):
+    """
+    Try to extract the instrument_name from a given PDS label.
+
+    Parameters
+    ----------
+    label : Object
+        Any type of pds object that can be indexed
 
     Returns
     -------
-    upc_id : int
-        The defined upc_id from the database
+    instrument_name : str
+        The defined instrument_name from the label. If this is None an instrument name
+        could not be pulled from the label
     """
-    try:
-        # If there exists an array of values, then the first value is the
-        #  path to the IMG.
-        original_image_ext = os.path.splitext(label['^IMAGE'][0])[-1]
-        img_file = os.path.splitext(edr_source)[0] + original_image_ext.lower()
-        d_label = edr_source
-    except (TypeError, KeyError):
-        img_file = edr_source
-        d_label = None
+    # Although PDS3 the INSTRUMENT_NAME keyword, it is missing from some older datasets.
+    #  PDS3 defines several (often interchangeable) keywords to
+    #  hold instrument name, so try each of them in preferred order and grab the first match.
+    # If no match is found, leave as None
+    for inst in ['INSTRUMENT_NAME', 'INSTRUMENT_ID']:
+        try:
+            instrument_name = label[inst]
+            break
+        except KeyError:
+            instrument_name = None
 
-    datafile_attributes = dict.fromkeys(DataFiles.__table__.columns.keys(), None)
+    return instrument_name
 
-    datafile_attributes['source'] = img_file
-    datafile_attributes['detached_label'] = d_label
 
-    # Attempt to get the ISIS serial from the cube
-    datafile_attributes['isisid'] = get_isis_id(input_cube)
+def get_spacecraft_name(label):
+    """
+    Try to extract the spacecraft_name from a given PDS label.
 
-    # Attempt to get the product id from the original label
-    product_id = getPDSid(input_cube)
+    Parameters
+    ----------
+    label : Object
+        Any type of pds object that can be indexed
 
-    datafile_attributes['productid'] = product_id
-    datafile_attributes['instrumentid'] = get_instrument_id(label, session_maker)
-    datafile_attributes['targetid'] = get_target_id(label, session_maker)
+    Returns
+    -------
+    spacecraft_name : str
+        The defined spacecraft_name from the label. If this is None an spacecraft name
+        could not be pulled from the label
+    """
+    # PDS3 does not require a keyword to hold spacecraft name,
+    #  and PDS3 defines several (often interchangeable) keywords to
+    #  hold spacecraft name, so try each of them in preferred order and grab the first match.
+    # If no match is found, leave as None
 
-    session = session_maker()
-    datafile_qobj = session.query(DataFiles).filter(
-        DataFiles.source == img_file).first()
+    for sc in ['SPACECRAFT_NAME', 'INSTRUMENT_HOST_NAME', 'MISSION_NAME', 'SPACECRAFT_ID', 'INSTRUMENT_HOST_ID']:
+        try:
+            spacecraft_name = label[sc]
+            break
+        except KeyError:
+            spacecraft_name = None
 
-    if datafile_qobj is None:
-        DataFiles.create(session, **datafile_attributes)
-    else:
-        datafile_attributes.pop('upcid')
-        session.query(DataFiles).\
-            filter(DataFiles.source == img_file).\
-            update(datafile_attributes)
-        session.commit()
-    session.close()
-
-    session = session_maker()
-    upc_id = session.query(DataFiles).filter(
-        DataFiles.source == img_file).first().upcid
-    session.close()
-
-    return upc_id
+    return spacecraft_name
 
 
 def parse_args():
@@ -426,9 +368,12 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+
 def main(user_args):
     upc_session_maker, upc_engine = db_connect(upc_db)
-    pds_session_maker, pds_engine = db_connect(pds_db)
+
+    persist = user_args.persist
+    log_level = user_args.log_level
 
     try:
         slurm_job_id = os.environ['SLURM_ARRAY_JOB_ID']
@@ -457,74 +402,134 @@ def main(user_args):
     RQ_lock = RedisLock(lock_obj)
     # If the queue isn't registered, add it and set it to "running"
     RQ_lock.add({RQ_main.id_name: '1'})
-
-    try:
-        session = upc_session_maker()
-        session.close()
-    except TypeError as e:
-        logger.error("Unable to create a database session/connection to the upc database: %s", e)
-        raise e
-
     # if there are items in the redis queue
     if int(RQ_main.QueueSize()) > 0 and RQ_lock.available(RQ_main.id_name):
         # get a file from the queue
         item = literal_eval(RQ_main.QueueGet())
         inputfile = item[0]
         archive = item[1]
-
-        no_extension_inputfile = os.path.splitext(inputfile)[0]
-        upc_session = upc_session_maker()
-        isis_id = get_isis_id(no_extension_inputfile)
-        datafile = upc_session.query(DataFiles).filter(DataFiles.isisid.like(f"%{isis_id}%")).first()
-        upc_id = datafile.upcid
+        failing_command = item[2]
+        update_type = item[3]
 
         if not os.path.isfile(inputfile):
-            RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during UPC processing')
+            RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during UPC update')
             logger.debug("%s is not a file\n", inputfile)
             exit()
 
-        # UPC process update
-        if update_type.lower() = 'upc':
-            cam_info_file = no_extension_inputfile + '_caminfo.pvl'
-            footprint_file = no_extension_inputfile + '_footprint.json'
-            pds_label = pvl.load(inputfile)
-            # Build URL for edr_source based on archive path from PDSinfo.json
-            PDSinfoDICT = json.load(open(pds_info, 'r'))
-            archive_path = PDSinfoDICT[archive]['path']
-            orig_file = inputfile.replace(workarea, archive_path)
-            edr_source = orig_file.replace(archive_base, web_base)
-            #upc_id = create_datafiles_record(pds_label, edr_source, no_extension_inputfile + '.cub', upc_session_maker)
-            #create_search_terms_record(pds_label, cam_info_file, upc_id, no_extension_inputfile + '.cub', footprint_file, search_term_mapping, upc_session_maker)
-            #create_json_keywords_record(cam_info_file, upc_id, inputfile, failing_command, upc_session_maker, logger)
-        # Derived process update
-        elif update_type.lower() = 'derived':
-            temppath = os.path.dirname(inputfile)
-            final_path = temppath.replace(workarea, derived_base)
-            derived_product = os.path.join(final_path, os.path.splitext(os.path.basename(inputfile))[0])
-            #add_url(derived_product, upc_id, upc_session_maker)
-            upc_session.close()
-            logger.info(f'Derived Process Success: %s', inputfile)
-            #add_process_db(pds_session_maker, fid, 't')
+        # Build URL for edr_source
+        edr_source = inputfile.replace(workarea, web_base)
+
+        # Update the logger context to include inputfile
+        context['inputfile'] = inputfile
+
 
         try:
-            pds_session = pds_session_maker()
-            pds_session.flush()
-        except:
-            logger.debug("Unable to flush database connection")
+            session = upc_session_maker()
+            session.close()
+        except TypeError as e:
+            logger.error("Unable to create a database session/connection to the upc database: %s", e)
+            raise e
 
-        add_process_db(pds_session, fid, True)
-        pds_session.close()
+        try:
+            if update_type.lower() == 'upc':
+
+                recipe_file = recipe_base + "/" + archive + '.json'
+                no_extension_inputfile = os.path.splitext(inputfile)[0]
+                cam_info_file = no_extension_inputfile + '_caminfo.pvl'
+                footprint_file = no_extension_inputfile + '_footprint.json'
+                catlab_output = no_extension_inputfile + '_catlab.pvl'
+
+                with open(recipe_file) as fp:
+                    upc_json = json.load(fp)['upc']
+                    # Attempt to get the optional search_term_mapping for the upc
+                    # process
+                    try:
+                        search_term_mapping = upc_json['search_term_mapping']
+                    except KeyError:
+                        search_term_mapping = {}
+
+                if os.path.exists(catlab_output):
+                    pds_label = pvl.load(catlab_output)
+                else:
+                    pds_label = pvl.load(inputfile)
+
+                instrument_name = get_instrument_name(pds_label)
+                spacecraft_name = get_spacecraft_name(pds_label)
+                target_name = get_target_name(pds_label)
+                with session_scope(upc_session_maker) as session:
+                    target_qobj = Targets.create(session, targetname=target_name,
+                                                 displayname=target_name.title(),
+                                                 system=target_name)
+                    target_id = target_qobj.targetid
 
 
-        if not persist:
-            # Remove all files file from the workarea except for the copied
-            # source file
-            file_prefix = os.path.splitext(inputfile)[0]
-            workarea_files = glob(file_prefix + '*')
-            os.remove(os.path.join(workarea, 'print.prt'))
-            for file in workarea_files:
-                os.remove(file)
 
+                # Some datasets with attached PDS labels cause PVL to hang,
+                #  so recipe includes call to dump label using `catlab`
+                # If present, use the catlab output as pds_label instead of inputfile
+                with session_scope(upc_session_maker) as session:
+                    instrument_qobj = Instruments.create(session, instrument=instrument_name,
+                                                         spacecraft=spacecraft_name)
+                    instrument_id = instrument_qobj.instrumentid
+
+                ######## Generate DataFiles Record ########
+                datafile_attributes = create_datafiles_atts(pds_label, edr_source, no_extension_inputfile + '.cub')
+
+                datafile_attributes['instrumentid'] = instrument_id
+                datafile_attributes['targetid'] = target_id
+
+                with session_scope(upc_session_maker) as session:
+                    datafile_qobj = DataFiles.create(session, **datafile_attributes)
+                    upc_id = datafile_qobj.upcid
+
+                ######## Generate SearchTerms Record ########
+                search_term_attributes = create_search_terms_atts(cam_info_file, upc_id,
+                                                                  no_extension_inputfile + '.cub',
+                                                                  footprint_file, search_term_mapping)
+
+                search_term_attributes['targetid'] = target_id
+                search_term_attributes['instrumentid'] = instrument_id
+
+                with session_scope(upc_session_maker) as session:
+                    SearchTerms.create(session, **search_term_attributes)
+
+                ######## Generate JsonKeywords Record ########
+                json_keywords_attributes = create_json_keywords_atts(cam_info_file, upc_id, inputfile,
+                                                                     failing_command, logger)
+
+                with session_scope(upc_session_maker) as session:
+                    JsonKeywords.create(session, **json_keywords_attributes)
+
+            #derived
+            elif update_type.lower() == 'derived':
+                with session_scope(upc_session_maker) as session:
+                    src = inputfile.replace(workarea, web_base)
+                    datafile = session.query(DataFiles).filter(or_(DataFiles.source == src,
+                                                                   DataFiles.detached_label == src)).first()
+                    upc_id = datafile.upcid
+                temp_path = os.path.dirname(inputfile)
+                finalpath = temp_path.replace(workarea, derived_base)
+                derived_product = os.path.join(final_path, os.path.splitext(os.path.basename(inputfile))[0])
+                add_url(derived_product, upc_id, upc_session_maker)
+                logger.info(f'Derived Process Success: %s', inputfile)
+                if not persist:
+                    # Remove all files file from the workarea except for the copied
+                    # source file
+                    file_prefix = os.path.splitext(inputfile)[0]
+                    workarea_files = glob(file_prefix + '*')
+                    # os.remove(os.path.join(workarea, 'print.prt'))
+                    for file in workarea_files:
+                        os.remove(file)
+
+        # Handle SQL specific database errors
+        except SQLAlchemyError as e:
+            logger.error("Database operation failed: %s \nRequeueing (%s, %s)", e, inputfile, archive)
+            RQ_main.QueueAdd((inputfile, archive, failing_command, update_type))
+            raise e
+
+
+        # Disconnect from the engines
+        upc_engine.dispose()
 
 if __name__ == '__main__':
-    sys.exit(main(parse_args()))
+    sys.exit(main(parse_args()))#
