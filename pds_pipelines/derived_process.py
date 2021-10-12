@@ -4,6 +4,7 @@ import sys
 import json
 import logging
 import errno
+import argparse
 
 from ast import literal_eval
 from json import JSONDecoder
@@ -49,7 +50,18 @@ def add_url(input_file, upc_id, session_maker):
         q_record.update(params, False)
 
 
-def main():
+def parse_args():
+    parser = argparse.ArgumentParser(description="Derived Process")
+
+    parser.add_argument('--namespace', '-n', dest="namespace",
+                        help="The namespace used for this queue.")
+
+    args = parser.parse_args()
+    return args
+
+def main(user_args):
+    namespace = user_args.namespace
+
     try:
         slurm_job_id = os.environ['SLURM_ARRAY_JOB_ID']
         slurm_array_id = os.environ['SLURM_ARRAY_TASK_ID']
@@ -68,8 +80,8 @@ def main():
     logger.addHandler(log_file_handle)
     logger = logging.LoggerAdapter(logger, context)
 
-    RQ_derived = RedisQueue('Derived_ReadyQueue')
-    RQ_error = RedisQueue(upc_error_queue)
+    RQ_derived = RedisQueue('Derived_ReadyQueue', namespace)
+    RQ_error = RedisQueue(upc_error_queue, namespace)
     RQ_lock = RedisLock(lock_obj)
     RQ_lock.add({RQ_derived.id_name: '1'})
 
@@ -123,4 +135,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(parse_args()))

@@ -24,11 +24,15 @@ def parse_args():
                                 'WARNING', 'ERROR', 'CRITICAL'],
                         help="Set the log level.", default='INFO')
 
+    parser.add_argument('--namespace', '-n', dest="namespace",
+                        help="The namespace used for this queue.")
+
     args = parser.parse_args()
     return args
 
 def main(user_args):
     log_level = user_args.log_level
+    namespace = user_args.namespace
 
     PDSinfoDICT = json.load(open(pds_info, 'r'))
 
@@ -52,11 +56,13 @@ def main(user_args):
         logger.error('DataBase Connection Error: %s', str(e))
         return 1
 
-    RQ = RedisQueue('DI_ReadyQueue')
-    RQ_error = RedisQueue(upc_error_queue)
+
+    RQ = RedisQueue('DI_ReadyQueue', namespace)
+    RQ_work = RedisQueue('DI_WorkQueue', namespace)
+    RQ_error = RedisQueue(upc_error_queue, namespace)
     RQ_lock = RedisLock(lock_obj)
     RQ_lock.add({RQ.id_name: '1'})
-    RQ_work = RedisQueue('DI_WorkQueue')
+
     index = 0
 
     logger.info("DI Queue: %s", RQ.id_name)

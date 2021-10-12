@@ -28,6 +28,9 @@ def parse_args():
                                 'WARNING', 'ERROR', 'CRITICAL'],
                         help="Set the log level.", default='INFO')
 
+    parser.add_argument('--namespace', '-n', dest="namespace",
+                        help="The namespace used for this queue.")
+
     args = parser.parse_args()
     return args
 
@@ -35,6 +38,7 @@ def parse_args():
 def main(user_args):
     log_level = user_args.log_level
     override = user_args.override
+    namespace = user_args.namespace
 
     logger = logging.getLogger('Ingest_Process')
     level = logging.getLevelName(log_level)
@@ -49,11 +53,12 @@ def main(user_args):
     logger.info("Starting Ingest Process")
     PDSinfoDICT = json.load(open(pds_info, 'r'))
 
-    RQ_main = RedisQueue('Ingest_ReadyQueue')
-    RQ_error = RedisQueue(upc_error_queue)
+    RQ_main = RedisQueue('Ingest_ReadyQueue', namespace)
+    RQ_work = RedisQueue('Ingest_WorkQueue', namespace)
+    RQ_error = RedisQueue(upc_error_queue, namespace)
     RQ_lock = RedisLock(lock_obj)
     RQ_lock.add({RQ_main.id_name: '1'})
-    RQ_work = RedisQueue('Ingest_WorkQueue')
+
 
     try:
         Session, engine = db_connect(pds_db)
