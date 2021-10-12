@@ -1,15 +1,21 @@
-version: "3.1"
+version: '2.1'
 services:
+    redis:
+        image: 'redis:latest'
+        # command: redis-server --requirepass redispass
+
+        ports:
+            - "6379:6379"
+
     postgres:
         image: mdillon/postgis:9.6-alpine
         environment:
-            POSTGRES_PASSWORD: 1234
-            POSTGRES_USER: upcmgr
-            POSTGRES_DB: upc
-        volumes: 
-            - "/scratch/sakins/upc:/var/lib/postgresql/data"
+            # No password
+            POSTGRES_USER: postgres
+        volumes:
+            - "${UPC_DATABASE_PATH}:/var/lib/postgresql/data"
         ports:
-            - "9010:5432"
+            - "5432:5432"
 
     admin:
         image: dpage/pgadmin4

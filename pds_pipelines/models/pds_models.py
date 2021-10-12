@@ -6,8 +6,11 @@ from sqlalchemy import (Column, Integer, Float, String, Boolean,
 from sqlalchemy.orm import relationship
 from sqlalchemy_utils import database_exists, create_database
 
+import json
+
 from pds_pipelines.db import db_connect
 from pds_pipelines.config import pds_db
+from pds_pipelines.config import pds_info
 
 Base = declarative_base()
 
@@ -56,7 +59,7 @@ class Files(BaseMixin, Base):
 
 class Archives(BaseMixin, Base):
     __tablename__ = 'archives'
-    archiveid = Column(Integer, primary_key=True, autoincrement=True)
+    archiveid = Column(Integer, primary_key=True)
     archive_name = Column(String(1024))
     missionid = Column(Integer)
     pds_archive = Column(Boolean)
@@ -83,3 +86,36 @@ def create_pds_database():
         Base.metadata.create_all(tables=[ProcessRuns.__table__,
                                          Files.__table__,
                                          Archives.__table__])
+        with open(pds_info, 'r') as fp:
+            data = json.load(fp)
+
+        i = 0
+        archive_list = []
+        archive_ids = []
+        unsupported_args = ['bandbinQuery', 'FilterName', 'upc_reqs', 'mission', 'bandorder']
+        for key, value in data.items():
+            value['archive_name'] = key
+            value['missionid'] = i
+            value['pds_archive'] = True
+            value['primary_node'] = 'USGS'
+            value.pop('path')
+
+            for key in unsupported_args:
+                try:
+                    value.pop(key)
+                except:
+                    pass
+
+            if value['archiveid'] not in archive_ids:
+                archive_ids.append(value['archiveid'])
+                archive_list.append(Archives(**value))
+            i += 1
+
+        session = Session()
+        try:
+            session.add_all(archive_list)
+            session.commit()
+        except sqlalchemy.exc.IntegrityError as e:
+            print("Not adding new archives to Archives table, as the table is likely " +
+                  "already populated. This a result of the following: \n\n{}".format(e))
+        session.close()

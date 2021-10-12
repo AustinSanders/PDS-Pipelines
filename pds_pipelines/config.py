@@ -75,7 +75,7 @@ workarea = os.path.join(scratch, 'workarea/')
 
 # The namespace of redis queues.  Namespace, in this context, is a prefix used
 #  to identify a queue (namespace:queue_name)
-default_namespace = 'adampaquette_queue'
+default_namespace = 'randomuser_queue'
 
 
 # The name of the redis queue used to store process lock information
