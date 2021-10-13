@@ -23,6 +23,8 @@ def parse_args():
                         help="Set the log level.", default='INFO')
     parser.set_defaults(proc=True)
     parser.set_defaults(derived=True)
+    parser.add_argument('--namespace', '-n', dest="namespace",
+                        help="The namespace used for this queue.")
     args = parser.parse_args()
     return args
 
@@ -31,6 +33,7 @@ def main(user_args):
     proc = user_args.proc
     derived = user_args.derived
     log_level = user_args.log_level
+    namespace = user_args.namespace
 
     try:
         slurm_job_id = os.environ['SLURM_ARRAY_JOB_ID']
@@ -56,6 +59,7 @@ def main(user_args):
     RQ_error = RedisQueue(upc_error_queue, namespace)
     RQ_work = RedisQueue('UPC_WorkQueue', namespace)
     RQ_update = RedisQueue('UPC_UpdateQueue', namespace)
+
     logger.info("UPC Processing Queue: %s", RQ_main.id_name)
 
     RQ_error = RedisQueue(upc_error_queue)
