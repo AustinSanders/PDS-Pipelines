@@ -3,10 +3,12 @@ import os
 import sys
 import datetime
 import logging
+import errno
 from ast import literal_eval
 import argparse
 from glob import glob
 import json
+import shutil
 
 from osgeo import ogr
 import pytz
@@ -41,6 +43,19 @@ def add_url(input_file, upc_id, session_maker):
         params['jsonkeywords'] = old_json
 
         q_record.update(params, False)
+
+
+def makedir(inputfile):
+    temppath = os.path.dirname(inputfile)
+    finalpath = temppath.replace(workarea, derived_base)
+
+    if not os.path.exists(finalpath):
+        try:
+            os.makedirs(finalpath, exist_ok=True)
+        except OSError as err:
+            if err.errno != errno.EEXIST:
+                raise
+    return finalpath
 
 
 def read_json_footprint(footprint_file):
@@ -507,9 +522,12 @@ def main(user_args):
                     datafile = session.query(DataFiles).filter(or_(DataFiles.source == src,
                                                                    DataFiles.detached_label == src)).first()
                     upc_id = datafile.upcid
-                temp_path = os.path.dirname(inputfile)
-                finalpath = temp_path.replace(workarea, derived_base)
+
+                final_path = makedir(inputfile)
+                src = os.path.splitext(inputfile)[0]
                 derived_product = os.path.join(final_path, os.path.splitext(os.path.basename(inputfile))[0])
+                shutil.move(src + '.browse.jpg', derived_product + '.browse.jpg')
+                shutil.move(src + '.thumbnail.jpg', derived_product + '.thumbnail.jpg')
                 add_url(derived_product, upc_id, upc_session_maker)
                 logger.info(f'Derived Process Success: %s', inputfile)
                 if not persist:

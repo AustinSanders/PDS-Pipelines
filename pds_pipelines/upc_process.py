@@ -2,7 +2,6 @@
 import os
 import sys
 import logging
-import errno
 from ast import literal_eval
 import argparse
 import json
@@ -11,19 +10,6 @@ from pds_pipelines.redis_lock import RedisLock
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.config import pds_log, workarea, lock_obj, upc_error_queue, recipe_base
 from pds_pipelines.utils import generate_processes, process,  parse_pairs
-
-
-def makedir(inputfile):
-    temppath = os.path.dirname(inputfile)
-    finalpath = temppath.replace(workarea, derived_base)
-
-    if not os.path.exists(finalpath):
-        try:
-            os.makedirs(finalpath, exist_ok=True)
-        except OSError as err:
-            if err.errno != errno.EEXIST:
-                raise
-    return finalpath
 
 
 def parse_args():
@@ -121,8 +107,8 @@ def main(user_args):
 
                 logger.info('Starting Process: %s', inputfile)
 
-                final_path = makedir(inputfile)
-                derived_product = os.path.join(final_path, os.path.splitext(os.path.basename(inputfile))[0])
+                work_dir = os.path.dirname(inputfile)
+                derived_product = os.path.join(work_dir, os.path.splitext(os.path.basename(inputfile))[0])
 
                 no_extension_inputfile = os.path.splitext(inputfile)[0]
                 processes = generate_processes(inputfile,
