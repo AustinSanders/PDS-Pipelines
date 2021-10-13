@@ -52,8 +52,10 @@ def main(user_args):
     logger = logging.LoggerAdapter(logger, context)
 
     # Redis Queue Objects
-    RQ_main = RedisQueue('UPC_ReadyQueue')
-    RQ_update = RedisQueue('UPC_UpdateQueue')
+    RQ_main = RedisQueue('UPC_ReadyQueue', namespace)
+    RQ_error = RedisQueue(upc_error_queue, namespace)
+    RQ_work = RedisQueue('UPC_WorkQueue', namespace)
+    RQ_update = RedisQueue('UPC_UpdateQueue', namespace)
     logger.info("UPC Processing Queue: %s", RQ_main.id_name)
 
     RQ_error = RedisQueue(upc_error_queue)
