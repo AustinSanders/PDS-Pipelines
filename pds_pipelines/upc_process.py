@@ -381,6 +381,7 @@ def main(user_args):
     # Redis Queue Objects
     RQ_main = RedisQueue('UPC_ReadyQueue', namespace)
     RQ_error = RedisQueue(upc_error_queue, namespace)
+    RQ_work = RedisQueue('UPC_WorkQueue', namespace)
 
     logger.info("UPC Processing Queue: %s", RQ_main.id_name)
 
@@ -398,9 +399,9 @@ def main(user_args):
     # if there are items in the redis queue
     if int(RQ_main.QueueSize()) > 0 and RQ_lock.available(RQ_main.id_name):
         # get a file from the queue
-        item = literal_eval(RQ_main.QueueGet())
-        inputfile = item[0]
-        archive = item[1]
+        item = RQ_main.Qfile2Qwork(RQ_main.getQueueName(), RQ_work.getQueueName())
+        inputfile = literal_eval(item)[0]
+        archive = literal_eval(item)[1]
 
         if not os.path.isfile(inputfile):
             RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during UPC processing')
@@ -505,6 +506,8 @@ def main(user_args):
             # os.remove(os.path.join(workarea, 'print.prt'))
             for file in workarea_files:
                 os.remove(file)
+
+        RQ_work.QueueRemove(item)
 
     logger.info("UPC processing exited")
 
