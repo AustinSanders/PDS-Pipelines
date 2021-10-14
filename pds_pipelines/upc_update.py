@@ -414,6 +414,7 @@ def main(user_args):
 
     # Redis Queue Objects
     RQ_main = RedisQueue('UPC_UpdateQueue', namespace)
+    RQ_work = RedisQueue('UPC_UpdateWorkQueue', namespace)
     logger.info("UPC Update Queue: %s", RQ_main.id_name)
 
     RQ_error = RedisQueue(upc_error_queue)
@@ -423,11 +424,12 @@ def main(user_args):
     # if there are items in the redis queue
     if int(RQ_main.QueueSize()) > 0 and RQ_lock.available(RQ_main.id_name):
         # get a file from the queue
-        item = literal_eval(RQ_main.QueueGet())
-        inputfile = item[0]
-        archive = item[1]
-        failing_command = item[2]
-        update_type = item[3]
+        item = RQ_main.Qfile2Qwork(RQ_main.getQueueName(), RQ_work.getQueueName())
+        item_list = literal_eval(item)
+        inputfile = item_list[0]
+        archive = item_list[1]
+        failing_command = item_list[2]
+        update_type = item_list[3]
 
         if not os.path.isfile(inputfile):
             RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during UPC update')
@@ -548,6 +550,7 @@ def main(user_args):
             RQ_main.QueueAdd((inputfile, archive, failing_command, update_type))
             raise e
 
+        RQ_work.QueueRemove(item)
 
         # Disconnect from the engines
         upc_engine.dispose()
