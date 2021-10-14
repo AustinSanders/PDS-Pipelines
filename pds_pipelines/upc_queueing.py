@@ -9,12 +9,14 @@ def main(user_args):
     search = user_args.search
     log_level = user_args.log_level
     namespace = user_args.namespace
+    copy = user_args.copy
+
     try:
         process = UPCQueueProcess('UPC', archive, volume, search, log_level, namespace)
     except KeyError:
         exit()
     matching_files = process.get_matching_files()
-    process.run(matching_files)
+    process.run(matching_files, copy=copy)
 
 if __name__ == "__main__":
-    sys.exit(main(parse_args()))
+    sys.exit(main(parse_args('UPC')))

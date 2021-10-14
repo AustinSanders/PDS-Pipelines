@@ -17,4 +17,4 @@ def main(user_args):
     process.run(matching_files, copy=False)
 
 if __name__ == "__main__":
-    sys.exit(main(parse_args()))
+    sys.exit(main(parse_args('DI')))

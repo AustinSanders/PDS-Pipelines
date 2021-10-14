@@ -18,8 +18,8 @@ from pds_pipelines.db import db_connect
 from pds_pipelines.redis_queue import RedisQueue
 from pds_pipelines.config import pds_info, pds_log, pds_db, workarea, disk_usage_ratio, archive_base
 
-def parse_args():
-    parser = argparse.ArgumentParser(description='UPC Queueing')
+def parse_args(qname):
+    parser = argparse.ArgumentParser(description= qname + ' Queueing')
 
     parser.add_argument('--archive', '-a', dest="archive", required=True,
                         help="Enter archive - archive to ingest")
@@ -37,6 +37,11 @@ def parse_args():
 
     parser.add_argument('--namespace', '-n', dest="namespace",
                         help="The namespace used for this queue.")
+
+    if qname == 'UPC':
+        parser.add_argument('--no-copy', dest="copy", action='store_false',
+                            help="Runs script without copying files.",
+                            default=True)
 
     args = parser.parse_args()
     return args
