@@ -108,8 +108,8 @@ def test_bad_spacecraft_name():
     spacecraft_name = get_spacecraft_name(PVLModule())
     assert spacecraft_name == None
 
-@patch('pds_pipelines.upc_process.get_isis_id', return_value = 'ISISSERIAL')
-@patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
+@patch('pds_pipelines.upc_update.get_isis_id', return_value = 'ISISSERIAL')
+@patch('pds_pipelines.upc_update.getPDSid', return_value = 'PRODUCTID')
 def test_datafile_generation(mocked_pds_id, mocked_isis_id, pds_label):
     input_cube = '/Path/to/my/cube.cub'
     datafile_attributes = create_datafiles_atts(pds_label, '/Path/to/label/location/label.lbl', input_cube)
@@ -123,8 +123,8 @@ def test_datafile_generation(mocked_pds_id, mocked_isis_id, pds_label):
     shared_items = {k: expected_attributes[k] for k in expected_attributes if k in datafile_attributes and expected_attributes[k] == datafile_attributes[k]}
     assert len(shared_items) == 8
 
-@patch('pds_pipelines.upc_process.get_isis_id', return_value = 'ISISSERIAL')
-@patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
+@patch('pds_pipelines.upc_update.get_isis_id', return_value = 'ISISSERIAL')
+@patch('pds_pipelines.upc_update.getPDSid', return_value = 'PRODUCTID')
 def test_datafiles_no_label(mocked_pds_id, mocked_isis_id, pds_label):
     pds_label['^IMAGE'] = 1
     datafile_attributes = create_datafiles_atts(pds_label, '/Path/to/label/location/label.lbl', '/Path/to/my/cube.cub')
@@ -132,7 +132,7 @@ def test_datafiles_no_label(mocked_pds_id, mocked_isis_id, pds_label):
     assert datafile_attributes['detached_label'] == None
     assert datafile_attributes['source'] == '/Path/to/label/location/label.lbl'
 
-@patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
+@patch('pds_pipelines.upc_update.getPDSid', return_value = 'PRODUCTID')
 def test_datafiles_no_isisid(mocked_pds_id, pds_label):
     # Since we mock getsn above, make it throw an exception here so we can test
     # when there is no ISIS ID.
@@ -140,7 +140,7 @@ def test_datafiles_no_isisid(mocked_pds_id, pds_label):
         datafile_attributes = create_datafiles_atts(pds_label, '/Path/to/label/location/label.lbl', '/Path/to/my/cube.cub')
     assert datafile_attributes['isisid'] == None
 
-@patch('pds_pipelines.upc_process.get_isis_id', return_value = 'ISISSERIAL')
+@patch('pds_pipelines.upc_update.get_isis_id', return_value = 'ISISSERIAL')
 def test_datafiles_no_pdsid(mocked_isis_id, pds_label):
     # Since we mock getkey above, make it throw an exception here so we can test
     # when there is no PDS ID.
@@ -151,11 +151,11 @@ def test_datafiles_no_pdsid(mocked_isis_id, pds_label):
 def extract_keyword(pvl, key):
     return cam_info_dict[key]
 
-@patch('pds_pipelines.upc_process.find_keyword', side_effect = extract_keyword)
-@patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
+@patch('pds_pipelines.upc_update.find_keyword', side_effect = extract_keyword)
+@patch('pds_pipelines.upc_update.getPDSid', return_value = 'PRODUCTID')
 def test_search_terms_generation(mocked_product_id, mocked_keyword):
     upc_id = cam_info_dict['upcid']
-    with patch('pds_pipelines.upc_process.load_pvl', return_value = pds_label):
+    with patch('pds_pipelines.upc_update.load_pvl', return_value = pds_label):
         search_term_attributes = create_search_terms_atts('/Path/to/caminfo.pvl', upc_id, '/Path/to/my/cube.cub', '')
     # Convert the dates from strings back to date times. This could probably
     # be handled in the model
@@ -176,7 +176,7 @@ def test_search_terms_generation(mocked_product_id, mocked_keyword):
             continue
         assert cam_info_dict[search_term_mapping[key]] == attribute
 
-@patch('pds_pipelines.upc_process.getPDSid', return_value = 'PRODUCTID')
+@patch('pds_pipelines.upc_update.getPDSid', return_value = 'PRODUCTID')
 def test_search_terms_keyword_exception(mocked_product_id, pds_label):
     upc_id = cam_info_dict['upcid']
 
@@ -200,7 +200,7 @@ def test_json_keywords_generation(pds_label):
     logger = logging.getLogger('UPC_Process')
     upc_id = cam_info_dict['upcid']
 
-    with patch('pds_pipelines.upc_process.load_pvl', return_value = pds_label):
+    with patch('pds_pipelines.upc_update.load_pvl', return_value = pds_label):
         json_keywords_attributes = create_json_keywords_atts(pds_label, upc_id, '/Path/to/my/cube.cub', 'No Failures', logger)
 
     result_json = json_keywords_attributes['jsonkeywords']
