@@ -466,6 +466,9 @@ def main(user_args):
                     except KeyError:
                         search_term_mapping = {}
 
+                # Some datasets with attached PDS labels cause PVL to hang,
+                #  so recipe includes call to dump label using `catlab`
+                # If present, use the catlab output as pds_label instead of inputfile
                 if os.path.exists(catlab_output):
                     pds_label = pvl.load(catlab_output)
                 else:
@@ -482,9 +485,6 @@ def main(user_args):
 
 
 
-                # Some datasets with attached PDS labels cause PVL to hang,
-                #  so recipe includes call to dump label using `catlab`
-                # If present, use the catlab output as pds_label instead of inputfile
                 with session_scope(upc_session_maker) as session:
                     instrument_qobj = Instruments.create(session, instrument=instrument_name,
                                                          spacecraft=spacecraft_name)
