@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 # Database credentials
 credentials = {'upc_test': {'user': 'postgres',
@@ -46,7 +47,11 @@ link_dest = '/pds_san/PDS_Archive_Links/'
 
 # The project root.  The 'main' folder containing source, log, and output subdirectories.
 #  e.g. '/home/some_user/pds_pipelines' will lead to logs stored in '/home/some_user/pds_pipelines/logs'
-root = '/home/some_user/pds_pipelines'
+#  This is currently configured to set the root based on the location of config file.
+#  If you plan on  installing the package, then this should be edited to point to the
+#  non-installed location, e.g. /home/some_user/pds_pipelines
+root = Path(__file__).parent.parent
+
 
 ##
 # These paths should only be changed by users who desire non-standard functionality.
