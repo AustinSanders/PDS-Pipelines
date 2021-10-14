@@ -421,8 +421,8 @@ def main(user_args):
     RQ_lock = RedisLock(lock_obj)
     # If the queue isn't registered, add it and set it to "running"
     RQ_lock.add({RQ_main.id_name: '1'})
-    # if there are items in the redis queue
-    if int(RQ_main.QueueSize()) > 0 and RQ_lock.available(RQ_main.id_name):
+    # while there are items in the redis queue
+    while int(RQ_main.QueueSize()) > 0 and RQ_lock.available(RQ_main.id_name):
         # get a file from the queue
         item = RQ_main.Qfile2Qwork(RQ_main.getQueueName(), RQ_work.getQueueName())
         item_list = literal_eval(item)
