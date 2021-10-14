@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 
 # Database credentials
 credentials = {'upc_test': {'user': 'postgres',
