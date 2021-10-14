@@ -62,7 +62,6 @@ def main(user_args):
 
     logger.info("UPC Processing Queue: %s", RQ_main.id_name)
 
-    RQ_error = RedisQueue(upc_error_queue)
     RQ_lock = RedisLock(lock_obj)
     # If the queue isn't registered, add it and set it to "running"
     RQ_lock.add({RQ_main.id_name: '1'})
