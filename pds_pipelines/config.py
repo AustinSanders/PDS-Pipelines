@@ -47,8 +47,7 @@ link_dest = '/pds_san/PDS_Archive_Links/'
 
 # The project root.  The 'main' folder containing source, log, and output subdirectories.
 #  e.g. '/home/some_user/pds_pipelines' will lead to logs stored in '/home/some_user/pds_pipelines/logs'
-root = Path(__file__).parent.parent
-
+root = '/home/some_user/pds_pipelines'
 
 ##
 # These paths should only be changed by users who desire non-standard functionality.
