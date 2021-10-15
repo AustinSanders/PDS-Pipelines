@@ -430,6 +430,7 @@ def main(user_args):
         archive = item_list[1]
         failing_command = item_list[2]
         update_type = item_list[3]
+        upc_id = None
 
         if not os.path.isfile(inputfile):
             RQ_error.QueueAdd(f'Unable to locate or access {inputfile} during UPC update')
@@ -441,7 +442,6 @@ def main(user_args):
 
         # Update the logger context to include inputfile
         context['inputfile'] = inputfile
-
 
         try:
             session = upc_session_maker()
@@ -523,7 +523,7 @@ def main(user_args):
             # Derived Processing:
 
             # If we don't have a upcid, get the matching ID from the database
-            if not 'upc_id' in locals():
+            if not upc_id:
                 with session_scope(upc_session_maker) as session:
                     src = inputfile.replace(workarea, web_base)
                     datafile = session.query(DataFiles).filter(or_(DataFiles.source == src,
