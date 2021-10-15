@@ -527,6 +527,11 @@ def main(user_args):
                     src = inputfile.replace(workarea, web_base)
                     datafile = session.query(DataFiles).filter(or_(DataFiles.source == src,
                                                                    DataFiles.detached_label == src)).first()
+                    if not datafile:
+                        RQ_error.QueueAdd(f'No matching upcid was found for {inputfile}, '
+                                          'derived product paths could not be added')
+                        logger.warning(f'No matching upcid was found for %s, '
+                                       'derived product paths could not be added', inputfile)
                     upc_id = datafile.upcid
 
             final_path = makedir(inputfile)
