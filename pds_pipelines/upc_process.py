@@ -100,7 +100,6 @@ def main(user_args):
                                            cam_info_file=cam_info_file,
                                            footprint_file=footprint_file)
             failing_command, _ = process(processes, workarea, logger)
-            RQ_update.QueueAdd((inputfile, archive, failing_command, 'upc'))
 
         if derived:
             if os.path.isfile(inputfile):
@@ -122,10 +121,13 @@ def main(user_args):
                                                derived_product=derived_product)
                 failing_command, _ = process(processes, workarea, logger)
 
-                if not failing_command:
-                    RQ_update.QueueAdd((inputfile, archive, failing_command, 'derived'))
-                else:
-                    logger.error('Error: %s', failing_command)
+        if failing_command:
+            logger.warn(logger.error('%s Processing Error: %s', inputfile, failing_command))
+
+        if proc:
+            RQ_update.QueueAdd((inputfile, archive, failing_command, 'upc'))
+        elif derived:
+            RQ_update.QueueAdd((inputfile, archive, failing_command, 'derived'))
 
         RQ_work.QueueRemove(item)
     logger.info("UPC processing exited")

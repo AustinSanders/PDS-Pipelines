@@ -520,29 +520,36 @@ def main(user_args):
                 with session_scope(upc_session_maker) as session:
                     JsonKeywords.create(session, **json_keywords_attributes)
 
-            #derived
-            elif update_type.lower() == 'derived':
+            # Always attempt derived processing
+            # If we don't have a upcid, get the matching ID from the database
+            if not 'upc_id' in locals():
                 with session_scope(upc_session_maker) as session:
                     src = inputfile.replace(workarea, web_base)
                     datafile = session.query(DataFiles).filter(or_(DataFiles.source == src,
                                                                    DataFiles.detached_label == src)).first()
                     upc_id = datafile.upcid
 
-                final_path = makedir(inputfile)
-                src = os.path.splitext(inputfile)[0]
-                derived_product = os.path.join(final_path, os.path.splitext(os.path.basename(inputfile))[0])
+            final_path = makedir(inputfile)
+            src = os.path.splitext(inputfile)[0]
+            derived_product = os.path.join(final_path, os.path.splitext(os.path.basename(inputfile))[0])
+
+            # If derived products exist, copy them to the derived area and add the path to the db
+            try:
                 shutil.move(src + '.browse.jpg', derived_product + '.browse.jpg')
                 shutil.move(src + '.thumbnail.jpg', derived_product + '.thumbnail.jpg')
                 add_url(derived_product, upc_id, upc_session_maker)
-                logger.info(f'Derived Process Success: %s', inputfile)
-                if not persist:
-                    # Remove all files file from the workarea except for the copied
-                    # source file
-                    file_prefix = os.path.splitext(inputfile)[0]
-                    workarea_files = glob(file_prefix + '*')
-                    # os.remove(os.path.join(workarea, 'print.prt'))
-                    for file in workarea_files:
-                        os.remove(file)
+            except FileNotFoundError:
+                RQ_error.QueueAdd(f'Unable to locate or access derived products for {inputfile}')
+                logger.warning(f'Unable to locate or access derived products for %s', inputfile)
+
+            if not persist:
+                # Remove all files file from the workarea except for the copied
+                # source file
+                file_prefix = os.path.splitext(inputfile)[0]
+                workarea_files = glob(file_prefix + '*')
+                # os.remove(os.path.join(workarea, 'print.prt'))
+                for file in workarea_files:
+                    os.remove(file)
 
         # Handle SQL specific database errors
         except SQLAlchemyError as e:
