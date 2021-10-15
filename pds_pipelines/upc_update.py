@@ -520,7 +520,8 @@ def main(user_args):
                 with session_scope(upc_session_maker) as session:
                     JsonKeywords.create(session, **json_keywords_attributes)
 
-            # Always attempt derived processing
+            # Derived Processing:
+
             # If we don't have a upcid, get the matching ID from the database
             if not 'upc_id' in locals():
                 with session_scope(upc_session_maker) as session:
